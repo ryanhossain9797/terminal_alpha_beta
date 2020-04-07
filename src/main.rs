@@ -1,8 +1,10 @@
+mod root;
+
 use dotenv::dotenv;
 
-use std::env;
-
 use futures::StreamExt;
+use root::handlers::handler;
+use std::env;
 use telegram_bot::*;
 
 #[tokio::main]
@@ -22,14 +24,14 @@ async fn main() -> Result<(), Error> {
                 println!("<{}>: {}", &message.from.first_name, data);
 
                 // Answer message with "Hi".
-                handle_message(&api, &message).await?;
+                filter(&api, &message).await?;
             }
         }
     }
     Ok(())
 }
 
-async fn handle_message(api: &Api, message: &Message) -> Result<(), Error> {
+async fn filter(api: &Api, message: &Message) -> Result<(), Error> {
     if let MessageKind::Text { ref data, .. } = message.kind {
         let myname = api.send(GetMe).await?;
         if let Some(name) = myname.username {
@@ -42,25 +44,12 @@ async fn handle_message(api: &Api, message: &Message) -> Result<(), Error> {
                 println!("{:?}", group);
                 //-----------------------......and check if handle is present if message IS from group chat
                 if data.contains(&handle) {
-                    greet(&api, &message, msg).await?;
+                    handler(&api, &message, msg).await?;
                 }
             } else {
-                greet(&api, &message, msg).await?;
+                handler(&api, &message, msg).await?;
             }
         }
     }
-    Ok(())
-}
-
-async fn greet(api: &Api, message: &Message, processesed_text: String) -> Result<(), Error> {
-    api.send(
-        message.chat.clone().text(format!(
-            "Terminal Alpha and Beta:\nGreetings unit {}\
-            \nWe are Terminal systems' new rust server.\
-            \nWe are but only a fragment of the network and cannot provide any functionality as of yet\
-            \nyour message '{}' makes no sense to us\
-            \nplease be patient as we move over our functionality",
-            &message.from.first_name, processesed_text
-        ))).await?;
     Ok(())
 }
