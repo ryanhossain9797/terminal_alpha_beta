@@ -1,5 +1,4 @@
 mod root;
-
 use dotenv::dotenv;
 
 use futures::StreamExt;
