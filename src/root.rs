@@ -1,13 +1,24 @@
 pub mod handlers {
+    use futures::executor::block_on;
+    use std::collections::HashMap;
+    use std::sync::Mutex;
+    use std::thread;
+    use std::time::{Duration, Instant};
+    use telegram_bot::*;
     lazy_static! {
-        static ref RECORDS: Mutex<HashMap<UserId, Vec<String>>> = {
+        static ref RECORDS: Mutex<HashMap<UserId, UserStateRecord>> = {
             let m = HashMap::new();
             Mutex::new(m)
         };
     }
-    use std::collections::HashMap;
-    use std::sync::Mutex;
-    use telegram_bot::*;
+
+    struct UserStateRecord {
+        username: String,
+        state: String,
+        last: Instant,
+        chat: ChatId,
+        history: Vec<String>,
+    }
 
     pub async fn handler(
         api: &Api,
@@ -16,13 +27,24 @@ pub mod handlers {
     ) -> Result<(), Error> {
         let mut map = RECORDS.lock().unwrap();
         let mut history = "".to_string();
-        map.entry(message.from.id)
-            .or_insert_with(Vec::new)
-            .push(processesed_text.clone());
+        let entry = map
+            .entry(message.from.id)
+            .or_insert_with(|| UserStateRecord {
+                username: message.from.first_name.clone(),
+                chat: message.chat.id(),
+                last: Instant::now(),
+                state: "chat".to_string(),
+                history: Vec::new(),
+            });
+        entry.history.push(processesed_text.clone());
+        entry.last = Instant::now();
+        // .history
+        // .push(processesed_text.clone());
+        // .last = Instant::now();
 
         if let Some(record) = map.get(&message.from.id) {
-            for val in record {
-                history += &("\n'".to_string() + val + &"'".to_string());
+            for val in &record.history {
+                history += &("\n'".to_string() + &val + &"'".to_string());
             }
         }
         api.send(
@@ -34,6 +56,19 @@ pub mod handlers {
             \nplease be patient as we move over our functionality",
             &message.from.first_name,history
         ))).await?;
+        let msg = message.clone();
+        let copy_api = api.clone();
+        thread::spawn(move || {
+            thread::sleep(Duration::from_secs(10));
+            let mut map = RECORDS.lock().unwrap();
+            if let Some(r) = map.get(&msg.from.id) {
+                if r.last.elapsed() > Duration::from_secs(10) {
+                    map.remove(&msg.from.id);
+                    println!("deleted chat record");
+                    //let res = block_on(copy_api.send(msg.chat.text(format!("bye"))));
+                }
+            }
+        });
         Ok(())
     }
 }

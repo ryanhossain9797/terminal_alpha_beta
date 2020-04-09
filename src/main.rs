@@ -3,7 +3,7 @@ extern crate lazy_static;
 mod root;
 use dotenv::dotenv;
 
-use futures::StreamExt;
+use futures::{future, StreamExt};
 use root::handlers::handler;
 use std::env;
 use telegram_bot::*;
