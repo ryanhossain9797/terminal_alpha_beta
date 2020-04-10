@@ -1,13 +1,17 @@
 pub mod handlers {
+    const LONGWAIT: u64 = 30;
+    const SHORTWAIT: u64 = 10;
+
+    const WAITTIME: u64 = SHORTWAIT;
     use std::collections::HashMap;
-    use std::sync::Mutex;
-    use std::thread;
+    // use std::sync::Mutex;
     use std::time::{Duration, Instant};
     use telegram_bot::*;
+    use tokio::*;
     lazy_static! {
-        static ref RECORDS: Mutex<HashMap<UserId, UserStateRecord>> = {
+        static ref RECORDS: tokio::sync::Mutex<HashMap<UserId, UserStateRecord>> = {
             let m = HashMap::new();
-            Mutex::new(m)
+            tokio::sync::Mutex::new(m)
         };
     }
 
@@ -24,7 +28,7 @@ pub mod handlers {
         message: &Message,
         processesed_text: String,
     ) -> Result<(), Error> {
-        let mut map = RECORDS.lock().unwrap();
+        let mut map = RECORDS.lock().await;
         let mut history = "".to_string();
         let entry = map
             .entry(message.from.id)
@@ -57,14 +61,23 @@ pub mod handlers {
         ))).await?;
         let msg = message.clone();
         let copy_api = api.clone();
-        thread::spawn(move || {
-            thread::sleep(Duration::from_secs(10));
-            let mut map = RECORDS.lock().unwrap();
+        tokio::spawn(async move {
+            tokio::time::delay_for(Duration::from_secs(WAITTIME)).await;
+            // thread::sleep(Duration::from_secs(10));
+            let mut map = RECORDS.lock().await;
             if let Some(r) = map.get(&msg.from.id) {
-                if r.last.elapsed() > Duration::from_secs(10) {
+                if r.last.elapsed() > Duration::from_secs(WAITTIME) {
                     map.remove(&msg.from.id);
                     println!("deleted chat record");
-                    //let res = block_on(copy_api.send(msg.chat.text(format!("bye"))));
+                    let notice_result = copy_api
+                        .send(msg.chat.text(format!(
+                            "you have been silent for too long\nwe cannot wait for you any longer"
+                        )))
+                        .await;
+                    match notice_result {
+                        Err(e) => println!("{:?}", e),
+                        _ => (),
+                    }
                 }
             }
         });
