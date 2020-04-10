@@ -3,7 +3,8 @@ extern crate lazy_static;
 mod root;
 use dotenv::dotenv;
 
-use futures::{future, StreamExt};
+use futures::StreamExt;
+use regex::Regex;
 use root::handlers::handler;
 use std::env;
 use telegram_bot::*;
@@ -39,6 +40,11 @@ async fn filter(api: &Api, message: &Message) -> Result<(), Error> {
             //-----------------------remove self mention from message
             let handle = "@".to_string() + &name;
             let mut msg = data.replace(&handle, "");
+            msg = msg.trim_start_matches("/").to_string();
+            let space_trimmer = Regex::new(r"\s+").unwrap();
+
+            let msg_str: &str = &msg[..];
+            msg = space_trimmer.replace_all(msg_str, " ").to_string();
             msg = msg.trim().to_string();
             //-----------------------check if message is from a group chat.......
             if let MessageChat::Group(group) = &message.chat {
