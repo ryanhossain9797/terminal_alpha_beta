@@ -1,5 +1,4 @@
 pub mod handlers {
-    use futures::executor::block_on;
     use std::collections::HashMap;
     use std::sync::Mutex;
     use std::thread;
