@@ -1,5 +1,6 @@
 #[macro_use]
 extern crate lazy_static;
+extern crate snips_nlu_lib;
 mod handlers;
 use dotenv::dotenv;
 
