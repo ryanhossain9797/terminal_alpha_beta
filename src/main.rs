@@ -1,11 +1,11 @@
 #[macro_use]
 extern crate lazy_static;
-mod root;
+mod handlers;
 use dotenv::dotenv;
 
 use futures::StreamExt;
+use handlers::root::handler;
 use regex::Regex;
-use root::handlers::handler;
 use std::env;
 use telegram_bot::*;
 
@@ -51,10 +51,12 @@ async fn filter(api: &Api, message: &Message) -> Result<(), Error> {
                 println!("{:?}", group);
                 //-----------------------......and check if handle is present if message IS from group chat
                 if data.contains(&handle) {
-                    handler(&api, &message, msg).await?;
+                    handler(&api, &message, msg, true).await?;
+                } else {
+                    handler(&api, &message, msg, false).await?;
                 }
             } else {
-                handler(&api, &message, msg).await?;
+                handler(&api, &message, msg, true).await?;
             }
         }
     }
