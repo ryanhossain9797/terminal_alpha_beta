@@ -1,4 +1,5 @@
 use crate::handlers::chat;
+use crate::handlers::responses;
 const LONGWAIT: u64 = 30;
 const SHORTWAIT: u64 = 10;
 const WAITTIME: u64 = LONGWAIT;
@@ -52,6 +53,13 @@ pub async fn handler(
             println!("starting chat");
             let start_chat = chat::start_chat(api.clone(), message.clone()).await;
             match start_chat {
+                Err(e) => println!("{:?}", e),
+                _ => (),
+            }
+        } else {
+            let handler_assignment =
+                responses::unsupported_notice(api.clone(), message.clone()).await;
+            match handler_assignment {
                 Err(e) => println!("{:?}", e),
                 _ => (),
             }
