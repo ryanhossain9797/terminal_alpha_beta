@@ -56,9 +56,19 @@ pub async fn handler(
                 Err(e) => println!("{:?}", e),
                 _ => (),
             }
-        } else {
+        }
+        // else {
+        //     let handler_assignment =
+        //         responses::unsupported_notice(api.clone(), message.clone()).await;
+        //     match handler_assignment {
+        //         Err(e) => println!("{:?}", e),
+        //         _ => (),
+        //     }
+        // }
+        else {
             let handler_assignment =
-                responses::unsupported_notice(api.clone(), message.clone()).await;
+                responses::natural_understanding(api.clone(), message.clone(), processesed_text)
+                    .await;
             match handler_assignment {
                 Err(e) => println!("{:?}", e),
                 _ => (),
