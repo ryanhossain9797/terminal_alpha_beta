@@ -74,7 +74,7 @@ pub async fn handler(
         else {
             drop(map);
             println!("some unknown state");
-            responses::unknown_state_notice(api.clone(), message.clone()).await
+            responses::unknown_state_notice(api.clone(), message.chat.clone()).await
         };
         match handler_assignment {
             Err(e) => println!("{:?}", e),
@@ -152,7 +152,7 @@ pub async fn natural_understanding(
                 println!("starting search");
                 search::start_search(api.clone(), message.clone()).await
             } else {
-                responses::unsupported_notice(api.clone(), message.clone()).await
+                responses::unsupported_notice(api.clone(), message.chat.clone()).await
             };
             match response_result {
                 Err(e) => println!("{:?}", e),
@@ -163,7 +163,7 @@ pub async fn natural_understanding(
         else {
             println!("unknown intent");
             let handler_assignment =
-                responses::unsupported_notice(api.clone(), message.clone()).await;
+                responses::unsupported_notice(api.clone(), message.chat.clone()).await;
             match handler_assignment {
                 Err(e) => println!("{:?}", e),
                 _ => (),
@@ -173,7 +173,8 @@ pub async fn natural_understanding(
     //---unknown intent if can't match intent at all
     else {
         println!("could not understand intent");
-        let handler_assignment = responses::unsupported_notice(api.clone(), message.clone()).await;
+        let handler_assignment =
+            responses::unsupported_notice(api.clone(), message.chat.clone()).await;
         match handler_assignment {
             Err(e) => println!("{:?}", e),
             _ => (),

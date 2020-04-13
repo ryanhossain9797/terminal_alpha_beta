@@ -62,6 +62,7 @@ async fn filter(api: &Api, message: &Message) -> Result<(), Error> {
                     //---true means message is to be processed even if no conversation is in progress
                     //---if bot is mentioned new convo can start
                     handler(&api, &message, msg, true).await?;
+                    todo!("replace message copies with message.chat copies");
                 } else {
                     //---false means message won't start a new conversation
                     //---required because ongoing conversation will continue regardless of true or false

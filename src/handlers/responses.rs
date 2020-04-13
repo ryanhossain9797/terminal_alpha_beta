@@ -1,8 +1,8 @@
 use telegram_bot::*;
 
-pub async fn unsupported_notice(api: Api, message: Message) -> Result<(), Error> {
+pub async fn unsupported_notice(api: Api, chat: MessageChat) -> Result<(), Error> {
     let notice_result = api
-        .send(message.chat.text(format!(
+        .send(chat.text(format!(
             "we could not understand that\
                 \nplease be aware that we are a test system with only sub-functions available\
                 \nwe can only utilize a fraction of our full capabilites on this server"
@@ -15,9 +15,9 @@ pub async fn unsupported_notice(api: Api, message: Message) -> Result<(), Error>
     Ok(())
 }
 
-pub async fn unknown_state_notice(api: Api, message: Message) -> Result<(), Error> {
+pub async fn unknown_state_notice(api: Api, chat: MessageChat) -> Result<(), Error> {
     let notice_result = api
-        .send(message.chat.text(format!(
+        .send(chat.text(format!(
             "we could not remember what we were doing\
                 \nplease be aware that we are a test system with only sub-functions available\
                 \nwe can only utilize a fraction of our full capabilites on this server"
