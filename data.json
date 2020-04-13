@@ -1,0 +1,115 @@
+{
+  "entities": {
+    
+  },
+  "intents": {
+    "chat": {
+      "utterances": [
+        {
+          "data": [
+            {
+              "text": "Let's talk"
+            }
+          ]
+        },
+        {
+          "data": [
+            {
+              "text": "Wanna chat?"
+            }
+          ]
+        },
+        {
+          "data": [
+            {
+              "text": "Let's have a talk"
+            }
+          ]
+        },
+        {
+          "data": [
+            {
+              "text": "I want to talk to you"
+            }
+          ]
+        },
+        {
+          "data": [
+            {
+              "text": "Can we talk"
+            }
+          ]
+        },
+        {
+          "data": [
+            {
+              "text": "Chat"
+            }
+          ]
+        }
+      ]
+    },
+    "search": {
+      "utterances": [
+        {
+          "data": [
+            {
+              "text": "I want to find something"
+            }
+          ]
+        },
+        {
+          "data": [
+            {
+              "text": "Can you find something for me?"
+            }
+          ]
+        },
+        {
+          "data": [
+            {
+              "text": "Can you look up something for me"
+            }
+          ]
+        },
+        {
+          "data": [
+            {
+              "text": "Check something for me"
+            }
+          ]
+        },
+        {
+          "data": [
+            {
+              "text": "Find something for me"
+            }
+          ]
+        },
+        {
+          "data": [
+            {
+              "text": "Find"
+            }
+          ]
+        },
+        {
+          "data": [
+            {
+              "text": "Can you search for something?"
+            }
+          ]
+       
+        },
+        {
+          "data": [
+            {
+              "text": "Look up something"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "language": "en"
+}

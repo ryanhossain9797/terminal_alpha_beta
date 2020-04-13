@@ -3,6 +3,9 @@ use crate::handlers::*;
 use std::mem::drop;
 use std::time::Instant;
 use telegram_bot::*;
+
+//---adds a userstate record with chat state to userstate records map
+//---fires wipe history command for chat state
 pub async fn start_chat(api: Api, message: Message) -> Result<(), Error> {
     println!("START_CHAT: chat initiated");
 
@@ -31,6 +34,8 @@ pub async fn start_chat(api: Api, message: Message) -> Result<(), Error> {
     Ok(())
 }
 
+//---updates userstate record map with chat messages list and new time
+//---fires wipe history command for chat state
 pub async fn continue_chat(
     api: Api,
     message: Message,

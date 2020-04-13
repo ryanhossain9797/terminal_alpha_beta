@@ -3,3 +3,4 @@
 pub mod chat;
 pub mod responses;
 pub mod root;
+pub mod search;
