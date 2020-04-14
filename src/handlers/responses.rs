@@ -29,3 +29,27 @@ pub async fn unknown_state_notice(api: Api, chat: MessageChat) -> Result<(), Err
     }
     Ok(())
 }
+
+pub async fn custom_response(api: Api, chat: MessageChat, key: String) -> Result<(), Error> {
+    let notice_result = if key == "about".to_string() {
+        api.send(chat.text(format!(
+            "we are terminal alpha and beta\
+                \nwe represent the collective intelligence of the machine life forms"
+        )))
+        .await
+    } else if key == "technology".to_string() {
+        api.send(chat.text(format!(
+            "we are running on a raspberry pi 3 b+\
+                    \nwe were made using RUST"
+        )))
+        .await
+    } else {
+        api.send(chat.text(format!("we could not understand your question")))
+            .await
+    };
+    match notice_result {
+        Err(e) => println!("{:?}", e),
+        _ => (),
+    }
+    Ok(())
+}

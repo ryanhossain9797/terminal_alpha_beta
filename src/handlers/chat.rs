@@ -4,6 +4,19 @@ use std::mem::drop;
 use std::time::Instant;
 use telegram_bot::*;
 
+//
+extern crate snips_nlu_lib;
+use snips_nlu_lib::SnipsNluEngine;
+//
+
+//---Snips NLU is used to pick actions when they don't match directly
+lazy_static! {
+    pub static ref ENGINE: SnipsNluEngine = {
+        println!("\nLoading the nlu engine...");
+        SnipsNluEngine::from_path("chatengine/").unwrap()
+    };
+}
+
 //---adds a userstate record with chat state to userstate records map
 //---fires wipe history command for chat state
 pub async fn start_chat(api: Api, message: Message) -> Result<(), Error> {
@@ -39,7 +52,7 @@ pub async fn start_chat(api: Api, message: Message) -> Result<(), Error> {
 pub async fn continue_chat(
     api: Api,
     message: Message,
-    processesed_text: String,
+    processed_text: String,
 ) -> Result<(), Error> {
     let mut history = "".to_string();
 
@@ -53,25 +66,70 @@ pub async fn continue_chat(
             state: "chat".to_string(),
             history: Vec::new(),
         });
-    entry.history.push(processesed_text.clone());
+    entry.history.push(processed_text.clone());
     entry.last = Instant::now();
-    if let Some(record) = map.get(&message.from.id) {
-        for val in &record.history {
-            history += &("\n'".to_string() + &val + &"'".to_string());
-        }
-    }
     drop(map);
 
-    api.send(message.chat.clone().text(format!(
-        "Terminal Alpha and Beta:\nGreetings unit {}\
-            \nyour messages are{}",
-        &message.from.first_name, history
-    )))
-    .await?;
-    let wipe_launch = root::wipe_history(message.clone(), api.clone(), "chat".to_string()).await;
-    match wipe_launch {
-        Err(e) => println!("{:?}", e),
-        _ => (),
+    let intents_alternatives = 1;
+    let slots_alternatives = 1;
+
+    let result = ENGINE
+        .parse_with_alternatives(
+            &processed_text,
+            None,
+            None,
+            intents_alternatives,
+            slots_alternatives,
+        )
+        .unwrap();
+    if let Some(intent) = result.intent.intent_name {
+        println!(
+            "{} with confidence {}",
+            intent, result.intent.confidence_score
+        );
+        //---tries to match against existing intents like chat, search etc
+        //---only valid if confidence greater than 0.5
+        if result.intent.confidence_score > 0.5 {
+            let response_result = if intent == "about" {
+                println!("starting about");
+                responses::custom_response(api.clone(), message.chat.clone(), "about".to_string())
+                    .await
+            } else if intent == "technology" {
+                println!("starting technology");
+                responses::custom_response(
+                    api.clone(),
+                    message.chat.clone(),
+                    "technology".to_string(),
+                )
+                .await
+            } else {
+                responses::unsupported_notice(api.clone(), message.chat.clone()).await
+            };
+            match response_result {
+                Err(e) => println!("{:?}", e),
+                _ => (),
+            }
+        }
+        //---unknown intent if cannot match to any intent confidently
+        else {
+            println!("unknown intent");
+            let handler_assignment =
+                responses::unsupported_notice(api.clone(), message.chat.clone()).await;
+            match handler_assignment {
+                Err(e) => println!("{:?}", e),
+                _ => (),
+            }
+        }
+    }
+    //---unknown intent if can't match intent at all
+    else {
+        println!("could not understand intent");
+        let handler_assignment =
+            responses::unsupported_notice(api.clone(), message.chat.clone()).await;
+        match handler_assignment {
+            Err(e) => println!("{:?}", e),
+            _ => (),
+        }
     }
     Ok(())
 }

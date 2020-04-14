@@ -13,4 +13,7 @@ telegram-bot = "0.7"
 dotenv = "0.15.0"
 lazy_static = "1.4.0"
 regex = "1"
+reqwest = "0.10.4"
+scraper = "0.11.0"
+select = "0.4.3"
 snips-nlu-lib = { git = "https://github.com/snipsco/snips-nlu-rs", branch = "master" }

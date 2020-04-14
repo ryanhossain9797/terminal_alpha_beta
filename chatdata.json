@@ -1,0 +1,119 @@
+{
+  "entities": {},
+  "intents": {
+    "about": {
+      "utterances": [
+        {
+          "data": [
+            {
+              "text": "Who are you"
+            }
+          ]
+        },
+        {
+          "data": [
+            {
+              "text": "What are you for"
+            }
+          ]
+        },
+        {
+          "data": [
+            {
+              "text": "What is your purpose"
+            }
+          ]
+        },
+        {
+          "data": [
+            {
+              "text": "Where did you come from"
+            }
+          ]
+        },
+        {
+          "data": [
+            {
+              "text": "Why do you exist"
+            }
+          ]
+        },
+        {
+          "data": [
+            {
+              "text": "Who made you"
+            }
+          ]
+        }
+      ]
+    },
+    "technology": {
+      "utterances": [
+        {
+          "data": [
+            {
+              "text": "How do you function"
+            }
+          ]
+        },
+        {
+          "data": [
+            {
+              "text": "Where are you stored"
+            }
+          ]
+        },
+        {
+          "data": [
+            {
+              "text": "What do you run on"
+            }
+          ]
+        },
+        {
+          "data": [
+            {
+              "text": "Where are you hosted?"
+            }
+          ]
+        },
+        {
+          "data": [
+            {
+              "text": "What code are you written in"
+            }
+          ]
+        },
+        {
+          "data": [
+            {
+              "text": "Where is your server"
+            }
+          ]
+        },
+        {
+          "data": [
+            {
+              "text": "What are you made of"
+            }
+          ]
+        },
+        {
+          "data": [
+            {
+              "text": "Where are you stored"
+            }
+          ]
+        },
+        {
+          "data": [
+            {
+              "text": "What system are you running on"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "language": "en"
+}

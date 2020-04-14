@@ -234,12 +234,12 @@ pub async fn wipe_history(message: Message, api: Api, state: String) -> Result<(
 //---immediately purges history IF provided state matches history state
 //---used to remove history after state action is completed
 //---no notice provided
-pub async fn imeediate_purge_history(message: Message, state: String) -> Result<(), Error> {
+pub async fn imeediate_purge_history(user: User, state: String) -> Result<(), Error> {
     tokio::spawn(async move {
         let mut map = RECORDS.lock().await;
-        if let Some(r) = map.get(&message.from.id) {
+        if let Some(r) = map.get(&user.id) {
             if r.state == state {
-                map.remove(&message.from.id);
+                map.remove(&user.id);
                 drop(map);
                 println!("deleted state record for {}", state);
             }
