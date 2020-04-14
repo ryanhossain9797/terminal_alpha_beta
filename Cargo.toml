@@ -16,4 +16,5 @@ regex = "1"
 reqwest = "0.10.4"
 scraper = "0.11.0"
 select = "0.4.3"
+openssl = { version = "0.10", features = ["vendored"] }
 snips-nlu-lib = { git = "https://github.com/snipsco/snips-nlu-rs", branch = "master" }
