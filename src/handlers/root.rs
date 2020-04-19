@@ -16,27 +16,25 @@ extern crate snips_nlu_lib;
 use snips_nlu_lib::SnipsNluEngine;
 //
 
-//---Record is a map holding all users state record info
 lazy_static! {
+    //---Global API access
     pub static ref API: Api = {
         let token = env::var("TELEGRAM_TOKEN").expect("TELEGRAM_TOKEN not set");
         Api::new(token)
     };
-}
-
-//---Record is a map holding all users state record info
-lazy_static! {
+    //---Record is a map holding all users state record info
     pub static ref RECORDS: tokio::sync::Mutex<HashMap<UserId, UserStateRecord>> =
         { tokio::sync::Mutex::new(HashMap::new()) };
-}
-
-//---Snips NLU is used to pick actions when they don't match directly
-lazy_static! {
+    //---Snips NLU is used to pick actions when they don't match directly
     pub static ref ENGINE: SnipsNluEngine = {
         println!("\nLoading the nlu engine...");
         SnipsNluEngine::from_path("actionengine/").unwrap()
     };
 }
+
+lazy_static! {}
+
+lazy_static! {}
 
 //---A user state record holds an individual user's state
 //---Last holds when it was last updated
