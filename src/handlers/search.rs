@@ -32,7 +32,7 @@ pub async fn start_search(api: Api, message: Message) -> Result<(), Error> {
         &message.from.first_name
     )))
     .await?;
-    let wipe_launch = root::wipe_history(message.clone(), api.clone(), "search".to_string()).await;
+    let wipe_launch = root::wipe_history(message.clone(), "search".to_string()).await;
     match wipe_launch {
         Err(e) => println!("{:?}", e),
         _ => (),

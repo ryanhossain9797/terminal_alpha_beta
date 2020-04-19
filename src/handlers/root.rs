@@ -6,6 +6,7 @@ const LONGWAIT: u64 = 30;
 const SHORTWAIT: u64 = 10;
 const WAITTIME: u64 = LONGWAIT;
 use std::collections::HashMap;
+use std::env;
 use std::mem::drop;
 use std::time::{Duration, Instant};
 use telegram_bot::*;
@@ -14,6 +15,14 @@ use telegram_bot::*;
 extern crate snips_nlu_lib;
 use snips_nlu_lib::SnipsNluEngine;
 //
+
+//---Record is a map holding all users state record info
+lazy_static! {
+    pub static ref API: Api = {
+        let token = env::var("TELEGRAM_TOKEN").expect("TELEGRAM_TOKEN not set");
+        Api::new(token)
+    };
+}
 
 //---Record is a map holding all users state record info
 lazy_static! {
@@ -42,7 +51,6 @@ pub struct UserStateRecord {
 
 //----------First place to handler messages after initial filtering
 pub async fn handler(
-    api: &Api,
     message: &Message,
     processesed_text: String,
     will_respond: bool,
@@ -56,25 +64,25 @@ pub async fn handler(
         //---"cancel last will shut off the conversation"
         let handler_assignment = if processesed_text == "cancel last" {
             drop(map);
-            cancel_history(api.clone(), message.clone()).await
+            cancel_history(message.clone()).await
         }
         //---"if state is chat"
         else if record.state == "chat".to_string() {
             drop(map);
             println!("continuing chat");
-            chat::continue_chat(api.clone(), message.clone(), processesed_text.clone()).await
+            chat::continue_chat(API.clone(), message.clone(), processesed_text.clone()).await
         }
         //---"if state is search"
         else if record.state == "search".to_string() {
             drop(map);
             println!("continuing search");
-            search::continue_search(api.clone(), message.clone(), processesed_text.clone()).await
+            search::continue_search(API.clone(), message.clone(), processesed_text.clone()).await
         }
         //---"if state is unknown"
         else {
             drop(map);
             println!("some unknown state");
-            responses::unknown_state_notice(api.clone(), message.chat.clone()).await
+            responses::unknown_state_notice(API.clone(), message.chat.clone()).await
         };
         match handler_assignment {
             Err(e) => println!("{:?}", e),
@@ -91,7 +99,7 @@ pub async fn handler(
         //---starts a chat
         else if processesed_text.starts_with("chat") {
             println!("starting chat");
-            let start_chat = chat::start_chat(api.clone(), message.clone()).await;
+            let start_chat = chat::start_chat(API.clone(), message.clone()).await;
             match start_chat {
                 Err(e) => println!("{:?}", e),
                 _ => (),
@@ -100,7 +108,7 @@ pub async fn handler(
         //---starts a search
         else if processesed_text.starts_with("search") {
             println!("starting search");
-            let start_search = search::start_search(api.clone(), message.clone()).await;
+            let start_search = search::start_search(API.clone(), message.clone()).await;
             match start_search {
                 Err(e) => println!("{:?}", e),
                 _ => (),
@@ -109,8 +117,7 @@ pub async fn handler(
         //---if nothing matches directly
         //---hand over to the natural understanding system for advanced matching
         else {
-            let handler_assignment =
-                natural_understanding(api.clone(), message.clone(), processesed_text).await;
+            let handler_assignment = natural_understanding(message.clone(), processesed_text).await;
             match handler_assignment {
                 Err(e) => println!("{:?}", e),
                 _ => (),
@@ -120,11 +127,7 @@ pub async fn handler(
     Ok(())
 }
 
-pub async fn natural_understanding(
-    api: Api,
-    message: Message,
-    processed_text: String,
-) -> Result<(), Error> {
+pub async fn natural_understanding(message: Message, processed_text: String) -> Result<(), Error> {
     let intents_alternatives = 1;
     let slots_alternatives = 1;
 
@@ -147,12 +150,12 @@ pub async fn natural_understanding(
         if result.intent.confidence_score > 0.5 {
             let response_result = if intent == "chat" {
                 println!("starting chat");
-                chat::start_chat(api.clone(), message.clone()).await
+                chat::start_chat(API.clone(), message.clone()).await
             } else if intent == "search" {
                 println!("starting search");
-                search::start_search(api.clone(), message.clone()).await
+                search::start_search(API.clone(), message.clone()).await
             } else {
-                responses::unsupported_notice(api.clone(), message.chat.clone()).await
+                responses::unsupported_notice(API.clone(), message.chat.clone()).await
             };
             match response_result {
                 Err(e) => println!("{:?}", e),
@@ -163,7 +166,7 @@ pub async fn natural_understanding(
         else {
             println!("unknown intent");
             let handler_assignment =
-                responses::unsupported_notice(api.clone(), message.chat.clone()).await;
+                responses::unsupported_notice(API.clone(), message.chat.clone()).await;
             match handler_assignment {
                 Err(e) => println!("{:?}", e),
                 _ => (),
@@ -174,7 +177,7 @@ pub async fn natural_understanding(
     else {
         println!("could not understand intent");
         let handler_assignment =
-            responses::unsupported_notice(api.clone(), message.chat.clone()).await;
+            responses::unsupported_notice(API.clone(), message.chat.clone()).await;
         match handler_assignment {
             Err(e) => println!("{:?}", e),
             _ => (),
@@ -186,11 +189,11 @@ pub async fn natural_understanding(
 //---removes current history with a cancellation message
 //---doesn't care about state
 //---used with the cancel last command
-pub async fn cancel_history(api: Api, message: Message) -> Result<(), Error> {
+pub async fn cancel_history(message: Message) -> Result<(), Error> {
     let mut map = RECORDS.lock().await;
     map.remove(&message.from.id);
     drop(map);
-    let notice_result = api
+    let notice_result = API
         .send(
             message
                 .chat
@@ -207,7 +210,7 @@ pub async fn cancel_history(api: Api, message: Message) -> Result<(), Error> {
 //---removes history after 30 seconds if it's not updated with a new time
 //---AND the history state matches the provided state
 //---message is provided to user
-pub async fn wipe_history(message: Message, api: Api, state: String) -> Result<(), Error> {
+pub async fn wipe_history(message: Message, state: String) -> Result<(), Error> {
     tokio::spawn(async move {
         tokio::time::delay_for(Duration::from_secs(WAITTIME)).await;
         let mut map = RECORDS.lock().await;
@@ -216,7 +219,7 @@ pub async fn wipe_history(message: Message, api: Api, state: String) -> Result<(
                 map.remove(&message.from.id);
                 drop(map);
                 println!("deleted state record for {}", state);
-                let notice_result = api
+                let notice_result = API
                     .send(message.chat.text(format!(
                         "you have been silent for too long\nwe cannot wait for you any longer"
                     )))

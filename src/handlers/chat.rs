@@ -39,7 +39,7 @@ pub async fn start_chat(api: Api, message: Message) -> Result<(), Error> {
         &message.from.first_name
     )))
     .await?;
-    let wipe_launch = root::wipe_history(message.clone(), api.clone(), "chat".to_string()).await;
+    let wipe_launch = root::wipe_history(message.clone(), "chat".to_string()).await;
     match wipe_launch {
         Err(e) => println!("{:?}", e),
         _ => (),
