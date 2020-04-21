@@ -19,7 +19,7 @@ lazy_static! {
 
 //---adds a userstate record with chat state to userstate records map
 //---fires wipe history command for chat state
-pub async fn start_chat(api: Api, message: Message) -> Result<(), Error> {
+pub async fn start_chat(message: Message) -> Result<(), Error> {
     println!("START_CHAT: chat initiated");
 
     let mut map = root::RECORDS.lock().await;
@@ -33,12 +33,13 @@ pub async fn start_chat(api: Api, message: Message) -> Result<(), Error> {
         });
     drop(map);
     println!("START_CHAT: record added");
-    api.send(message.chat.clone().text(format!(
-        "Terminal Alpha and Beta:\nGreetings unit {}\
+    root::API
+        .send(message.chat.clone().text(format!(
+            "Terminal Alpha and Beta:\nGreetings unit {}\
             \nwe will listen to your following queries",
-        &message.from.first_name
-    )))
-    .await?;
+            &message.from.first_name
+        )))
+        .await?;
     let wipe_launch = root::wipe_history(message.clone(), "chat".to_string()).await;
     match wipe_launch {
         Err(e) => println!("{:?}", e),
@@ -49,11 +50,7 @@ pub async fn start_chat(api: Api, message: Message) -> Result<(), Error> {
 
 //---updates userstate record map with chat messages list and new time
 //---fires wipe history command for chat state
-pub async fn continue_chat(
-    api: Api,
-    message: Message,
-    processed_text: String,
-) -> Result<(), Error> {
+pub async fn continue_chat(message: Message, processed_text: String) -> Result<(), Error> {
     let mut history = "".to_string();
 
     let mut map = root::RECORDS.lock().await;
@@ -92,18 +89,12 @@ pub async fn continue_chat(
         if result.intent.confidence_score > 0.5 {
             let response_result = if intent == "about" {
                 println!("starting about");
-                responses::custom_response(api.clone(), message.chat.clone(), "about".to_string())
-                    .await
+                responses::custom_response(message.chat.clone(), "about".to_string()).await
             } else if intent == "technology" {
                 println!("starting technology");
-                responses::custom_response(
-                    api.clone(),
-                    message.chat.clone(),
-                    "technology".to_string(),
-                )
-                .await
+                responses::custom_response(message.chat.clone(), "technology".to_string()).await
             } else {
-                responses::unsupported_notice(api.clone(), message.chat.clone()).await
+                responses::unsupported_notice(message.chat.clone()).await
             };
             match response_result {
                 Err(e) => println!("{:?}", e),
@@ -113,8 +104,7 @@ pub async fn continue_chat(
         //---unknown intent if cannot match to any intent confidently
         else {
             println!("unknown intent");
-            let handler_assignment =
-                responses::unsupported_notice(api.clone(), message.chat.clone()).await;
+            let handler_assignment = responses::unsupported_notice(message.chat.clone()).await;
             match handler_assignment {
                 Err(e) => println!("{:?}", e),
                 _ => (),
@@ -124,8 +114,7 @@ pub async fn continue_chat(
     //---unknown intent if can't match intent at all
     else {
         println!("could not understand intent");
-        let handler_assignment =
-            responses::unsupported_notice(api.clone(), message.chat.clone()).await;
+        let handler_assignment = responses::unsupported_notice(message.chat.clone()).await;
         match handler_assignment {
             Err(e) => println!("{:?}", e),
             _ => (),

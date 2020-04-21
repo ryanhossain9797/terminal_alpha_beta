@@ -12,7 +12,7 @@ use std::str;
 
 //---adds a userstate record with search state to userstate records map
 //---fires wipe history command for search state
-pub async fn start_search(api: Api, message: Message) -> Result<(), Error> {
+pub async fn start_search(message: Message) -> Result<(), Error> {
     println!("START_SEARCH: search initiated");
 
     let mut map = root::RECORDS.lock().await;
@@ -26,12 +26,13 @@ pub async fn start_search(api: Api, message: Message) -> Result<(), Error> {
         });
     drop(map);
     println!("START_SEARCH: record added");
-    api.send(message.chat.clone().text(format!(
-        "Terminal Alpha and Beta:\nGreetings unit {}\
+    root::API
+        .send(message.chat.clone().text(format!(
+            "Terminal Alpha and Beta:\nGreetings unit {}\
             \nwhat do you want to search for?",
-        &message.from.first_name
-    )))
-    .await?;
+            &message.from.first_name
+        )))
+        .await?;
     let wipe_launch = root::wipe_history(message.clone(), "search".to_string()).await;
     match wipe_launch {
         Err(e) => println!("{:?}", e),
@@ -42,11 +43,7 @@ pub async fn start_search(api: Api, message: Message) -> Result<(), Error> {
 
 //---finishes search
 //---fires immediate purge history command for search state
-pub async fn continue_search(
-    api: Api,
-    message: Message,
-    processesed_text: String,
-) -> Result<(), Error> {
+pub async fn continue_search(message: Message, processesed_text: String) -> Result<(), Error> {
     let mut search_results = "".to_string();
     if let Ok(results) = search_google(&processesed_text, 5).await {
         println!("{}", results.iter().len());
@@ -56,12 +53,13 @@ pub async fn continue_search(
     } else {
         search_results = "search failed".to_string();
     }
-    api.send(message.chat.clone().text(format!(
-        "Terminal Alpha and Beta:\
+    root::API
+        .send(message.chat.clone().text(format!(
+            "Terminal Alpha and Beta:\
             \nhere's your search results \n{}",
-        search_results
-    )))
-    .await?;
+            search_results
+        )))
+        .await?;
     let purge_launch =
         root::imeediate_purge_history(message.from.clone(), "search".to_string()).await;
     match purge_launch {

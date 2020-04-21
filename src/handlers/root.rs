@@ -68,19 +68,19 @@ pub async fn handler(
         else if record.state == "chat".to_string() {
             drop(map);
             println!("continuing chat");
-            chat::continue_chat(API.clone(), message.clone(), processesed_text.clone()).await
+            chat::continue_chat(message.clone(), processesed_text.clone()).await
         }
         //---"if state is search"
         else if record.state == "search".to_string() {
             drop(map);
             println!("continuing search");
-            search::continue_search(API.clone(), message.clone(), processesed_text.clone()).await
+            search::continue_search(message.clone(), processesed_text.clone()).await
         }
         //---"if state is unknown"
         else {
             drop(map);
             println!("some unknown state");
-            responses::unknown_state_notice(API.clone(), message.chat.clone()).await
+            responses::unknown_state_notice(message.chat.clone()).await
         };
         match handler_assignment {
             Err(e) => println!("{:?}", e),
@@ -97,7 +97,7 @@ pub async fn handler(
         //---starts a chat
         else if processesed_text.starts_with("chat") {
             println!("starting chat");
-            let start_chat = chat::start_chat(API.clone(), message.clone()).await;
+            let start_chat = chat::start_chat(message.clone()).await;
             match start_chat {
                 Err(e) => println!("{:?}", e),
                 _ => (),
@@ -106,7 +106,7 @@ pub async fn handler(
         //---starts a search
         else if processesed_text.starts_with("search") {
             println!("starting search");
-            let start_search = search::start_search(API.clone(), message.clone()).await;
+            let start_search = search::start_search(message.clone()).await;
             match start_search {
                 Err(e) => println!("{:?}", e),
                 _ => (),
@@ -148,12 +148,12 @@ pub async fn natural_understanding(message: Message, processed_text: String) -> 
         if result.intent.confidence_score > 0.5 {
             let response_result = if intent == "chat" {
                 println!("starting chat");
-                chat::start_chat(API.clone(), message.clone()).await
+                chat::start_chat(message.clone()).await
             } else if intent == "search" {
                 println!("starting search");
-                search::start_search(API.clone(), message.clone()).await
+                search::start_search(message.clone()).await
             } else {
-                responses::unsupported_notice(API.clone(), message.chat.clone()).await
+                responses::unsupported_notice(message.chat.clone()).await
             };
             match response_result {
                 Err(e) => println!("{:?}", e),
@@ -163,8 +163,7 @@ pub async fn natural_understanding(message: Message, processed_text: String) -> 
         //---unknown intent if cannot match to any intent confidently
         else {
             println!("unknown intent");
-            let handler_assignment =
-                responses::unsupported_notice(API.clone(), message.chat.clone()).await;
+            let handler_assignment = responses::unsupported_notice(message.chat.clone()).await;
             match handler_assignment {
                 Err(e) => println!("{:?}", e),
                 _ => (),
@@ -174,8 +173,7 @@ pub async fn natural_understanding(message: Message, processed_text: String) -> 
     //---unknown intent if can't match intent at all
     else {
         println!("could not understand intent");
-        let handler_assignment =
-            responses::unsupported_notice(API.clone(), message.chat.clone()).await;
+        let handler_assignment = responses::unsupported_notice(message.chat.clone()).await;
         match handler_assignment {
             Err(e) => println!("{:?}", e),
             _ => (),
