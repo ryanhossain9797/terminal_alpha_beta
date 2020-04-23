@@ -48,6 +48,7 @@ pub async fn start_chat(message: Message) -> Result<(), Error> {
     Ok(())
 }
 
+//---updated to implement RETURN STRINGS
 //---updates userstate record map with chat messages list and new time
 //---fires wipe history command for chat state
 pub async fn continue_chat(message: Message, processed_text: String) -> Result<(), Error> {
@@ -94,11 +95,13 @@ pub async fn continue_chat(message: Message, processed_text: String) -> Result<(
                 println!("starting technology");
                 responses::custom_response(message.chat.clone(), "technology".to_string()).await
             } else {
-                responses::unsupported_notice(message.chat.clone()).await
+                responses::unsupported_notice_string(message.chat.clone()).await
             };
             match response_result {
                 Err(e) => println!("{:?}", e),
-                _ => (),
+                Ok(msg) => {
+                    root::API.send(message.chat.clone().text(msg)).await?;
+                }
             }
         }
         //---unknown intent if cannot match to any intent confidently

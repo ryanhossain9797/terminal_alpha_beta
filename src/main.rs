@@ -49,6 +49,7 @@ async fn filter(message: &Message) -> Result<(), Error> {
             msg = msg.trim().to_string();
             msg = msg.trim_start_matches("/").to_string();
             msg = msg.trim().to_string();
+            msg = msg.to_lowercase();
             let space_trimmer = Regex::new(r"\s+").unwrap();
 
             let msg_str: &str = &msg[..];
