@@ -8,7 +8,6 @@ use futures::StreamExt;
 use handlers::root::handler;
 use handlers::root::API;
 use regex::Regex;
-use std::env;
 use telegram_bot::*;
 
 #[tokio::main]

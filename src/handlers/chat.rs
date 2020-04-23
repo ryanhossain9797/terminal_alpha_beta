@@ -52,8 +52,6 @@ pub async fn start_chat(message: Message) -> Result<(), Error> {
 //---updates userstate record map with chat messages list and new time
 //---fires wipe history command for chat state
 pub async fn continue_chat(message: Message, processed_text: String) -> Result<(), Error> {
-    let mut history = "".to_string();
-
     let mut map = root::RECORDS.lock().await;
     let entry = map
         .entry(message.from.id)
@@ -90,12 +88,12 @@ pub async fn continue_chat(message: Message, processed_text: String) -> Result<(
         if result.intent.confidence_score > 0.5 {
             let response_result = if intent == "about" {
                 println!("starting about");
-                responses::custom_response(message.chat.clone(), "about".to_string()).await
+                responses::custom_response("about".to_string()).await
             } else if intent == "technology" {
                 println!("starting technology");
-                responses::custom_response(message.chat.clone(), "technology".to_string()).await
+                responses::custom_response("technology".to_string()).await
             } else {
-                responses::unsupported_notice_string(message.chat.clone()).await
+                responses::unsupported_notice_string().await
             };
             match response_result {
                 Err(e) => println!("{:?}", e),

@@ -1,8 +1,9 @@
 use crate::handlers::chat;
 use crate::handlers::responses;
 use crate::handlers::search;
-
 const LONGWAIT: u64 = 30;
+
+#[allow(dead_code)]
 const SHORTWAIT: u64 = 10;
 const WAITTIME: u64 = LONGWAIT;
 use std::collections::HashMap;
