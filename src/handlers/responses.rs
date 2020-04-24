@@ -17,11 +17,11 @@ pub async fn unsupported_notice(chat: MessageChat) -> Result<(), Error> {
 }
 
 //---------------------Will eventually replace unsupported notice
-pub async fn unsupported_notice_string() -> Result<String, Error> {
-    Ok("we could not understand that\
+pub fn unsupported_notice_string() -> String {
+    "we could not understand that\
     \nplease be aware that we are a test system with only sub-functions available\
     \nwe can only utilize a fraction of our full capabilites on this server"
-        .to_string())
+        .to_string()
 }
 
 pub async fn unknown_state_notice(chat: MessageChat) -> Result<(), Error> {
@@ -39,7 +39,7 @@ pub async fn unknown_state_notice(chat: MessageChat) -> Result<(), Error> {
     Ok(())
 }
 
-pub async fn custom_response(key: String) -> Result<String, Error> {
+pub fn custom_response(key: String) -> String {
     let notice_result = if key == "about".to_string() {
         "we are terminal alpha and beta\
                 \nwe represent the collective intelligence of the machine life forms"
@@ -49,5 +49,5 @@ pub async fn custom_response(key: String) -> Result<String, Error> {
     } else {
         "we could not understand your question"
     };
-    Ok(notice_result.to_string())
+    notice_result.to_string()
 }

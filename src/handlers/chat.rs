@@ -78,7 +78,7 @@ pub async fn continue_chat(message: Message, processed_text: String) -> Result<(
             slots_alternatives,
         )
         .unwrap();
-    if let Some(intent) = result.intent.intent_name {
+    let response = if let Some(intent) = result.intent.intent_name {
         println!(
             "{} with confidence {}",
             intent, result.intent.confidence_score
@@ -86,40 +86,27 @@ pub async fn continue_chat(message: Message, processed_text: String) -> Result<(
         //---tries to match against existing intents like chat, search etc
         //---only valid if confidence greater than 0.5
         if result.intent.confidence_score > 0.5 {
-            let response_result = if intent == "about" {
+            if intent == "about" {
                 println!("starting about");
-                responses::custom_response("about".to_string()).await
+                responses::custom_response("about".to_string())
             } else if intent == "technology" {
                 println!("starting technology");
-                responses::custom_response("technology".to_string()).await
+                responses::custom_response("technology".to_string())
             } else {
-                responses::unsupported_notice_string().await
-            };
-            match response_result {
-                Err(e) => println!("{:?}", e),
-                Ok(msg) => {
-                    root::API.send(message.chat.clone().text(msg)).await?;
-                }
+                responses::unsupported_notice_string()
             }
         }
         //---unknown intent if cannot match to any intent confidently
         else {
-            println!("unknown intent");
-            let handler_assignment = responses::unsupported_notice(message.chat.clone()).await;
-            match handler_assignment {
-                Err(e) => println!("{:?}", e),
-                _ => (),
-            }
+            println!("unsure intent");
+            responses::unsupported_notice_string()
         }
     }
     //---unknown intent if can't match intent at all
     else {
-        println!("could not understand intent");
-        let handler_assignment = responses::unsupported_notice(message.chat.clone()).await;
-        match handler_assignment {
-            Err(e) => println!("{:?}", e),
-            _ => (),
-        }
-    }
+        println!("unknown intent");
+        responses::unsupported_notice_string()
+    };
+    root::API.send(message.chat.clone().text(response)).await?;
     Ok(())
 }

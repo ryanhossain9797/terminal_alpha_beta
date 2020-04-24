@@ -33,10 +33,6 @@ lazy_static! {
     };
 }
 
-lazy_static! {}
-
-lazy_static! {}
-
 //---A user state record holds an individual user's state
 //---Last holds when it was last updated
 //---History is just a vector of strings to hold misc info (ex: messages in chat state)
