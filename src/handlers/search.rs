@@ -12,7 +12,7 @@ use std::str;
 
 //---adds a userstate record with search state to userstate records map
 //---fires wipe history command for search state
-pub async fn start_search(message: Message) -> Result<(), Error> {
+pub async fn start_search(message: Message) -> String {
     println!("START_SEARCH: search initiated");
 
     let mut map = root::RECORDS.lock().await;
@@ -26,19 +26,13 @@ pub async fn start_search(message: Message) -> Result<(), Error> {
         });
     drop(map);
     println!("START_SEARCH: record added");
-    root::API
-        .send(message.chat.clone().text(format!(
-            "Terminal Alpha and Beta:\nGreetings unit {}\
-            \nwhat do you want to search for?",
-            &message.from.first_name
-        )))
-        .await?;
-    let wipe_launch = root::wipe_history(message.clone(), "search".to_string()).await;
-    match wipe_launch {
-        Err(e) => println!("{:?}", e),
-        _ => (),
-    }
-    Ok(())
+    root::wipe_history(message.clone(), "search".to_string());
+
+    format!(
+        "Terminal Alpha and Beta:\nGreetings unit {}\
+        \nwhat do you want to search for?",
+        &message.from.first_name
+    )
 }
 
 //---finishes search
@@ -60,12 +54,8 @@ pub async fn continue_search(message: Message, processesed_text: String) -> Resu
             search_results
         )))
         .await?;
-    let purge_launch =
-        root::imeediate_purge_history(message.from.clone(), "search".to_string()).await;
-    match purge_launch {
-        Err(e) => println!("{:?}", e),
-        _ => (),
-    }
+    root::immediate_purge_history(message.from.clone(), "search".to_string());
+
     Ok(())
 }
 

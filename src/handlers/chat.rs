@@ -17,9 +17,10 @@ lazy_static! {
     };
 }
 
+//---FIX LEVEL: Returns Strings (y)
 //---adds a userstate record with chat state to userstate records map
 //---fires wipe history command for chat state
-pub async fn start_chat(message: Message) -> Result<(), Error> {
+pub async fn start_chat(message: Message) -> String {
     println!("START_CHAT: chat initiated");
 
     let mut map = root::RECORDS.lock().await;
@@ -33,21 +34,15 @@ pub async fn start_chat(message: Message) -> Result<(), Error> {
         });
     drop(map);
     println!("START_CHAT: record added");
-    root::API
-        .send(message.chat.clone().text(format!(
-            "Terminal Alpha and Beta:\nGreetings unit {}\
-            \nwe will listen to your following queries",
-            &message.from.first_name
-        )))
-        .await?;
-    let wipe_launch = root::wipe_history(message.clone(), "chat".to_string()).await;
-    match wipe_launch {
-        Err(e) => println!("{:?}", e),
-        _ => (),
-    }
-    Ok(())
+    root::wipe_history(message.clone(), "chat".to_string());
+    format!(
+        "Terminal Alpha and Beta:\nGreetings unit {}\
+        \nwe will listen to your following queries",
+        &message.from.first_name
+    )
 }
 
+//---FIX LEVEL: Works with strings
 //---updated to implement RETURN STRINGS
 //---updates userstate record map with chat messages list and new time
 //---fires wipe history command for chat state
@@ -107,6 +102,7 @@ pub async fn continue_chat(message: Message, processed_text: String) -> Result<(
         println!("unknown intent");
         responses::unsupported_notice_string()
     };
+    root::wipe_history(message.clone(), "chat".to_string());
     root::API.send(message.chat.clone().text(response)).await?;
     Ok(())
 }

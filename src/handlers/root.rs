@@ -88,28 +88,9 @@ pub async fn handler(
     //---will start processing new info
     else if will_respond {
         drop(map);
-        //---cancel last does nothing as ther's nothing to cancel
+        //---cancel last does nothing as there's nothing to cancel
         if processesed_text == "cancel last" {
         }
-        //---starts a chat
-        else if processesed_text.starts_with("chat") {
-            println!("starting chat");
-            let start_chat = chat::start_chat(message.clone()).await;
-            match start_chat {
-                Err(e) => println!("{:?}", e),
-                _ => (),
-            }
-        }
-        //---starts a search
-        else if processesed_text.starts_with("search") {
-            println!("starting search");
-            let start_search = search::start_search(message.clone()).await;
-            match start_search {
-                Err(e) => println!("{:?}", e),
-                _ => (),
-            }
-        }
-        //---if nothing matches directly
         //---hand over to the natural understanding system for advanced matching
         else {
             let handler_assignment = natural_understanding(message.clone(), processesed_text).await;
@@ -122,6 +103,7 @@ pub async fn handler(
     Ok(())
 }
 
+//---FIX LEVEL: Works with strings
 pub async fn natural_understanding(message: Message, processed_text: String) -> Result<(), Error> {
     let intents_alternatives = 1;
     let slots_alternatives = 1;
@@ -135,7 +117,7 @@ pub async fn natural_understanding(message: Message, processed_text: String) -> 
             slots_alternatives,
         )
         .unwrap();
-    if let Some(intent) = result.intent.intent_name {
+    let response = if let Some(intent) = result.intent.intent_name {
         println!(
             "{} with confidence {}",
             intent, result.intent.confidence_score
@@ -143,38 +125,31 @@ pub async fn natural_understanding(message: Message, processed_text: String) -> 
         //---tries to match against existing intents like chat, search etc
         //---only valid if confidence greater than 0.5
         if result.intent.confidence_score > 0.5 {
-            let response_result = if intent == "chat" {
+            if intent == "chat" {
                 println!("starting chat");
                 chat::start_chat(message.clone()).await
             } else if intent == "search" {
                 println!("starting search");
                 search::start_search(message.clone()).await
             } else {
-                responses::unsupported_notice(message.chat.clone()).await
-            };
-            match response_result {
-                Err(e) => println!("{:?}", e),
-                _ => (),
+                responses::unsupported_notice_string()
             }
         }
         //---unknown intent if cannot match to any intent confidently
         else {
             println!("unknown intent");
-            let handler_assignment = responses::unsupported_notice(message.chat.clone()).await;
-            match handler_assignment {
-                Err(e) => println!("{:?}", e),
-                _ => (),
-            }
+            responses::unsupported_notice_string()
         }
     }
     //---unknown intent if can't match intent at all
     else {
         println!("could not understand intent");
-        let handler_assignment = responses::unsupported_notice(message.chat.clone()).await;
-        match handler_assignment {
-            Err(e) => println!("{:?}", e),
-            _ => (),
-        }
+        responses::unsupported_notice_string()
+    };
+    let notice_result = API.send(message.chat.text(response)).await;
+    match notice_result {
+        Err(e) => println!("{:?}", e),
+        _ => (),
     }
     Ok(())
 }
@@ -203,7 +178,7 @@ pub async fn cancel_history(message: Message) -> Result<(), Error> {
 //---removes history after 30 seconds if it's not updated with a new time
 //---AND the history state matches the provided state
 //---message is provided to user
-pub async fn wipe_history(message: Message, state: String) -> Result<(), Error> {
+pub fn wipe_history(message: Message, state: String) {
     tokio::spawn(async move {
         tokio::time::delay_for(Duration::from_secs(WAITTIME)).await;
         let mut map = RECORDS.lock().await;
@@ -224,13 +199,12 @@ pub async fn wipe_history(message: Message, state: String) -> Result<(), Error> 
             }
         }
     });
-    Ok(())
 }
 
 //---immediately purges history IF provided state matches history state
 //---used to remove history after state action is completed
 //---no notice provided
-pub async fn imeediate_purge_history(user: User, state: String) -> Result<(), Error> {
+pub fn immediate_purge_history(user: User, state: String) {
     tokio::spawn(async move {
         let mut map = RECORDS.lock().await;
         if let Some(r) = map.get(&user.id) {
@@ -241,5 +215,4 @@ pub async fn imeediate_purge_history(user: User, state: String) -> Result<(), Er
             }
         }
     });
-    Ok(())
 }
