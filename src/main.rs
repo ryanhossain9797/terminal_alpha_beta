@@ -25,7 +25,8 @@ async fn main() -> Result<(), Error> {
                 println!("<{}>: {}", &message.from.first_name, data);
 
                 // Answer message with "Hi".
-                filter(&message).await?;
+
+                tokio::spawn(async move { filter(&message).await });
             }
         }
     }

@@ -37,7 +37,7 @@ pub async fn start_search(message: Message) -> String {
 
 //---finishes search
 //---fires immediate purge history command for search state
-pub async fn continue_search(message: Message, processesed_text: String) -> Result<(), Error> {
+pub async fn continue_search(message: Message, processesed_text: String) -> String {
     let mut search_results = "".to_string();
     if let Ok(results) = search_google(&processesed_text, 5).await {
         println!("{}", results.iter().len());
@@ -47,16 +47,14 @@ pub async fn continue_search(message: Message, processesed_text: String) -> Resu
     } else {
         search_results = "search failed".to_string();
     }
-    root::API
-        .send(message.chat.clone().text(format!(
-            "Terminal Alpha and Beta:\
-            \nhere's your search results \n{}",
-            search_results
-        )))
-        .await?;
+
     root::immediate_purge_history(message.from.clone(), "search".to_string());
 
-    Ok(())
+    format!(
+        "Terminal Alpha and Beta:\
+        \nhere's your search results \n{}",
+        search_results
+    )
 }
 
 //--------------WEB scraper to search through google

@@ -55,9 +55,9 @@ pub async fn handler(
     let entry_option = map.get(&message.from.id);
     //---If record from user exists (A Some(record)), some conversation is ongoing
     //---So will be replied regardless of groups or mentions and stuff ('will_respond' is ignored)
-    if let Some(record) = entry_option {
+    let handler_assignment = if let Some(record) = entry_option {
         //---"cancel last will shut off the conversation"
-        let handler_assignment = if processesed_text == "cancel last" {
+        if processesed_text == "cancel last" {
             drop(map);
             cancel_history(message.clone()).await
         }
@@ -77,11 +77,7 @@ pub async fn handler(
         else {
             drop(map);
             println!("some unknown state");
-            responses::unknown_state_notice(message.chat.clone()).await
-        };
-        match handler_assignment {
-            Err(e) => println!("{:?}", e),
-            _ => (),
+            responses::unknown_state_notice()
         }
     }
     //---if record from user doesn't exist, but is either IN A PRIVATE CHAT or MENTIONED IN A GROUP CHAT
@@ -90,21 +86,25 @@ pub async fn handler(
         drop(map);
         //---cancel last does nothing as there's nothing to cancel
         if processesed_text == "cancel last" {
+            "nothing to cancel".to_string()
         }
         //---hand over to the natural understanding system for advanced matching
         else {
-            let handler_assignment = natural_understanding(message.clone(), processesed_text).await;
-            match handler_assignment {
-                Err(e) => println!("{:?}", e),
-                _ => (),
-            }
+            natural_understanding(message.clone(), processesed_text).await
         }
+    } else {
+        "".to_string()
+    };
+    let assisgnment_result = API.send(message.chat.text(handler_assignment)).await;
+    match assisgnment_result {
+        Err(e) => println!("{:?}", e),
+        _ => (),
     }
     Ok(())
 }
 
 //---FIX LEVEL: Works with strings
-pub async fn natural_understanding(message: Message, processed_text: String) -> Result<(), Error> {
+pub async fn natural_understanding(message: Message, processed_text: String) -> String {
     let intents_alternatives = 1;
     let slots_alternatives = 1;
 
@@ -132,47 +132,31 @@ pub async fn natural_understanding(message: Message, processed_text: String) -> 
                 println!("starting search");
                 search::start_search(message.clone()).await
             } else {
-                responses::unsupported_notice_string()
+                responses::unsupported_notice()
             }
         }
         //---unknown intent if cannot match to any intent confidently
         else {
             println!("unknown intent");
-            responses::unsupported_notice_string()
+            responses::unsupported_notice()
         }
     }
     //---unknown intent if can't match intent at all
     else {
         println!("could not understand intent");
-        responses::unsupported_notice_string()
+        responses::unsupported_notice()
     };
-    let notice_result = API.send(message.chat.text(response)).await;
-    match notice_result {
-        Err(e) => println!("{:?}", e),
-        _ => (),
-    }
-    Ok(())
+    response
 }
 
 //---removes current history with a cancellation message
 //---doesn't care about state
 //---used with the cancel last command
-pub async fn cancel_history(message: Message) -> Result<(), Error> {
+pub async fn cancel_history(message: Message) -> String {
     let mut map = RECORDS.lock().await;
     map.remove(&message.from.id);
     drop(map);
-    let notice_result = API
-        .send(
-            message
-                .chat
-                .text(format!("understood. we will not prolong this conversation")),
-        )
-        .await;
-    match notice_result {
-        Err(e) => println!("{:?}", e),
-        _ => (),
-    }
-    Ok(())
+    format!("understood. we will not prolong this conversation")
 }
 
 //---removes history after 30 seconds if it's not updated with a new time
