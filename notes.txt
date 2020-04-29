@@ -1,0 +1,1 @@
+snips-nlu train path/to/data.json path/to/output_folder

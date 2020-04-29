@@ -1,7 +1,5 @@
 {
-  "entities": {
-    
-  },
+  "entities": {},
   "intents": {
     "chat": {
       "utterances": [
@@ -54,57 +52,158 @@
         {
           "data": [
             {
-              "text": "I want to find something"
+              "text": "search"
             }
           ]
         },
         {
           "data": [
             {
-              "text": "Can you find something for me?"
+              "text": "help me search for something"
             }
           ]
         },
         {
           "data": [
             {
-              "text": "Can you look up something for me"
+              "text": "search something"
             }
           ]
         },
         {
           "data": [
             {
-              "text": "Check something for me"
+              "text": "i want to find something"
             }
           ]
         },
         {
           "data": [
             {
-              "text": "Find something for me"
+              "text": "can you find something for me?"
             }
           ]
         },
         {
           "data": [
             {
-              "text": "Find"
+              "text": "can you look up something for me"
             }
           ]
         },
         {
           "data": [
             {
-              "text": "Can you search for something?"
+              "text": "check something for me"
             }
           ]
-       
         },
         {
           "data": [
             {
-              "text": "Look up something"
+              "text": "find something for me"
+            }
+          ]
+        },
+        {
+          "data": [
+            {
+              "text": "find"
+            }
+          ]
+        },
+        {
+          "data": [
+            {
+              "text": "can you search for something?"
+            }
+          ]
+        },
+        {
+          "data": [
+            {
+              "text": "look up something"
+            }
+          ]
+        }
+      ]
+    },
+    "identify": {
+      "utterances": [
+        {
+          "data": [
+            {
+              "text": "identify"
+            }
+          ]
+        },
+        {
+          "data": [
+            {
+              "text": "help me search for someone"
+            }
+          ]
+        },
+        {
+          "data": [
+            {
+              "text": "search for a person"
+            }
+          ]
+        },
+        {
+          "data": [
+            {
+              "text": "i want to find someone"
+            }
+          ]
+        },
+        {
+          "data": [
+            {
+              "text": "can you find someone for me?"
+            }
+          ]
+        },
+        {
+          "data": [
+            {
+              "text": "can you identify someone for me"
+            }
+          ]
+        },
+        {
+          "data": [
+            {
+              "text": "can you check who this is"
+            }
+          ]
+        },
+        {
+          "data": [
+            {
+              "text": "find me this person's info"
+            }
+          ]
+        },
+        {
+          "data": [
+            {
+              "text": "look for this person's information"
+            }
+          ]
+        },
+        {
+          "data": [
+            {
+              "text": "can you look someone up"
+            }
+          ]
+        },
+        {
+          "data": [
+            {
+              "text": "look up someone"
             }
           ]
         }

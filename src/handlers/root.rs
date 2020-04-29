@@ -1,4 +1,5 @@
 use crate::handlers::chat;
+use crate::handlers::identify;
 use crate::handlers::responses;
 use crate::handlers::search;
 const LONGWAIT: u64 = 30;
@@ -73,6 +74,12 @@ pub async fn handler(
             println!("continuing search");
             search::continue_search(message.clone(), processesed_text.clone()).await
         }
+        //---"if state is identify"
+        else if record.state == "identify".to_string() {
+            drop(map);
+            println!("continuing identify");
+            identify::continue_identify(message.clone(), processesed_text.clone()).await
+        }
         //---"if state is unknown"
         else {
             drop(map);
@@ -131,6 +138,9 @@ pub async fn natural_understanding(message: Message, processed_text: String) -> 
             } else if intent == "search" {
                 println!("starting search");
                 search::start_search(message.clone()).await
+            } else if intent == "identify" {
+                println!("starting identify");
+                identify::start_identify(message.clone()).await
             } else {
                 responses::unsupported_notice()
             }

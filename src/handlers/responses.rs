@@ -1,6 +1,3 @@
-use crate::handlers::*;
-use telegram_bot::*;
-
 //---------------------Will eventually replace unsupported notice
 pub fn unsupported_notice() -> String {
     "we could not understand that\

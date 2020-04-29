@@ -153,7 +153,7 @@
     "unit_name": "crf_slot_filler"
   },
   "crf_model_file": null,
-  "intent": "chat",
+  "intent": "search",
   "language_code": "en",
   "slot_name_mapping": {}
 }
