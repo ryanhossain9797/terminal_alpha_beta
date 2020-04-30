@@ -7,6 +7,8 @@ const LONGWAIT: u64 = 30;
 #[allow(dead_code)]
 const SHORTWAIT: u64 = 10;
 const WAITTIME: u64 = LONGWAIT;
+use bson::{bson, doc, Bson};
+use mongodb::{options::ClientOptions, options::FindOptions, Client, Database};
 use std::collections::HashMap;
 use std::env;
 use std::mem::drop;
@@ -31,6 +33,15 @@ lazy_static! {
     pub static ref ENGINE: SnipsNluEngine = {
         println!("\nLoading the nlu engine...");
         SnipsNluEngine::from_path("actionengine/").unwrap()
+    };
+    //---MongoDB used to store various types of data
+    pub static ref DATABASE: Option<Database> = {
+        let client_options = ClientOptions::parse("mongodb+srv://zireael9797:hummerh2suv@cluster0-lbdsg.azure.mongodb.net/test?retryWrites=true&w=majority");
+        if let Ok(options) = client_options{
+            if let Ok(client) = Client::with_options(options){
+                Some(client.database("terminal"))
+            }else{None}
+        }else{None}
     };
 }
 
