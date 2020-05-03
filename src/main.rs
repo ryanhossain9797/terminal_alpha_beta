@@ -2,11 +2,13 @@
 extern crate lazy_static;
 extern crate snips_nlu_lib;
 mod handlers;
+use bson::{bson, doc, Bson};
 use dotenv::dotenv;
-
 use futures::StreamExt;
 use handlers::root::handler;
 use handlers::root::API;
+use handlers::root::DATABASE;
+use mongodb::{options::ClientOptions, options::FindOptions, Client, Database};
 use regex::Regex;
 use telegram_bot::*;
 
@@ -14,6 +16,8 @@ use telegram_bot::*;
 async fn main() -> Result<(), Error> {
     dotenv().ok();
 
+    println!("Starting up Terminal Alpha Beta");
+    lazy_static::initialize(&DATABASE);
     // Fetch new updates via long poll method
     let mut stream = API.stream();
     while let Some(update) = stream.next().await {

@@ -34,8 +34,8 @@ pub async fn start_identify(message: Message) -> String {
 #[allow(unused_variables)]
 pub async fn continue_identify(message: Message, processesed_text: String) -> String {
     root::immediate_purge_history(message.from.clone(), "identify".to_string());
-
-    if true {
+    println!("beginning identification");
+    if let Some(db) = &*root::DATABASE {
         format!(
             "Terminal Alpha and Beta:\
                 \nWe cannot identify people yet"

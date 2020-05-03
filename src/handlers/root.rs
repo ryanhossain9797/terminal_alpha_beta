@@ -35,13 +35,15 @@ lazy_static! {
         SnipsNluEngine::from_path("actionengine/").unwrap()
     };
     //---MongoDB used to store various types of data
-    pub static ref DATABASE: Option<Database> = {
-        let client_options = ClientOptions::parse("mongodb+srv://zireael9797:hummerh2suv@cluster0-lbdsg.azure.mongodb.net/test?retryWrites=true&w=majority");
-        if let Ok(options) = client_options{
-            if let Ok(client) = Client::with_options(options){
-                Some(client.database("terminal"))
-            }else{None}
-        }else{None}
+    pub static ref  DATABASE: Option<Database> = {
+        println!("loading db");
+        None
+        // let client_options = ClientOptions::parse("mongodb+srv://zireael9797:hummerh2suv@cluster0-lbdsg.azure.mongodb.net/test?retryWrites=true&w=majority");
+        // if let Ok(options) = client_options{
+        //     if let Ok(client) = Client::with_options(options){
+        //         Some(client.database("terminal"))
+        //     }else{None}
+        // }else{None}
     };
 }
 
