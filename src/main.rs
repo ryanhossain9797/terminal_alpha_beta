@@ -3,6 +3,8 @@ extern crate lazy_static;
 extern crate snips_nlu_lib;
 mod handlers;
 use bson::{bson, doc, Bson};
+
+extern crate openssl_probe;
 use dotenv::dotenv;
 use futures::StreamExt;
 use handlers::root::handler;
@@ -14,6 +16,7 @@ use telegram_bot::*;
 
 #[tokio::main]
 async fn main() -> Result<(), Error> {
+    openssl_probe::init_ssl_cert_env_vars();
     dotenv().ok();
 
     println!("Starting up Terminal Alpha Beta");
