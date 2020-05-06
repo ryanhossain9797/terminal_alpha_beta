@@ -2,6 +2,7 @@ use crate::handlers::chat;
 use crate::handlers::identify;
 use crate::handlers::responses;
 use crate::handlers::search;
+use crate::handlers::util;
 const LONGWAIT: u64 = 30;
 
 #[allow(dead_code)]
@@ -10,8 +11,7 @@ const WAITTIME: u64 = LONGWAIT;
 
 use std::collections::HashMap;
 use std::env;
-use std::fs::OpenOptions;
-use std::io::prelude::*;
+
 use std::mem::drop;
 use std::time::{Duration, Instant};
 use telegram_bot::*;
@@ -147,62 +147,19 @@ pub async fn natural_understanding(message: Message, processed_text: String) -> 
                 println!("ACTION_PICKER: starting identify");
                 identify::start_identify(message.clone()).await
             } else {
-                if let Ok(mut file) = OpenOptions::new()
-                    .read(true)
-                    .append(true)
-                    .create(true)
-                    .open("action_log.txt")
-                {
-                    if let Ok(_) = file.write((&(format!("{}{}", processed_text, "\n"))).as_bytes())
-                    {
-                        println!("ACTION_PICKER: successfully logged unknown action")
-                    } else {
-                        println!("ACTION_PICKER: failed to log unknown action")
-                    }
-                } else {
-                    println!("ACTION_PICKER: failed to open file for logging unknown action")
-                }
-
+                util::log_message(processed_text);
                 responses::unsupported_notice()
             }
         }
         //---unknown intent if cannot match to any intent confidently
         else {
-            println!("ACTION_PICKER: unsure intent");
-            if let Ok(mut file) = OpenOptions::new()
-                .read(true)
-                .append(true)
-                .create(true)
-                .open("action_log.txt")
-            {
-                if let Ok(_) = file.write((&(format!("{}{}", processed_text, "\n"))).as_bytes()) {
-                    println!("ACTION_PICKER: successfully logged unknown action")
-                } else {
-                    println!("ACTION_PICKER: failed to log unknown action")
-                }
-            } else {
-                println!("ACTION_PICKER: failed to open file for logging unknown action")
-            }
+            util::log_message(processed_text);
             responses::unsupported_notice()
         }
     }
     //---unknown intent if can't match intent at all
     else {
-        if let Ok(mut file) = OpenOptions::new()
-            .read(true)
-            .append(true)
-            .create(true)
-            .open("action_log.txt")
-        {
-            if let Ok(_) = file.write((&(format!("{}{}", processed_text, "\n"))).as_bytes()) {
-                println!("ACTION_PICKER: successfully logged unknown action")
-            } else {
-                println!("ACTION_PICKER: failed to log unknown action")
-            }
-        } else {
-            println!("ACTION_PICKER: failed to open file for logging unknown action")
-        }
-        println!("ACTION_PICKER could not understand intent");
+        util::log_message(processed_text);
         responses::unsupported_notice()
     };
     response

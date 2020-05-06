@@ -5,3 +5,4 @@ pub mod identify;
 pub mod responses;
 pub mod root;
 pub mod search;
+pub mod util;
