@@ -2,7 +2,8 @@
 pub fn unsupported_notice() -> String {
     "we could not understand that\
     \nplease be aware that we are a test system with only sub-functions available\
-    \nwe can only utilize a fraction of our full capabilites on this server"
+    \nwe can only utilize a fraction of our full capabilites on this server\
+    \nnote that this query may be stored for further analysis of intent"
         .to_string()
 }
 
@@ -19,8 +20,9 @@ pub fn custom_response(key: String) -> String {
         "we are terminal alpha and beta\
                 \nwe represent the collective intelligence of the machine life forms"
     } else if key == "technology".to_string() {
-        "we are running on a raspberry pi 3 b+\
-                    \nwe were made using RUST"
+        "we are physically on a raspberry pi 3 b+\
+        \nrunning Arch Linux\
+        \nwe were made using RUST"
     } else {
         "we could not understand your question"
     };

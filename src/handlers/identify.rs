@@ -1,6 +1,6 @@
 use crate::handlers::*;
-use bson::{bson, doc, Bson};
-use mongodb::{options::ClientOptions, options::FindOptions, Client, Database};
+
+
 use std::mem::drop;
 use std::time::Instant;
 use telegram_bot::*;
@@ -35,7 +35,7 @@ pub async fn start_identify(message: Message) -> String {
 pub async fn continue_identify(message: Message, processesed_text: String) -> String {
     root::immediate_purge_history(message.from.clone(), "identify".to_string());
     println!("beginning identification");
-    if let Some(db) = &*root::DATABASE {
+    if true{
         format!(
             "Terminal Alpha and Beta:\
                 \nWe cannot identify people yet"

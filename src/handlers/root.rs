@@ -7,10 +7,11 @@ const LONGWAIT: u64 = 30;
 #[allow(dead_code)]
 const SHORTWAIT: u64 = 10;
 const WAITTIME: u64 = LONGWAIT;
-use bson::{bson, doc, Bson};
-use mongodb::{options::ClientOptions, options::FindOptions, Client, Database};
+
 use std::collections::HashMap;
 use std::env;
+use std::fs::OpenOptions;
+use std::io::prelude::*;
 use std::mem::drop;
 use std::time::{Duration, Instant};
 use telegram_bot::*;
@@ -34,17 +35,8 @@ lazy_static! {
         println!("\nLoading the nlu engine...");
         SnipsNluEngine::from_path("actionengine/").unwrap()
     };
-    //---MongoDB used to store various types of data
-    pub static ref  DATABASE: Option<Database> = {
-        println!("loading db");
-        None
-        // let client_options = ClientOptions::parse("mongodb+srv://zireael9797:hummerh2suv@cluster0-lbdsg.azure.mongodb.net/test?retryWrites=true&w=majority");
-        // if let Ok(options) = client_options{
-        //     if let Ok(client) = Client::with_options(options){
-        //         Some(client.database("terminal"))
-        //     }else{None}
-        // }else{None}
-    };
+
+
 }
 
 //---A user state record holds an individual user's state
@@ -146,27 +138,71 @@ pub async fn natural_understanding(message: Message, processed_text: String) -> 
         //---only valid if confidence greater than 0.5
         if result.intent.confidence_score > 0.5 {
             if intent == "chat" {
-                println!("starting chat");
+                println!("ACTION_PICKER: starting chat");
                 chat::start_chat(message.clone()).await
             } else if intent == "search" {
-                println!("starting search");
+                println!("ACTION_PICKER: starting search");
                 search::start_search(message.clone()).await
             } else if intent == "identify" {
-                println!("starting identify");
+                println!("ACTION_PICKER: starting identify");
                 identify::start_identify(message.clone()).await
             } else {
+                if let Ok(mut file) = OpenOptions::new()
+                    .read(true)
+                    .append(true)
+                    .create(true)
+                    .open("action_log.txt")
+                {
+                    if let Ok(_) = file.write((&(format!("{}{}", processed_text, "\n"))).as_bytes())
+                    {
+                        println!("ACTION_PICKER: successfully logged unknown action")
+                    } else {
+                        println!("ACTION_PICKER: failed to log unknown action")
+                    }
+                } else {
+                    println!("ACTION_PICKER: failed to open file for logging unknown action")
+                }
+
                 responses::unsupported_notice()
             }
         }
         //---unknown intent if cannot match to any intent confidently
         else {
-            println!("unknown intent");
+            println!("ACTION_PICKER: unsure intent");
+            if let Ok(mut file) = OpenOptions::new()
+                .read(true)
+                .append(true)
+                .create(true)
+                .open("action_log.txt")
+            {
+                if let Ok(_) = file.write((&(format!("{}{}", processed_text, "\n"))).as_bytes()) {
+                    println!("ACTION_PICKER: successfully logged unknown action")
+                } else {
+                    println!("ACTION_PICKER: failed to log unknown action")
+                }
+            } else {
+                println!("ACTION_PICKER: failed to open file for logging unknown action")
+            }
             responses::unsupported_notice()
         }
     }
     //---unknown intent if can't match intent at all
     else {
-        println!("could not understand intent");
+        if let Ok(mut file) = OpenOptions::new()
+            .read(true)
+            .append(true)
+            .create(true)
+            .open("action_log.txt")
+        {
+            if let Ok(_) = file.write((&(format!("{}{}", processed_text, "\n"))).as_bytes()) {
+                println!("ACTION_PICKER: successfully logged unknown action")
+            } else {
+                println!("ACTION_PICKER: failed to log unknown action")
+            }
+        } else {
+            println!("ACTION_PICKER: failed to open file for logging unknown action")
+        }
+        println!("ACTION_PICKER could not understand intent");
         responses::unsupported_notice()
     };
     response
