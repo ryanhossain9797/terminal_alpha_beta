@@ -18,3 +18,8 @@ cross-arm-musl:
 	cross build --target armv7-unknown-linux-musleabihf
 arm64:
 	cargo build --target aarch64-unknown-linux-gnu
+train:
+	rm -rf ./actionengine
+	snips-nlu train actiondata.json actionengine
+	rm -rf ./chatengine
+	snips-nlu train chatdata.json chatengine

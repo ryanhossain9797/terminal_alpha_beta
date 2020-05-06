@@ -147,20 +147,23 @@ pub async fn natural_understanding(message: Message, processed_text: String) -> 
                 println!("ACTION_PICKER: starting identify");
                 identify::start_identify(message.clone()).await
             } else {
+                //---This one is only for unimplemented but known intents
+                //---DOn't put stuff related to unknown intents here
+                println!("ACTION_PICKER: unknown intent");
                 util::log_message(processed_text);
                 responses::unsupported_notice()
             }
         }
         //---unknown intent if cannot match to any intent confidently
         else {
-            util::log_message(processed_text);
-            responses::unsupported_notice()
+            util::log_message(processed_text.clone());
+            chat::continue_chat(message.clone(), processed_text).await
         }
     }
     //---unknown intent if can't match intent at all
     else {
-        util::log_message(processed_text);
-        responses::unsupported_notice()
+        util::log_message(processed_text.clone());
+        chat::continue_chat(message.clone(), processed_text).await
     };
     response
 }

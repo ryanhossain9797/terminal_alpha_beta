@@ -1,47 +1,107 @@
 {
   "entities": {},
   "intents": {
+    "greet": {
+      "utterances": [
+        {
+          "data": [
+            {
+              "text": "hellow"
+            }
+          ]
+        },
+        {
+          "data": [
+            {
+              "text": "hi there"
+            }
+          ]
+        },
+        {
+          "data": [
+            {
+              "text": "hey"
+            }
+          ]
+        },
+        {
+          "data": [
+            {
+              "text": "greetings"
+            }
+          ]
+        },
+        {
+          "data": [
+            {
+              "text": "what's up"
+            }
+          ]
+        },
+        {
+          "data": [
+            {
+              "text": "how are you"
+            }
+          ]
+        }
+      ]
+    },
     "about": {
       "utterances": [
         {
           "data": [
             {
-              "text": "Who are you"
+              "text": "why do you exist"
             }
           ]
         },
         {
           "data": [
             {
-              "text": "What are you for"
+              "text": "who are you"
             }
           ]
         },
         {
           "data": [
             {
-              "text": "What is your purpose"
+              "text": "what are you"
             }
           ]
         },
         {
           "data": [
             {
-              "text": "Where did you come from"
+              "text": "what are you for"
             }
           ]
         },
         {
           "data": [
             {
-              "text": "Why do you exist"
+              "text": "what is your purpose"
             }
           ]
         },
         {
           "data": [
             {
-              "text": "Who made you"
+              "text": "where did you come from"
+            }
+          ]
+        },
+        {
+          "data": [
+            {
+              "text": "why do you exist"
+            }
+          ]
+        },
+        {
+          "data": [
+            {
+              "text": "who made you"
             }
           ]
         }
@@ -52,63 +112,56 @@
         {
           "data": [
             {
-              "text": "How do you function"
+              "text": "how do you function"
             }
           ]
         },
         {
           "data": [
             {
-              "text": "Where are you stored"
+              "text": "where are you stored"
             }
           ]
         },
         {
           "data": [
             {
-              "text": "What do you run on"
+              "text": "what do you run on"
             }
           ]
         },
         {
           "data": [
             {
-              "text": "Where are you hosted?"
+              "text": "what code are you written in"
             }
           ]
         },
         {
           "data": [
             {
-              "text": "What code are you written in"
+              "text": "where is your server"
             }
           ]
         },
         {
           "data": [
             {
-              "text": "Where is your server"
+              "text": "what are you made of"
             }
           ]
         },
         {
           "data": [
             {
-              "text": "What are you made of"
+              "text": "where are you stored"
             }
           ]
         },
         {
           "data": [
             {
-              "text": "Where are you stored"
-            }
-          ]
-        },
-        {
-          "data": [
-            {
-              "text": "What system are you running on"
+              "text": "what system are you running on"
             }
           ]
         }

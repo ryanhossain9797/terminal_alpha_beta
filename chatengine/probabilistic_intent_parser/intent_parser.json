@@ -190,8 +190,12 @@
       "slot_filler_name": "slot_filler_0"
     },
     {
-      "intent": "technology",
+      "intent": "greet",
       "slot_filler_name": "slot_filler_1"
+    },
+    {
+      "intent": "technology",
+      "slot_filler_name": "slot_filler_2"
     }
   ]
 }

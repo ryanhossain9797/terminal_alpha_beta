@@ -81,7 +81,10 @@ pub async fn continue_chat(message: Message, processed_text: String) -> String {
         //---tries to match against existing intents like chat, search etc
         //---only valid if confidence greater than 0.5
         if result.intent.confidence_score > 0.5 {
-            if intent == "about" {
+            if intent == "greet" {
+                println!("starting greet");
+                responses::custom_response("greet".to_string())
+            } else if intent == "about" {
                 println!("starting about");
                 responses::custom_response("about".to_string())
             } else if intent == "technology" {

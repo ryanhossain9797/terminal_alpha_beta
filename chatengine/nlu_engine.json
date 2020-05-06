@@ -200,6 +200,7 @@
     "language_code": "en",
     "slot_name_mappings": {
       "about": {},
+      "greet": {},
       "technology": {}
     }
   },

@@ -2,8 +2,6 @@ use std::fs::OpenOptions;
 use std::io::prelude::*;
 
 pub fn log_message(processed_text: String) {
-    println!("START_CHAT: chat initiated");
-
     if let Ok(mut file) = OpenOptions::new()
         .read(true)
         .append(true)
