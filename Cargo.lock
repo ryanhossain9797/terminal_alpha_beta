@@ -2335,6 +2335,7 @@ dependencies = [
  "reqwest",
  "scraper",
  "select",
+ "serde_json",
  "snips-nlu-lib",
  "telegram-bot",
  "tokio",

@@ -1,3 +1,4 @@
+use crate::handlers::util;
 use crate::handlers::*;
 use telegram_bot::*;
 //------Chat will not be a state any more.
@@ -109,12 +110,14 @@ pub async fn continue_chat(/*message: Message,*/ processed_text: String) -> Stri
         //---unknown intent if cannot match to any intent confidently
         else {
             println!("unsure intent");
+            util::log_message(processed_text.clone());
             responses::unsupported_notice()
         }
     }
     //---unknown intent if can't match intent at all
     else {
         println!("unknown intent");
+        util::log_message(processed_text.clone());
         responses::unsupported_notice()
     };
     //------Chat will not be a state any more.

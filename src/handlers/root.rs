@@ -12,9 +12,13 @@ const WAITTIME: u64 = LONGWAIT;
 use std::collections::HashMap;
 use std::env;
 
+use std::fs::*;
+
 use std::mem::drop;
 use std::time::{Duration, Instant};
 use telegram_bot::*;
+
+use serde_json;
 
 //
 extern crate snips_nlu_lib;
@@ -36,8 +40,13 @@ lazy_static! {
         println!("\nLoading the nlu engine...");
         SnipsNluEngine::from_path("actionengine/").unwrap()
     };
-
-
+    pub static ref RESPONSES: Option<serde_json::Value> = {
+        println!("\nLoading JSON responses");
+        match read_to_string("responses.json"){
+            Ok(json) => serde_json::from_str(&json).ok(),
+            Err(_) => None,
+        }
+    };
 }
 
 //---A user state record holds an individual user's state
@@ -161,13 +170,11 @@ pub async fn natural_understanding(message: Message, processed_text: String) -> 
         }
         //---unknown intent if cannot match to any intent confidently
         else {
-            util::log_message(processed_text.clone());
             chat::continue_chat(processed_text).await
         }
     }
     //---unknown intent if can't match intent at all
     else {
-        util::log_message(processed_text.clone());
         chat::continue_chat(processed_text).await
     };
     response
