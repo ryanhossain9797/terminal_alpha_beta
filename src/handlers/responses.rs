@@ -17,15 +17,15 @@ pub fn unknown_state_notice() -> String {
 
 pub fn custom_response(key: String) -> String {
     let notice_result = if key == "greet".to_string() {
-        "greetings unit\
-                \nwhat is it you require?"
+        "Greetings unit\
+        \nwhat is it you require?"
     } else if key == "about".to_string() {
-        "we are terminal alpha and beta\
-                \nwe represent the collective intelligence of the machine life forms"
+        "We are terminal alpha and beta\
+        \nwe represent the collective intelligence of the machine life forms"
     } else if key == "technology".to_string() {
-        "we are physically on a raspberry pi 3 b+\
-        \nrunning Arch Linux\
-        \nwe were made using RUST"
+        "We physically exist on a Raspberry Pi 3B+\
+        \nrunning Arch Linux.\
+        \nWe were made using RUST"
     } else {
         "we could not understand your question"
     };

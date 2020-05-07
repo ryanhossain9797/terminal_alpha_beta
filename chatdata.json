@@ -44,6 +44,55 @@
               "text": "how are you"
             }
           ]
+        },
+        {
+          "data": [
+            {
+              "text": "helloz"
+            }
+          ]
+        },
+        {
+          "data": [
+            {
+              "text": "hellowz"
+            }
+          ]
+        },
+        {
+          "data": [
+            {
+              "text": "heya bot"
+            }
+          ]
+        },
+        {
+          "data": [
+            {
+              "text": "hellow bot"
+            }
+          ]
+        },
+        {
+          "data": [
+            {
+              "text": "how are you"
+            }
+          ]
+        },
+        {
+          "data": [
+            {
+              "text": "how's it going"
+            }
+          ]
+        },
+        {
+          "data": [
+            {
+              "text": "heyo"
+            }
+          ]
         }
       ]
     },
@@ -162,6 +211,13 @@
           "data": [
             {
               "text": "what system are you running on"
+            }
+          ]
+        },
+        {
+          "data": [
+            {
+              "text": "what system do you run on"
             }
           ]
         }

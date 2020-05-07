@@ -25,7 +25,8 @@ lazy_static! {
     //---Global API access
     pub static ref API: Api = {
         let token = env::var("TELEGRAM_TOKEN").expect("TELEGRAM_TOKEN not set");
-        Api::new(token)
+        let api = Api::new(token);
+        api
     };
     //---Record is a map holding all users state record info
     pub static ref RECORDS: tokio::sync::Mutex<HashMap<UserId, UserStateRecord>> =
@@ -68,11 +69,15 @@ pub async fn handler(
             cancel_history(message.clone()).await
         }
         //---"if state is chat"
+        //------Chat will not be a state any more.
+        //------Rather any unknown message will be handled by chat in default
+        /*
         else if record.state == "chat".to_string() {
             drop(map);
             println!("continuing chat");
             chat::continue_chat(message.clone(), processesed_text.clone()).await
         }
+        */
         //---"if state is search"
         else if record.state == "search".to_string() {
             drop(map);
@@ -87,8 +92,8 @@ pub async fn handler(
         }
         //---"if state is unknown"
         else {
+            println!("some unknown state {}", record.state);
             drop(map);
-            println!("some unknown state");
             responses::unknown_state_notice()
         }
     }
@@ -148,7 +153,7 @@ pub async fn natural_understanding(message: Message, processed_text: String) -> 
                 identify::start_identify(message.clone()).await
             } else {
                 //---This one is only for unimplemented but known intents
-                //---DOn't put stuff related to unknown intents here
+                //---Don't put stuff related to unknown intents here
                 println!("ACTION_PICKER: unknown intent");
                 util::log_message(processed_text);
                 responses::unsupported_notice()
@@ -157,13 +162,13 @@ pub async fn natural_understanding(message: Message, processed_text: String) -> 
         //---unknown intent if cannot match to any intent confidently
         else {
             util::log_message(processed_text.clone());
-            chat::continue_chat(message.clone(), processed_text).await
+            chat::continue_chat(processed_text).await
         }
     }
     //---unknown intent if can't match intent at all
     else {
         util::log_message(processed_text.clone());
-        chat::continue_chat(message.clone(), processed_text).await
+        chat::continue_chat(processed_text).await
     };
     response
 }

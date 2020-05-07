@@ -26,9 +26,7 @@ async fn main() -> Result<(), Error> {
             if let MessageKind::Text { ref data, .. } = message.kind {
                 // Print received text message to stdout.
                 println!("<{}>: {}", &message.from.first_name, data);
-
-                // Answer message with "Hi".
-
+                // Spawn a handler for the message.
                 tokio::spawn(async move { filter(&message).await });
             }
         }

@@ -1,8 +1,9 @@
 use crate::handlers::*;
-
-use std::mem::drop;
-use std::time::Instant;
 use telegram_bot::*;
+//------Chat will not be a state any more.
+//------Rather any unknown message will be handled by chat in default
+//use std::mem::drop;
+//use std::time::Instant;
 
 //
 extern crate snips_nlu_lib;
@@ -22,7 +23,9 @@ lazy_static! {
 //---fires wipe history command for chat state
 pub async fn start_chat(message: Message) -> String {
     println!("START_CHAT: chat initiated");
-
+    //------Chat will not be a state any more.
+    //------Rather any unknown message will be handled by chat in default
+    /*
     let mut map = root::RECORDS.lock().await;
     map.entry(message.from.id)
         .or_insert_with(|| root::UserStateRecord {
@@ -33,11 +36,16 @@ pub async fn start_chat(message: Message) -> String {
             history: Vec::new(),
         });
     drop(map);
-    println!("START_CHAT: record added");
     root::wipe_history(message.clone(), "chat".to_string());
+    println!("START_CHAT: record added");
+    */
+    println!("START_CHAT: responding to chat intent");
+
     format!(
-        "Terminal Alpha and Beta:\nGreetings unit {}\
-        \nwe will listen to your following queries",
+        "Greetings unit {}.\
+        \nYou are free to ask any questions.\
+        \nWhether we answer or not depends on us.\
+        \nNote that in public groups you must mention us by our handle.",
         &message.from.first_name
     )
 }
@@ -46,7 +54,10 @@ pub async fn start_chat(message: Message) -> String {
 //---updated to implement RETURN STRINGS
 //---updates userstate record map with chat messages list and new time
 //---fires wipe history command for chat state
-pub async fn continue_chat(message: Message, processed_text: String) -> String {
+pub async fn continue_chat(/*message: Message,*/ processed_text: String) -> String {
+    //------Chat will not be a state any more.
+    //------Rather any unknown message will be handled by chat in default
+    /*
     let mut map = root::RECORDS.lock().await;
     let entry = map
         .entry(message.from.id)
@@ -60,6 +71,7 @@ pub async fn continue_chat(message: Message, processed_text: String) -> String {
     entry.history.push(processed_text.clone());
     entry.last = Instant::now();
     drop(map);
+    */
 
     let intents_alternatives = 1;
     let slots_alternatives = 1;
@@ -105,6 +117,10 @@ pub async fn continue_chat(message: Message, processed_text: String) -> String {
         println!("unknown intent");
         responses::unsupported_notice()
     };
+    //------Chat will not be a state any more.
+    //------Rather any unknown message will be handled by chat in default
+    /*
     root::wipe_history(message.clone(), "chat".to_string());
+    */
     response
 }
