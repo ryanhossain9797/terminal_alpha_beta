@@ -115,6 +115,23 @@ dependencies = [
 ]
 
 [[package]]
+name = "biscuit"
+version = "0.4.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "359ca61641a4d4afcb8a1eefa59d17e84808fd9dc10dcc753a7b8def542bbb8c"
+dependencies = [
+ "chrono",
+ "data-encoding",
+ "num",
+ "once_cell",
+ "ring",
+ "serde",
+ "serde_derive",
+ "serde_json",
+ "url",
+]
+
+[[package]]
 name = "bit-set"
 version = "0.5.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -196,6 +213,7 @@ dependencies = [
  "libc",
  "num-integer",
  "num-traits 0.2.11",
+ "serde",
  "time",
  "wasm-bindgen",
 ]
@@ -336,6 +354,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "ct-logs"
+version = "0.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4d3686f5fa27dbc1d76c751300376e167c5a43387f44bb451fd1c24776e49113"
+dependencies = [
+ "sct",
+]
+
+[[package]]
+name = "data-encoding"
+version = "2.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "11c0346158a19b3627234e15596f5e465c360fcdb97d817bcb255e0510f5a788"
+
+[[package]]
 name = "derive-new"
 version = "0.5.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -450,6 +483,21 @@ dependencies = [
  "quote 1.0.4",
  "syn 1.0.19",
  "synstructure",
+]
+
+[[package]]
+name = "firestore-db-and-auth"
+version = "0.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "98965fef58241bca8aa30c0cd0754930097c8d6cc1b912a4f941f20af9a511c5"
+dependencies = [
+ "base64 0.11.0",
+ "biscuit",
+ "chrono",
+ "reqwest",
+ "ring",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]
@@ -769,6 +817,24 @@ dependencies = [
  "tokio",
  "tower-service",
  "want",
+]
+
+[[package]]
+name = "hyper-rustls"
+version = "0.20.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ac965ea399ec3a25ac7d13b8affd4b8f39325cca00858ddf5eb29b79e6b14b08"
+dependencies = [
+ "bytes",
+ "ct-logs",
+ "futures-util",
+ "hyper",
+ "log 0.4.8",
+ "rustls",
+ "rustls-native-certs",
+ "tokio",
+ "tokio-rustls",
+ "webpki",
 ]
 
 [[package]]
@@ -1171,6 +1237,31 @@ dependencies = [
 ]
 
 [[package]]
+name = "num"
+version = "0.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b8536030f9fea7127f841b45bb6243b27255787fb4eb83958aa1ef9d2fdc0c36"
+dependencies = [
+ "num-bigint",
+ "num-complex",
+ "num-integer",
+ "num-iter",
+ "num-rational",
+ "num-traits 0.2.11",
+]
+
+[[package]]
+name = "num-bigint"
+version = "0.2.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "090c7f9998ee0ff65aa5b723e4009f7b217707f1fb5ea551329cc4d6231fb304"
+dependencies = [
+ "autocfg 1.0.0",
+ "num-integer",
+ "num-traits 0.2.11",
+]
+
+[[package]]
 name = "num-complex"
 version = "0.2.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1187,6 +1278,29 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3f6ea62e9d81a77cd3ee9a2a5b9b609447857f3d358704331e4ef39eb247fcba"
 dependencies = [
  "autocfg 1.0.0",
+ "num-traits 0.2.11",
+]
+
+[[package]]
+name = "num-iter"
+version = "0.1.40"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "dfb0800a0291891dd9f4fe7bd9c19384f98f7fbe0cd0f39a2c6b88b9868bbc00"
+dependencies = [
+ "autocfg 1.0.0",
+ "num-integer",
+ "num-traits 0.2.11",
+]
+
+[[package]]
+name = "num-rational"
+version = "0.2.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5c000134b5dbf44adc5cb772486d335293351644b801551abe8f75c84cfa4aef"
+dependencies = [
+ "autocfg 1.0.0",
+ "num-bigint",
+ "num-integer",
  "num-traits 0.2.11",
 ]
 
@@ -1217,6 +1331,12 @@ dependencies = [
  "hermit-abi",
  "libc",
 ]
+
+[[package]]
+name = "once_cell"
+version = "1.3.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b1c601810575c99596d4afc46f78a678c80105117c379eb3650cf99b8a21ce5b"
 
 [[package]]
 name = "openssl"
@@ -1655,6 +1775,7 @@ dependencies = [
  "http",
  "http-body",
  "hyper",
+ "hyper-rustls",
  "hyper-tls",
  "js-sys",
  "lazy_static",
@@ -1664,16 +1785,35 @@ dependencies = [
  "native-tls",
  "percent-encoding",
  "pin-project-lite",
+ "rustls",
  "serde",
+ "serde_json",
  "serde_urlencoded",
  "time",
  "tokio",
+ "tokio-rustls",
  "tokio-tls",
  "url",
  "wasm-bindgen",
  "wasm-bindgen-futures",
  "web-sys",
+ "webpki-roots",
  "winreg",
+]
+
+[[package]]
+name = "ring"
+version = "0.16.13"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "703516ae74571f24b465b4a1431e81e2ad51336cb0ded733a55a1aa3eccac196"
+dependencies = [
+ "cc",
+ "libc",
+ "once_cell",
+ "spin",
+ "untrusted",
+ "web-sys",
+ "winapi 0.3.8",
 ]
 
 [[package]]
@@ -1903,6 +2043,31 @@ dependencies = [
 ]
 
 [[package]]
+name = "rustls"
+version = "0.17.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c0d4a31f5d68413404705d6982529b0e11a9aacd4839d1d6222ee3b8cb4015e1"
+dependencies = [
+ "base64 0.11.0",
+ "log 0.4.8",
+ "ring",
+ "sct",
+ "webpki",
+]
+
+[[package]]
+name = "rustls-native-certs"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a75ffeb84a6bd9d014713119542ce415db3a3e4748f0bfce1e1416cd224a23a5"
+dependencies = [
+ "openssl-probe",
+ "rustls",
+ "schannel",
+ "security-framework",
+]
+
+[[package]]
 name = "ryu"
 version = "1.0.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1932,6 +2097,16 @@ dependencies = [
  "selectors",
  "smallvec 0.6.13",
  "tendril",
+]
+
+[[package]]
+name = "sct"
+version = "0.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e3042af939fca8c3453b7af0f1c66e533a15a86169e39de2657310ade8f98d3c"
+dependencies = [
+ "ring",
+ "untrusted",
 ]
 
 [[package]]
@@ -2022,6 +2197,7 @@ version = "1.0.52"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a7894c8ed05b7a3a279aeb79025fdec1d3158080b75b98a08faf2806bb799edd"
 dependencies = [
+ "indexmap",
  "itoa",
  "ryu",
  "serde",
@@ -2168,6 +2344,12 @@ dependencies = [
  "redox_syscall",
  "winapi 0.3.8",
 ]
+
+[[package]]
+name = "spin"
+version = "0.5.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6e63cff320ae2c57904679ba7cb63280a3dc4613885beafb148ee7bf9aa9042d"
 
 [[package]]
 name = "stable_deref_trait"
@@ -2327,6 +2509,7 @@ name = "terminal_alpha_beta_rust"
 version = "0.1.0"
 dependencies = [
  "dotenv",
+ "firestore-db-and-auth",
  "futures",
  "lazy_static",
  "openssl",
@@ -2335,6 +2518,7 @@ dependencies = [
  "reqwest",
  "scraper",
  "select",
+ "serde",
  "serde_json",
  "snips-nlu-lib",
  "telegram-bot",
@@ -2408,6 +2592,18 @@ dependencies = [
  "proc-macro2 1.0.12",
  "quote 1.0.4",
  "syn 1.0.19",
+]
+
+[[package]]
+name = "tokio-rustls"
+version = "0.13.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4adb8b3e5f86b707f1b54e7c15b6de52617a823608ccda98a15d3a24222f265a"
+dependencies = [
+ "futures-core",
+ "rustls",
+ "tokio",
+ "webpki",
 ]
 
 [[package]]
@@ -2539,6 +2735,12 @@ name = "unicode-xid"
 version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "826e7639553986605ec5979c7dd957c7895e93eabed50ab2ffa7f6128a75097c"
+
+[[package]]
+name = "untrusted"
+version = "0.7.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a156c684c91ea7d62626509bce3cb4e1d9ed5c4d978f7b4352658f96a4c26b4a"
 
 [[package]]
 name = "url"
@@ -2673,6 +2875,25 @@ checksum = "8bc359e5dd3b46cb9687a051d50a2fdd228e4ba7cf6fcf861a5365c3d671a642"
 dependencies = [
  "js-sys",
  "wasm-bindgen",
+]
+
+[[package]]
+name = "webpki"
+version = "0.21.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f1f50e1972865d6b1adb54167d1c8ed48606004c2c9d0ea5f1eeb34d95e863ef"
+dependencies = [
+ "ring",
+ "untrusted",
+]
+
+[[package]]
+name = "webpki-roots"
+version = "0.18.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "91cd5736df7f12a964a5067a12c62fa38e1bd8080aff1f80bc29be7c80d19ab4"
+dependencies = [
+ "webpki",
 ]
 
 [[package]]

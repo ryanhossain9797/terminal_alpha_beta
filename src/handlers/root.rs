@@ -151,21 +151,26 @@ pub async fn natural_understanding(message: Message, processed_text: String) -> 
         //---tries to match against existing intents like chat, search etc
         //---only valid if confidence greater than 0.5
         if result.intent.confidence_score > 0.5 {
-            if intent == "chat" {
-                println!("ACTION_PICKER: starting chat");
-                chat::start_chat(message.clone()).await
-            } else if intent == "search" {
-                println!("ACTION_PICKER: starting search");
-                search::start_search(message.clone()).await
-            } else if intent == "identify" {
-                println!("ACTION_PICKER: starting identify");
-                identify::start_identify(message.clone()).await
-            } else {
-                //---This one is only for unimplemented but known intents
-                //---Don't put stuff related to unknown intents here
-                println!("ACTION_PICKER: unknown intent");
-                util::log_message(processed_text);
-                responses::unsupported_notice()
+            match &*intent {
+                "chat" => {
+                    println!("ACTION_PICKER: starting chat");
+                    chat::start_chat(message.clone()).await
+                }
+                "search" => {
+                    println!("ACTION_PICKER: starting search");
+                    search::start_search(message.clone()).await
+                }
+                "identify" => {
+                    println!("ACTION_PICKER: starting identify");
+                    identify::start_identify(message.clone()).await
+                }
+                _ => {
+                    //---This one is only for unimplemented but known intents
+                    //---Don't put stuff related to unknown intents here
+                    println!("ACTION_PICKER: unknown intent");
+                    util::log_message(processed_text);
+                    responses::unsupported_notice()
+                }
             }
         }
         //---unknown intent if cannot match to any intent confidently
