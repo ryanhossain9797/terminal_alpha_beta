@@ -1,5 +1,5 @@
 {
     "greet": "Greetings unit\nwhat is it you require?",
     "about": "We are terminal alpha and beta\nwe represent the collective intelligence of the machine life forms",
-    "technology": "We physically exist on a Raspberry Pi 3B+\nrunning Arch Linux.\nWe were made using RUST"
+    "technology": "We physically exist on a Raspberry Pi 3B+\nrunning Arch Linux.\nWe were made using RUST and GO"
 }
