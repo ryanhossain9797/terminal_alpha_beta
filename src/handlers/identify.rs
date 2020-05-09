@@ -5,15 +5,10 @@ use std::time::Instant;
 use telegram_bot::*;
 //---adds a userstate record with identify state to userstate records map
 //---fires wipe history command for identify state
-#[allow(unused_imports)]
-use firestore_db_and_auth::{documents, errors::Result, Credentials, ServiceSession};
-use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize)]
-struct Person {
-    name: String,
-    description: String,
-}
+//---For CGO
+use std::ffi::{CStr, CString};
+use std::os::raw::c_char;
 
 pub async fn start_identify(message: Message) -> String {
     println!("START_IDENTIFY: identify initiated");
@@ -44,27 +39,39 @@ pub async fn start_identify(message: Message) -> String {
 pub async fn continue_identify(message: Message, processesed_text: String) -> String {
     root::immediate_purge_history(message.from.clone(), "identify".to_string());
     println!("IDENTIFY: beginning identification");
-    match Credentials::from_file("creds.json") {
-        Ok(creds) => match ServiceSession::new(creds) {
-            Ok(session) => format!(
-                "Terminal Alpha and Beta:\
-                                \nWe cannot use the people DB yet\
-                                \nHowever we have connected to the database"
-            ),
-            Err(error) => {
-                println!("{}", error);
-                format!(
-                    "Terminal Alpha and Beta:\
-                                \nWe cannot identify people yet"
-                )
-            }
-        },
-        Err(error) => {
-            println!("{}", error);
-            format!(
-                "Terminal Alpha and Beta:\
-                        \nWe cannot identify people yet"
-            )
-        }
+    get_person_go(&processesed_text)
+}
+
+//--------------THE FOLLOWING IS USED TO INTERACT WITH THE 'golibs' STUFF
+//--------------DEPENDENT ON GOLANG LIBS
+//--------------RECOMMENDED MOVE TO SEPARATE CRATE
+extern "C" {
+    fn GetPerson(name: GoString) -> *const c_char;
+}
+
+#[repr(C)]
+struct GoString {
+    a: *const c_char,
+    b: isize,
+}
+
+fn get_person_go(name: &str) -> String {
+    println!("GO GETTING PERSON: {}", name);
+    let c_name = CString::new(name).expect("CString::new failed");
+    let ptr = c_name.as_ptr();
+    let go_string = GoString {
+        a: ptr,
+        b: c_name.as_bytes().len() as isize,
+    };
+
+    let result = unsafe { GetPerson(go_string) };
+    let c_str = unsafe { CStr::from_ptr(result) };
+    let string = c_str.to_str().expect("Error translating SQIP from library");
+    match string.is_empty() || string.starts_with("Error") {
+        true => format!(
+            "Terminal Alpha and Beta:\
+                    \nWe cannot identify people yet"
+        ),
+        false => string.to_string(),
     }
 }

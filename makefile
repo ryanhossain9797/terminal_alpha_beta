@@ -23,3 +23,5 @@ train:
 	snips-nlu train actiondata.json actionengine
 	rm -rf ./chatengine
 	snips-nlu train chatdata.json chatengine
+go-lib:
+	env GOOS=linux GOARCH=arm CGO_ENABLED=1 CC=arm-linux-gnueabihf-gcc go build -buildmode=c-archive -o libpeople.a main.go
