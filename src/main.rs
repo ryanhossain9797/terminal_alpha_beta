@@ -9,29 +9,34 @@ use futures::StreamExt;
 use handlers::root::handler;
 use handlers::root::API;
 use regex::Regex;
+use std::time::Duration;
 use telegram_bot::*;
 
 #[tokio::main]
-async fn main() -> Result<(), Error> {
-    openssl_probe::init_ssl_cert_env_vars();
+async fn main() {
     dotenv().ok();
 
     println!("Starting up Terminal Alpha Beta");
-    // Fetch new updates via long poll method
-    let mut stream = API.stream();
-    while let Some(update) = stream.next().await {
-        // If the received update contains a new message...
-        let update = update?;
-        if let UpdateKind::Message(message) = update.kind {
-            if let MessageKind::Text { ref data, .. } = message.kind {
-                // Print received text message to stdout.
-                println!("<{}>: {}", &message.from.first_name, data);
-                // Spawn a handler for the message.
-                tokio::spawn(async move { filter(&message).await });
+
+    loop {
+        println!("(re)starting bot");
+        let mut stream = API.stream();
+        // Fetch new updates via long poll method
+        while let Some(update) = stream.next().await {
+            // If the received update contains a new message...
+            if let Ok(msg) = update {
+                if let UpdateKind::Message(message) = msg.kind {
+                    if let MessageKind::Text { ref data, .. } = message.kind {
+                        // Print received text message to stdout.
+                        println!("<{}>: {}", &message.from.first_name, data);
+                        // Spawn a handler for the message.
+                        tokio::spawn(async move { filter(&message).await });
+                    }
+                }
             }
         }
+        tokio::time::delay_for(Duration::from_secs(5)).await;
     }
-    Ok(())
 }
 
 //---Filter basically does some spring cleaning

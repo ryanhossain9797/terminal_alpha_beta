@@ -1,5 +1,16 @@
 {
-  "entities": {},
+  "entities": {
+    "title": {
+      "automatically_extensible": true,
+      "use_synonyms": true,
+      "data": []
+    },
+    "pass": {
+      "automatically_extensible": true,
+      "use_synonyms": true,
+      "data": []
+    }
+  },
   "intents": {
     "chat": {
       "utterances": [
@@ -214,7 +225,20 @@
         {
           "data": [
             {
-              "text": "get info"
+              "text": "get info for "
+            },
+            {
+              "entity": "title",
+              "slot_name": "title",
+              "text": "upskill"
+            },
+            {
+              "text": " with password "
+            },
+            {
+              "entity": "pass",
+              "slot_name": "pass",
+              "text": "ksjdkawjdkw"
             }
           ]
         }

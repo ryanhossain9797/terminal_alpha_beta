@@ -148,7 +148,7 @@ pub async fn natural_understanding(message: Message, processed_text: String) -> 
             slots_alternatives,
         )
         .unwrap();
-    let response = if let Some(intent) = result.intent.intent_name {
+    let response = if let Some(intent) = result.intent.intent_name.clone() {
         println!(
             "{} with confidence {}",
             intent, result.intent.confidence_score
@@ -171,6 +171,8 @@ pub async fn natural_understanding(message: Message, processed_text: String) -> 
                 }
                 "info" => {
                     println!("ACTION_PICKER: starting info");
+                    let json_result = format!("{}", serde_json::to_string_pretty(&result).unwrap());
+                    println!("JSON DATA IS {}", json_result);
                     info::get_info_go(String::from("upskill"), String::from("mintusir"))
                 }
                 _ => {

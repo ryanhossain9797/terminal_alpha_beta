@@ -12,8 +12,19 @@
       "intent_group": [
         "chat",
         "identify",
-        "info",
         "search"
+      ]
+    },
+    {
+      "entity_scope": {
+        "builtin": [],
+        "custom": [
+          "title",
+          "pass"
+        ]
+      },
+      "intent_group": [
+        "info"
       ]
     }
   ],
@@ -40,6 +51,13 @@
     "-1408083707": [
       1,
       []
+    ],
+    "-1404306316": [
+      2,
+      [
+        0,
+        1
+      ]
     ],
     "-1350850167": [
       0,
@@ -75,10 +93,6 @@
     ],
     "-265246438": [
       3,
-      []
-    ],
-    "-164295691": [
-      2,
       []
     ],
     "-93208649": [
@@ -138,6 +152,9 @@
       []
     ]
   },
-  "slots_names": [],
+  "slots_names": [
+    "title",
+    "pass"
+  ],
   "stop_words_whitelist": {}
 }

@@ -3,6 +3,8 @@ use crate::handlers::*;
 use std::ffi::{CStr, CString};
 use std::os::raw::c_char;
 
+use serde_json::Value;
+
 //--------------THE FOLLOWING IS USED TO INTERACT WITH THE 'golibs' STUFF
 //--------------DEPENDENT ON GOLANG LIBS
 //--------------RECOMMENDED MOVE TO SEPARATE CRATE
@@ -36,8 +38,17 @@ pub fn get_info_go(title: String, pass: String) -> String {
     let string = c_str
         .to_str()
         .expect("Error translating info data from library");
-    match string.is_empty() || string.starts_with("Error") {
-        true => responses::unsupported_notice(),
-        false => string.to_string(),
+
+    if let Some(json) = serde_json::from_str(&string.to_string()).ok() {
+        match json {
+            Value::Object(map) => match &map["info"] {
+                Value::String(response) => response.to_string(),
+                _ => responses::unsupported_notice(),
+            },
+            // Value::String(response) =>
+            _ => responses::unsupported_notice(),
+        }
+    } else {
+        responses::unsupported_notice()
     }
 }

@@ -196,12 +196,22 @@
   },
   "custom_entity_parser": "custom_entity_parser",
   "dataset_metadata": {
-    "entities": {},
+    "entities": {
+      "pass": {
+        "automatically_extensible": true
+      },
+      "title": {
+        "automatically_extensible": true
+      }
+    },
     "language_code": "en",
     "slot_name_mappings": {
       "chat": {},
       "identify": {},
-      "info": {},
+      "info": {
+        "pass": "pass",
+        "title": "title"
+      },
       "search": {}
     }
   },
