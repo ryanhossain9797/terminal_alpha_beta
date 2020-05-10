@@ -75,7 +75,7 @@ pub async fn handler(
         //---"cancel last will shut off the conversation"
         if processesed_text == "cancel last" {
             drop(map);
-            cancel_history(message.clone()).await
+            Some(cancel_history(message.clone()).await)
         }
         //---"if state is chat"
         //------Chat will not be a state any more.
@@ -91,19 +91,19 @@ pub async fn handler(
         else if record.state == "search".to_string() {
             drop(map);
             println!("continuing search");
-            search::continue_search(message.clone(), processesed_text.clone()).await
+            Some(search::continue_search(message.clone(), processesed_text.clone()).await)
         }
         //---"if state is identify"
         else if record.state == "identify".to_string() {
             drop(map);
             println!("continuing identify");
-            identify::continue_identify(message.clone(), processesed_text.clone()).await
+            Some(identify::continue_identify(message.clone(), processesed_text.clone()).await)
         }
         //---"if state is unknown"
         else {
             println!("some unknown state {}", record.state);
             drop(map);
-            responses::unknown_state_notice()
+            Some(responses::unknown_state_notice())
         }
     }
     //---if record from user doesn't exist, but is either IN A PRIVATE CHAT or MENTIONED IN A GROUP CHAT
@@ -112,19 +112,23 @@ pub async fn handler(
         drop(map);
         //---cancel last does nothing as there's nothing to cancel
         if processesed_text == "cancel last" {
-            "nothing to cancel".to_string()
+            Some("nothing to cancel".to_string())
         }
         //---hand over to the natural understanding system for advanced matching
         else {
-            natural_understanding(message.clone(), processesed_text).await
+            Some(natural_understanding(message.clone(), processesed_text).await)
         }
     } else {
-        "".to_string()
+        None
     };
-    let assisgnment_result = API.send(message.chat.text(handler_assignment)).await;
-    match assisgnment_result {
-        Err(e) => println!("{:?}", e),
-        _ => (),
+    if let Some(msg_text) = handler_assignment {
+        API.spawn(message.chat.text(msg_text));
+
+        //---This one checks for a result to message sending. Not really needed but left for debugging
+        // match API.send(message.chat.text(msg_text)).await {
+        //     Err(e) => println!("{:?}", e),
+        //     _ => (),
+        // }
     }
     Ok(())
 }
