@@ -66,7 +66,9 @@ fn get_person_go(name: &str) -> String {
 
     let result = unsafe { GetPerson(go_string) };
     let c_str = unsafe { CStr::from_ptr(result) };
-    let string = c_str.to_str().expect("Error translating SQIP from library");
+    let string = c_str
+        .to_str()
+        .expect("Error translating person data from library");
     match string.is_empty() || string.starts_with("Error") {
         true => format!(
             "Terminal Alpha and Beta:\

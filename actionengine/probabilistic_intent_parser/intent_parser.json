@@ -194,8 +194,12 @@
       "slot_filler_name": "slot_filler_1"
     },
     {
-      "intent": "search",
+      "intent": "info",
       "slot_filler_name": "slot_filler_2"
+    },
+    {
+      "intent": "search",
+      "slot_filler_name": "slot_filler_3"
     }
   ]
 }

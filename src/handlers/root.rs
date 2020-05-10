@@ -1,5 +1,6 @@
 use crate::handlers::chat;
 use crate::handlers::identify;
+use crate::handlers::info;
 use crate::handlers::responses;
 use crate::handlers::search;
 use crate::handlers::util;
@@ -167,6 +168,10 @@ pub async fn natural_understanding(message: Message, processed_text: String) -> 
                 "identify" => {
                     println!("ACTION_PICKER: starting identify");
                     identify::start_identify(message.clone()).await
+                }
+                "info" => {
+                    println!("ACTION_PICKER: starting info");
+                    info::get_info_go(String::from("upskill"), String::from("mintusir"))
                 }
                 _ => {
                     //---This one is only for unimplemented but known intents

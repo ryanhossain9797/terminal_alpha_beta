@@ -201,6 +201,7 @@
     "slot_name_mappings": {
       "chat": {},
       "identify": {},
+      "info": {},
       "search": {}
     }
   },

@@ -208,6 +208,17 @@
           ]
         }
       ]
+    },
+    "info": {
+      "utterances": [
+        {
+          "data": [
+            {
+              "text": "get info"
+            }
+          ]
+        }
+      ]
     }
   },
   "language": "en"

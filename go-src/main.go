@@ -40,4 +40,18 @@ func GetPerson(name string) *C.char {
 	}
 }
 
-func main() {}
+//export GetInfo
+func GetInfo(title string, pass string) *C.char {
+	fmt.Println("GETINFO: Getting info for " + title)
+
+	data := database.FindInfoFromDB(title, pass)
+
+	fmt.Println("GETINFO: got data " + data)
+
+	return C.CString(data)
+
+}
+
+func main() {
+
+}

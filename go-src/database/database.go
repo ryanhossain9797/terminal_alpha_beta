@@ -10,6 +10,7 @@ import (
 	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
 )
+import "encoding/json"
 
 func init() {
 	fmt.Println("initialized storage")
@@ -21,6 +22,7 @@ var (
 	People   = make(map[string]Person)
 	ctx      context.Context
 	PeopleDB *firestore.CollectionRef
+	InfoDB   *firestore.CollectionRef
 )
 
 type Person struct {
@@ -36,6 +38,7 @@ func loadDB() {
 		fmt.Println("error end")
 	}
 	PeopleDB = client.Collection("people")
+	InfoDB = client.Collection("info")
 }
 
 func GetPeopleFromDB() []Person {
@@ -71,4 +74,31 @@ func FindPersonFromDB(name string) (Person, error) {
 	}
 	personSnapshot.DataTo(&person)
 	return person, nil
+}
+
+type Info struct {
+	Title string `firestore:"title" json:"title,omitempty"`
+	Info  string `firestore:"info"  json:"info,omitempty"`
+}
+
+func FindInfoFromDB(title string, pass string) string {
+	fmt.Println("INFO_FROM_DB: title " + title + " pass " + pass)
+	result := InfoDB.Where("title", "==", title).Where("pass", "==", pass).Documents(ctx)
+
+	var info Info
+	personSnapshot, err := result.Next()
+	if err == iterator.Done {
+
+		return "{}"
+	} else if err != nil {
+		fmt.Println(err)
+		return "{}"
+	}
+	personSnapshot.DataTo(&info)
+	jsonData, err := json.Marshal(info)
+	if err != nil {
+		fmt.Println(err)
+		return "{}"
+	}
+	return string(jsonData)
 }

@@ -2,6 +2,7 @@
 //----------------------'handlers/mod.rs' means handlers module
 pub mod chat;
 pub mod identify;
+pub mod info;
 pub mod responses;
 pub mod root;
 pub mod search;
