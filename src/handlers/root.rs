@@ -34,8 +34,8 @@ lazy_static! {
         api
     };
     //---Record is a map holding all users state record info
-    pub static ref RECORDS: tokio::sync::Mutex<HashMap<UserId, UserStateRecord>> =
-        { tokio::sync::Mutex::new(HashMap::new()) };
+    pub static ref RECORDS: tokio::sync::Mutex<HashMap<UserId, UserStateRecord>> = 
+        tokio::sync::Mutex::new(HashMap::new()) ;
     //---Snips NLU is used to pick actions when they don't match directly
     pub static ref ENGINE: SnipsNluEngine = {
         println!("\nLoading the nlu engine...");

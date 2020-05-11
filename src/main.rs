@@ -11,10 +11,9 @@ use handlers::root::API;
 use regex::Regex;
 use std::time::Duration;
 use telegram_bot::*;
-
+const WAITTIME: u64 = 10;
 #[tokio::main]
 async fn main() {
-    let wait: u64 = 10;
     dotenv().ok();
 
     println!("Starting up Terminal Alpha Beta");
@@ -35,8 +34,8 @@ async fn main() {
                 }
             }
             Err(error) => {
-                println!("ALPHA BETA MAIN: Hit problems fetching updates, stopping for {} seconds. error is {}", wait, error);
-                tokio::time::delay_for(Duration::from_secs(wait)).await;
+                println!("ALPHA BETA MAIN: Hit problems fetching updates, stopping for {} seconds. error is {}", WAITTIME, error);
+                tokio::time::delay_for(Duration::from_secs(WAITTIME)).await;
                 println!("ALPHA BETA MAIN: Resuming")
             }
         }
