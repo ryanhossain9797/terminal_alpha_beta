@@ -93,11 +93,39 @@
               "text": "heyo"
             }
           ]
+        },
+        {
+          "data": [
+            {
+              "text": "yo"
+            }
+          ]
+        },
+        {
+          "data": [
+            {
+              "text": "whazzup bro"
+            }
+          ]
+        },
+        {
+          "data": [
+            {
+              "text": "hola"
+            }
+          ]
         }
       ]
     },
     "about": {
       "utterances": [
+        {
+          "data": [
+            {
+              "text": "what's your job"
+            }
+          ]
+        },
         {
           "data": [
             {
