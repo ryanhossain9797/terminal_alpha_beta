@@ -38,11 +38,12 @@ pub fn get_info_go(title: String, pass: String) -> String {
     let string = c_str
         .to_str()
         .expect("Error translating info data from library");
-
+    println!("GET_INFO: got stuff from golang libs");
     if let Some(json) = serde_json::from_str(&string.to_string()).ok() {
+        println!("GET_INFO: json is {} ", json);
         match json {
-            Value::Object(map) => match &map["info"] {
-                Value::String(response) => response.to_string(),
+            Value::Object(map) => match &map.get("info") {
+                Some(Value::String(response)) => response.to_string().replace("\\n", "\n"),
                 _ => responses::unsupported_notice(),
             },
             // Value::String(response) =>

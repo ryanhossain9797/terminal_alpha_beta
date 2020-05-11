@@ -1,0 +1,46 @@
+{
+    "alternatives": [
+        {
+            "intent": {
+                "confidenceScore": 0.1752486,
+                "intentName": null
+            },
+            "slots": []
+        }
+    ],
+    "input": "get info for potato with password welp",
+    "intent": {
+        "confidenceScore": 0.70341223,
+        "intentName": "info"
+    },
+    "slots": [
+        {
+            "alternatives": [],
+            "entity": "title",
+            "range": {
+                "end": 19,
+                "start": 13
+            },
+            "rawValue": "potato",
+            "slotName": "title",
+            "value": {
+                "kind": "Custom",
+                "value": "potato"
+            }
+        },
+        {
+            "alternatives": [],
+            "entity": "pass",
+            "range": {
+                "end": 38,
+                "start": 34
+            },
+            "rawValue": "welp",
+            "slotName": "pass",
+            "value": {
+                "kind": "Custom",
+                "value": "welp"
+            }
+        }
+    ]
+}

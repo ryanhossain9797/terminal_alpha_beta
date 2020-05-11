@@ -7,7 +7,7 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-futures = "0.3.4"
+futures = "0.3.5"
 tokio = {version = "0.2.20", features = ["full"]}
 telegram-bot = "0.7"
 dotenv = "0.15.0"
@@ -15,11 +15,10 @@ lazy_static = "1.4.0"
 base64 = "0.12.1"
 regex = "1"
 reqwest = "0.10.4"
-scraper = "0.11.0"
+scraper = "0.12.0"
 select = "0.4.3"
 openssl = { version = "0.10", features = ["vendored"] }
 openssl-probe = "0.1.2"
-serde = "1.0.106"
+serde = "1.0.110"
 serde_json = "1.0"
-firestore-db-and-auth = "0.6.0"
 snips-nlu-lib = { git = "https://github.com/snipsco/snips-nlu-rs", branch = "master" }

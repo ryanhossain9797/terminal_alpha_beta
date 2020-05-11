@@ -14,18 +14,18 @@ use telegram_bot::*;
 
 #[tokio::main]
 async fn main() {
+    let wait: u64 = 10;
     dotenv().ok();
 
     println!("Starting up Terminal Alpha Beta");
 
-    loop {
-        println!("(re)starting bot");
-        let mut stream = API.stream();
-        // Fetch new updates via long poll method
-        while let Some(update) = stream.next().await {
+    let mut stream = API.stream();
+    // Fetch new updates via long poll method
+    while let Some(update_result) = stream.next().await {
+        match update_result {
             // If the received update contains a new message...
-            if let Ok(msg) = update {
-                if let UpdateKind::Message(message) = msg.kind {
+            Ok(update) => {
+                if let UpdateKind::Message(message) = update.kind {
                     if let MessageKind::Text { ref data, .. } = message.kind {
                         // Print received text message to stdout.
                         println!("<{}>: {}", &message.from.first_name, data);
@@ -34,8 +34,12 @@ async fn main() {
                     }
                 }
             }
+            Err(error) => {
+                println!("ALPHA BETA MAIN: Hit problems fetching updates, stopping for {} seconds. error is {}", wait, error);
+                tokio::time::delay_for(Duration::from_secs(wait)).await;
+                println!("ALPHA BETA MAIN: Resuming")
+            }
         }
-        tokio::time::delay_for(Duration::from_secs(5)).await;
     }
 }
 

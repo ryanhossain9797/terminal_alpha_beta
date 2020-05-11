@@ -172,8 +172,13 @@ pub async fn natural_understanding(message: Message, processed_text: String) -> 
                 "info" => {
                     println!("ACTION_PICKER: starting info");
                     let json_result = format!("{}", serde_json::to_string_pretty(&result).unwrap());
-                    println!("JSON DATA IS {}", json_result);
-                    info::get_info_go(String::from("upskill"), String::from("mintusir"))
+                    // println!("JSON DATA IS {}", json_result);
+                    let title_pass = util::title_pass_retriever(json_result);
+                    println!(
+                        "ACTION_PICKER: info title pass is {}, {}",
+                        title_pass.0, title_pass.1
+                    );
+                    info::get_info_go(title_pass.0, title_pass.1)
                 }
                 _ => {
                     //---This one is only for unimplemented but known intents
