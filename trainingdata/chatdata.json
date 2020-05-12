@@ -1,122 +1,6 @@
 {
   "entities": {},
   "intents": {
-    "greet": {
-      "utterances": [
-        {
-          "data": [
-            {
-              "text": "hellow"
-            }
-          ]
-        },
-        {
-          "data": [
-            {
-              "text": "hi there"
-            }
-          ]
-        },
-        {
-          "data": [
-            {
-              "text": "hey"
-            }
-          ]
-        },
-        {
-          "data": [
-            {
-              "text": "greetings"
-            }
-          ]
-        },
-        {
-          "data": [
-            {
-              "text": "what's up"
-            }
-          ]
-        },
-        {
-          "data": [
-            {
-              "text": "how are you"
-            }
-          ]
-        },
-        {
-          "data": [
-            {
-              "text": "helloz"
-            }
-          ]
-        },
-        {
-          "data": [
-            {
-              "text": "hellowz"
-            }
-          ]
-        },
-        {
-          "data": [
-            {
-              "text": "heya bot"
-            }
-          ]
-        },
-        {
-          "data": [
-            {
-              "text": "hellow bot"
-            }
-          ]
-        },
-        {
-          "data": [
-            {
-              "text": "how are you"
-            }
-          ]
-        },
-        {
-          "data": [
-            {
-              "text": "how's it going"
-            }
-          ]
-        },
-        {
-          "data": [
-            {
-              "text": "heyo"
-            }
-          ]
-        },
-        {
-          "data": [
-            {
-              "text": "yo"
-            }
-          ]
-        },
-        {
-          "data": [
-            {
-              "text": "whazzup bro"
-            }
-          ]
-        },
-        {
-          "data": [
-            {
-              "text": "hola"
-            }
-          ]
-        }
-      ]
-    },
     "about": {
       "utterances": [
         {
@@ -179,6 +63,115 @@
           "data": [
             {
               "text": "who made you"
+            }
+          ]
+        }
+      ]
+    },
+    "greet": {
+      "utterances": [
+        {
+          "data": [
+            {
+              "text": "hellow"
+            }
+          ]
+        },
+        {
+          "data": [
+            {
+              "text": "hi there"
+            }
+          ]
+        },
+        {
+          "data": [
+            {
+              "text": "hey"
+            }
+          ]
+        },
+        {
+          "data": [
+            {
+              "text": "greetings"
+            }
+          ]
+        },
+        {
+          "data": [
+            {
+              "text": "what's up"
+            }
+          ]
+        },
+        {
+          "data": [
+            {
+              "text": "how are you"
+            }
+          ]
+        },
+        {
+          "data": [
+            {
+              "text": "helloz"
+            }
+          ]
+        },
+        {
+          "data": [
+            {
+              "text": "hellowz"
+            }
+          ]
+        },
+        {
+          "data": [
+            {
+              "text": "hola"
+            }
+          ]
+        },
+        {
+          "data": [
+            {
+              "text": "heyo"
+            }
+          ]
+        },
+        {
+          "data": [
+            {
+              "text": "yo"
+            }
+          ]
+        },
+        {
+          "data": [
+            {
+              "text": "heya bot"
+            }
+          ]
+        },
+        {
+          "data": [
+            {
+              "text": "hellow bot"
+            }
+          ]
+        },
+        {
+          "data": [
+            {
+              "text": "how's it going"
+            }
+          ]
+        },
+        {
+          "data": [
+            {
+              "text": "whazzup"
             }
           ]
         }
@@ -253,6 +246,13 @@
           "data": [
             {
               "text": "what system do you run on"
+            }
+          ]
+        },
+        {
+          "data": [
+            {
+              "text": "what configuration are you running on"
             }
           ]
         }

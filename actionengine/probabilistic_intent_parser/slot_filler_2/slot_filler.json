@@ -117,8 +117,8 @@
       {
         "args": {
           "entities": [
-            "pass",
-            "title"
+            "title",
+            "pass"
           ],
           "entity_filter": {
             "automatically_extensible": true

@@ -22,6 +22,8 @@ train:
 	rm -rf ./actionengine
 	snips-nlu train trainingdata/actiondata.json actionengine
 	rm -rf ./chatengine
+	rm -f trainingdata/chatdata.json
+	snips-nlu generate-dataset en trainingdata/chatdata.yaml > trainingdata/chatdata.json
 	snips-nlu train trainingdata/chatdata.json chatengine
 go-lib:
 	env GOOS=linux GOARCH=arm CGO_ENABLED=1 CC=arm-linux-gnueabihf-gcc go build -buildmode=c-archive -o libpeople.a main.go

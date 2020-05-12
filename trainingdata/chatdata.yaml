@@ -1,0 +1,52 @@
+# greet intent
+---
+type: intent
+name: greet
+utterances:
+  - hellow
+  - hi there
+  - hey
+  - greetings
+  - what's up
+  - how are you
+  - helloz
+  - hellowz
+  - hola
+  - heyo
+  - yo
+  - heya bot
+  - hellow bot
+  - how's it going
+  - whazzup
+
+# about intent
+---
+type: intent
+name: about
+utterances:
+  - what's your job
+  - why do you exist
+  - who are you
+  - what are you
+  - what are you for
+  - what is your purpose
+  - where did you come from
+  - why do you exist
+  - who made you
+
+## technology intent
+---
+type: intent
+name: technology
+utterances:
+  - what os do you use
+  - how do you function
+  - where are you stored
+  - what do you run on
+  - what code are you written in
+  - where is your server
+  - what are you made of
+  - where are you stored
+  - what system are you running on
+  - what system do you run on
+  - what configuration are you running on
