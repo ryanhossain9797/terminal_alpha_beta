@@ -22,7 +22,7 @@ lazy_static! {
 //---FIX LEVEL: Returns Strings (y)
 //---adds a userstate record with chat state to userstate records map
 //---fires wipe history command for chat state
-pub async fn start_chat(message: Message) -> String {
+pub async fn start_chat(message: Message) -> root::Msg {
     println!("START_CHAT: chat initiated");
     //------Chat will not be a state any more.
     //------Rather any unknown message will be handled by chat in default
@@ -42,20 +42,20 @@ pub async fn start_chat(message: Message) -> String {
     */
     println!("START_CHAT: responding to chat intent");
 
-    format!(
+    root::Msg::Text(format!(
         "Greetings unit {}.\
         \nYou are free to ask any questions.\
         \nWhether we answer or not depends on us.\
         \nNote that in public groups you must mention us by our handle.",
         &message.from.first_name
-    )
+    ))
 }
 
 //---FIX LEVEL: Works with strings
 //---updated to implement RETURN STRINGS
 //---updates userstate record map with chat messages list and new time
 //---fires wipe history command for chat state
-pub async fn continue_chat(/*message: Message,*/ processed_text: String) -> String {
+pub async fn continue_chat(/*message: Message,*/ processed_text: String) -> root::Msg {
     //------Chat will not be a state any more.
     //------Rather any unknown message will be handled by chat in default
     /*

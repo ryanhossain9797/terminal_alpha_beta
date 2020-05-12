@@ -200,6 +200,9 @@
       "pass": {
         "automatically_extensible": true
       },
+      "passwordWord": {
+        "automatically_extensible": true
+      },
       "title": {
         "automatically_extensible": true
       }

@@ -5,8 +5,12 @@
       "entity_parser": "parser_1"
     },
     {
-      "entity_identifier": "title",
+      "entity_identifier": "passwordWord",
       "entity_parser": "parser_2"
+    },
+    {
+      "entity_identifier": "title",
+      "entity_parser": "parser_3"
     }
   ]
 }

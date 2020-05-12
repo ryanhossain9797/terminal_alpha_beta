@@ -34,7 +34,7 @@ lazy_static! {
         api
     };
     //---Record is a map holding all users state record info
-    pub static ref RECORDS: tokio::sync::Mutex<HashMap<UserId, UserStateRecord>> = 
+    pub static ref RECORDS: tokio::sync::Mutex<HashMap<UserId, UserStateRecord>> =
         tokio::sync::Mutex::new(HashMap::new()) ;
     //---Snips NLU is used to pick actions when they don't match directly
     pub static ref ENGINE: SnipsNluEngine = {
@@ -48,6 +48,12 @@ lazy_static! {
             Err(_) => None,
         }
     };
+}
+
+pub enum Msg {
+    Text(String),
+    TextList(Vec<String>),
+    NoMsg,
 }
 
 //---A user state record holds an individual user's state
@@ -72,11 +78,11 @@ pub async fn handler(
     let entry_option = map.get(&message.from.id);
     //---If record from user exists (A Some(record)), some conversation is ongoing
     //---So will be replied regardless of groups or mentions and stuff ('will_respond' is ignored)
-    let handler_assignment = if let Some(record) = entry_option {
+    let received_message = if let Some(record) = entry_option {
         //---"cancel last will shut off the conversation"
         if processesed_text == "cancel last" {
             drop(map);
-            Some(cancel_history(message.clone()).await)
+            cancel_history(message.clone()).await
         }
         //---"if state is chat"
         //------Chat will not be a state any more.
@@ -92,19 +98,19 @@ pub async fn handler(
         else if record.state == "search".to_string() {
             drop(map);
             println!("continuing search");
-            Some(search::continue_search(message.clone(), processesed_text.clone()).await)
+            search::continue_search(message.clone(), processesed_text.clone()).await
         }
         //---"if state is identify"
         else if record.state == "identify".to_string() {
             drop(map);
             println!("continuing identify");
-            Some(identify::continue_identify(message.clone(), processesed_text.clone()).await)
+            identify::continue_identify(message.clone(), processesed_text.clone()).await
         }
         //---"if state is unknown"
         else {
             println!("some unknown state {}", record.state);
             drop(map);
-            Some(responses::unknown_state_notice())
+            responses::unknown_state_notice()
         }
     }
     //---if record from user doesn't exist, but is either IN A PRIVATE CHAT or MENTIONED IN A GROUP CHAT
@@ -113,29 +119,38 @@ pub async fn handler(
         drop(map);
         //---cancel last does nothing as there's nothing to cancel
         if processesed_text == "cancel last" {
-            Some("nothing to cancel".to_string())
+            Msg::Text("nothing to cancel".to_string())
         }
         //---hand over to the natural understanding system for advanced matching
         else {
-            Some(natural_understanding(message.clone(), processesed_text).await)
+            natural_understanding(message.clone(), processesed_text).await
         }
     } else {
-        None
+        Msg::NoMsg
     };
-    if let Some(msg_text) = handler_assignment {
-        API.spawn(message.chat.text(msg_text));
-
-        //---This one checks for a result to message sending. Not really needed but left for debugging
-        // match API.send(message.chat.text(msg_text)).await {
-        //     Err(e) => println!("{:?}", e),
-        //     _ => (),
-        // }
+    match received_message {
+        Msg::Text(text) => {
+            API.spawn(message.chat.text(text));
+        }
+        Msg::TextList(text_list) => {
+            for text in text_list {
+                API.spawn(message.chat.text(text));
+            }
+        }
+        _ => {}
     }
+
+    //---This one checks for a result to message sending. Not really needed but left for debugging
+    // match API.send(message.chat.text(msg_text)).await {
+    //     Err(e) => println!("{:?}", e),
+    //     _ => (),
+    // }
+
     Ok(())
 }
 
 //---FIX LEVEL: Works with strings
-pub async fn natural_understanding(message: Message, processed_text: String) -> String {
+pub async fn natural_understanding(message: Message, processed_text: String) -> Msg {
     let intents_alternatives = 1;
     let slots_alternatives = 1;
 
@@ -204,11 +219,11 @@ pub async fn natural_understanding(message: Message, processed_text: String) -> 
 //---removes current history with a cancellation message
 //---doesn't care about state
 //---used with the cancel last command
-pub async fn cancel_history(message: Message) -> String {
+pub async fn cancel_history(message: Message) -> Msg {
     let mut map = RECORDS.lock().await;
     map.remove(&message.from.id);
     drop(map);
-    format!("understood. we will not prolong this conversation")
+    Msg::Text(format!("understood. we will not prolong this conversation"))
 }
 
 //---removes history after 30 seconds if it's not updated with a new time

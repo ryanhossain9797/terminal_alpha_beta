@@ -12,7 +12,7 @@ use std::str;
 
 //---adds a userstate record with search state to userstate records map
 //---fires wipe history command for search state
-pub async fn start_search(message: Message) -> String {
+pub async fn start_search(message: Message) -> root::Msg {
     println!("START_SEARCH: search initiated");
 
     let mut map = root::RECORDS.lock().await;
@@ -28,16 +28,16 @@ pub async fn start_search(message: Message) -> String {
     println!("START_SEARCH: record added");
     root::wipe_history(message.clone(), "search".to_string());
 
-    format!(
+    root::Msg::Text(format!(
         "Terminal Alpha and Beta:\nGreetings unit {}\
         \nwhat do you want to search for?",
         &message.from.first_name
-    )
+    ))
 }
 
 //---finishes search
 //---fires immediate purge history command for search state
-pub async fn continue_search(message: Message, processesed_text: String) -> String {
+pub async fn continue_search(message: Message, processesed_text: String) -> root::Msg {
     let mut search_results = "".to_string();
     if let Ok(results) = search_google(&processesed_text, 5).await {
         println!("{}", results.iter().len());
@@ -50,11 +50,11 @@ pub async fn continue_search(message: Message, processesed_text: String) -> Stri
 
     root::immediate_purge_history(message.from.clone(), "search".to_string());
 
-    format!(
+    root::Msg::Text(format!(
         "Terminal Alpha and Beta:\
         \nhere's your search results \n{}",
         search_results
-    )
+    ))
 }
 
 //--------------WEB scraper to search through google

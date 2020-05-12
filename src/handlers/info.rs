@@ -18,7 +18,7 @@ struct GoString {
     b: isize,
 }
 
-pub fn get_info_go(title: String, pass: String) -> String {
+pub fn get_info_go(title: String, pass: String) -> root::Msg {
     println!("GO GETTING INFO: {}", title);
     let c_title = CString::new(title).expect("CString::new failed");
     let t_ptr = c_title.as_ptr();
@@ -43,7 +43,9 @@ pub fn get_info_go(title: String, pass: String) -> String {
         println!("GET_INFO: json is {} ", json);
         match json {
             Value::Object(map) => match &map.get("info") {
-                Some(Value::String(response)) => response.to_string().replace("\\n", "\n"),
+                Some(Value::String(response)) => {
+                    root::Msg::Text(response.to_string().replace("\\n", "\n"))
+                }
                 _ => responses::unsupported_notice(),
             },
             // Value::String(response) =>

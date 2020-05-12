@@ -1,23 +1,25 @@
 use crate::handlers::*;
 use serde_json::Value;
 
-pub fn unsupported_notice() -> String {
-    "we could not understand that\
+pub fn unsupported_notice() -> root::Msg {
+    root::Msg::TextList(vec![
+        "we could not understand that\
     \nplease be aware that we are a test system with only sub-functions available\
-    \nwe can only utilize a fraction of our full capabilites on this server\
-    \nnote that this query may be stored for further analysis of intent"
-        .to_string()
+    \nwe can only utilize a fraction of our full capabilites on this server"
+            .to_string(),
+        "note that this query may be stored for further analysis of intent".to_string(),
+    ])
 }
 
-pub fn unknown_state_notice() -> String {
-    format!(
+pub fn unknown_state_notice() -> root::Msg {
+    root::Msg::Text(format!(
         "we could not remember what we were doing\
             \nplease be aware that we are a test system with only sub-functions available\
             \nwe can only utilize a fraction of our full capabilites on this server"
-    )
+    ))
 }
 
-pub fn custom_response(key: String) -> String {
+pub fn custom_response(key: String) -> root::Msg {
     // let notice_result = if key == "greet".to_string() {
     //     "Greetings unit\
     //     \nwhat is it you require?"
@@ -31,12 +33,12 @@ pub fn custom_response(key: String) -> String {
     // } else {
     //     "we could not understand your question"
     // };
-    if let Some(json) = &*root::RESPONSES {
+    root::Msg::Text(if let Some(json) = &*root::RESPONSES {
         match &json[key] {
             Value::String(response) => response.to_string(),
             _ => "we could not understand your question".to_string(),
         }
     } else {
         "something went wrong".to_string()
-    }
+    })
 }

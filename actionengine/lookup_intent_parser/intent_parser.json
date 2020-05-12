@@ -19,8 +19,8 @@
       "entity_scope": {
         "builtin": [],
         "custom": [
-          "title",
-          "pass"
+          "pass",
+          "title"
         ]
       },
       "intent_group": [

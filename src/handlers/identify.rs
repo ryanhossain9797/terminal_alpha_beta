@@ -10,7 +10,7 @@ use telegram_bot::*;
 use std::ffi::{CStr, CString};
 use std::os::raw::c_char;
 
-pub async fn start_identify(message: Message) -> String {
+pub async fn start_identify(message: Message) -> root::Msg {
     println!("START_IDENTIFY: identify initiated");
 
     let mut map = root::RECORDS.lock().await;
@@ -26,17 +26,17 @@ pub async fn start_identify(message: Message) -> String {
     println!("START_IDENTIFY: record added");
     root::wipe_history(message.clone(), "identify".to_string());
 
-    format!(
+    root::Msg::Text(format!(
         "Terminal Alpha and Beta:\nGreetings unit {}\
         \nwho do you want to look up?",
         &message.from.first_name
-    )
+    ))
 }
 
 //---finishes identify
 //---fires immediate purge history command for identify state
 #[allow(unused_variables)]
-pub async fn continue_identify(message: Message, processesed_text: String) -> String {
+pub async fn continue_identify(message: Message, processesed_text: String) -> root::Msg {
     root::immediate_purge_history(message.from.clone(), "identify".to_string());
     println!("IDENTIFY: beginning identification");
     get_person_go(&processesed_text)
@@ -55,7 +55,7 @@ struct GoString {
     b: isize,
 }
 
-fn get_person_go(name: &str) -> String {
+fn get_person_go(name: &str) -> root::Msg {
     println!("GO GETTING PERSON: {}", name);
     let c_name = CString::new(name).expect("CString::new failed");
     let ptr = c_name.as_ptr();
@@ -69,11 +69,11 @@ fn get_person_go(name: &str) -> String {
     let string = c_str
         .to_str()
         .expect("Error translating person data from library");
-    match string.is_empty() || string.starts_with("Error") {
+    root::Msg::Text(match string.is_empty() || string.starts_with("Error") {
         true => format!(
             "Terminal Alpha and Beta:\
                     \nWe cannot identify people yet"
         ),
         false => string.to_string(),
-    }
+    })
 }

@@ -9,6 +9,11 @@
       "automatically_extensible": true,
       "use_synonyms": true,
       "data": []
+    },
+    "passwordWord": {
+      "automatically_extensible": true,
+      "use_synonyms": true,
+      "data": []
     }
   },
   "intents": {
