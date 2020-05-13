@@ -20,6 +20,8 @@ arm64:
 	cargo build --target aarch64-unknown-linux-gnu
 train:
 	rm -rf ./actionengine
+	rm -f trainingdata/actiondata.json
+	snips-nlu generate-dataset en trainingdata/actiondata.yaml > trainingdata/actiondata.json
 	snips-nlu train trainingdata/actiondata.json actionengine
 	rm -rf ./chatengine
 	rm -f trainingdata/chatdata.json

@@ -6,7 +6,7 @@ slots:
   - name: room
     entity: room
 utterances:
-  - Turn on the lights in the [room](kitchen)
+  - turn on the lights in the [room](kitchen)
   - give me some light in the [room](bathroom) please
   - Can you light up the [room](living room) ?
   - switch the [room](bedroom)'s lights on please

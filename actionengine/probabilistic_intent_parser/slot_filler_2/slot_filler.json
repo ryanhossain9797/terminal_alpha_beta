@@ -117,8 +117,10 @@
       {
         "args": {
           "entities": [
-            "title",
-            "pass"
+            "infoWord",
+            "passWord",
+            "titleVar",
+            "passVar"
           ],
           "entity_filter": {
             "automatically_extensible": true
@@ -180,7 +182,9 @@
   "intent": "info",
   "language_code": "en",
   "slot_name_mapping": {
-    "pass": "pass",
-    "title": "title"
+    "infoTerm": "infoWord",
+    "pass": "passVar",
+    "passTerm": "passWord",
+    "title": "titleVar"
   }
 }

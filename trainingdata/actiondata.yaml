@@ -1,0 +1,130 @@
+# chat intent
+---
+type: intent
+name: chat
+slots:
+  - name: chatTerm
+    entity: chatWord
+utterances:
+  - wanna [chatTerm](talk)
+  - let's have a [chatTerm](talk)
+  - i want to [chatTerm](talk) to you
+  - i want to have a [chatTerm](discussion) with you
+  - can we [chatTerm](talk)
+  - let's [chatTerm](chat)
+  - i want to [chatTerm](chat)
+  
+# search intent
+---
+type: intent
+name: search
+slots:
+  - name: searchTerm
+    entity: searchWord
+utterances:
+  - help me [searchTerm](search)
+  - help me [searchTerm](search) for something
+  - "[searchTerm](search) something"
+  - i want to [searchTerm](find) something
+  - can you [searchTerm](look up) something for me
+  - can you [searchTerm](look for) something for me
+  - "[searchTerm](check) something for me"
+
+# identify intent
+---
+type: intent
+name: identify
+slots:
+  - name: searchTerm
+    entity: searchWord
+  - name: personTerm
+    entity: personWord
+  - name: infoTerm
+    entity: infoWord
+utterances:
+  - help me [searchTerm](search) for [personTerm](someone)
+  - please [searchTerm](search) [personTerm](someone)
+  - can you [searchTerm](search) this [personTerm](someone)'s [infoTerm](information)
+  - i want to [searchTerm](find) [personTerm](a person)
+  - can you [searchTerm](look up) [personTerm](a dude) for me
+  - can you [searchTerm](look) [personTerm](a dude) up
+  - maybe [searchTerm](look for) [personTerm](someone) for me
+  - please [searchTerm](check) [personTerm](a human) for me
+  - can you [searchTerm](check) [personTerm](who) this is
+
+# info intent
+---
+type: intent
+name: info
+slots:
+  - name: infoTerm
+    entity: infoWord
+  - name: passTerm
+    entity: passWord
+  - name: title
+    entity: titleVar
+  - name: pass
+    entity: passVar
+utterances:
+  - get [infoTerm](info) for [title](upskill) with [passTerm](pass) [pass](kajkjdskajd)
+  - get [title](linux) [infoTerm](info) with [passTerm](pin) [pass](dwafawf)
+  - get me [title](linux) [infoTerm](info), [passTerm](pin) is [pass](dwafawf)
+  - can you get me [title](linux) [infoTerm](info), [passTerm](pin) is [pass](dwafawf)
+  - fetch [infoTerm](info) for [title](ssh), [passTerm](pass) [pass](dawfwaf)
+  - on [title](top) [infoTerm](data), [passTerm](pass) [pass](jhawadw)
+  - check [title](sudo) [infoTerm](data), [pass](linuxinfo)
+  - with [passTerm](pass) [pass](jhawadw) fetch [title](sudo) [infoTerm](data)
+  - the [passTerm](pass) is [pass](ladida) get me [infoTerm](stuff) on [title](sudo)
+
+# chatWord entity
+---
+type: entity
+name: chatWord
+automatically_extensible: yes
+values:
+- [chat, talk, discussion, discuss]
+
+# searchWord entity
+---
+type: entity
+name: searchWord
+automatically_extensible: yes
+values:
+- [search, find, look for, look up, check]
+
+# personWord entity
+---
+type: entity
+name: personWord
+automatically_extensible: no
+values:
+- [person, someone, a human, a person, a dude, who]
+
+# infoWord entity
+---
+type: entity
+name: infoWord
+automatically_extensible: yes
+values:
+- [info, information, data, stuff]
+
+# passWord entity
+---
+type: entity
+name: passWord
+automatically_extensible: yes
+values:
+- [password, pass, pin, auth]
+
+# passWord entity
+---
+type: entity
+name: titleVar
+automatically_extensible: yes
+
+
+# passWord entity
+---
+type: entity
+name: passVar
+automatically_extensible: yes

@@ -28,7 +28,7 @@ pub fn title_pass_retriever(json_string: String) -> (String, String) {
         let val = &json["slots"];
         if let Value::Array(list) = val {
             for slot in list {
-                if let Value::String(entity) = &slot["entity"] {
+                if let Value::String(entity) = &slot["slotName"] {
                     if let Value::String(value) = &slot["rawValue"] {
                         if entity == &String::from("title") {
                             title = (*value).clone();

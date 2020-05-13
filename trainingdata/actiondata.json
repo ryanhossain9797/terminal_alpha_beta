@@ -1,19 +1,94 @@
 {
   "entities": {
-    "title": {
+    "chatWord": {
       "automatically_extensible": true,
-      "use_synonyms": true,
-      "data": []
+      "data": [
+        {
+          "synonyms": [
+            "talk",
+            "discussion",
+            "discuss"
+          ],
+          "value": "chat"
+        }
+      ],
+      "matching_strictness": 1.0,
+      "use_synonyms": true
     },
-    "pass": {
+    "infoWord": {
       "automatically_extensible": true,
-      "use_synonyms": true,
-      "data": []
+      "data": [
+        {
+          "synonyms": [
+            "information",
+            "data",
+            "stuff"
+          ],
+          "value": "info"
+        }
+      ],
+      "matching_strictness": 1.0,
+      "use_synonyms": true
     },
-    "passwordWord": {
+    "passVar": {
       "automatically_extensible": true,
-      "use_synonyms": true,
-      "data": []
+      "data": [],
+      "matching_strictness": 1.0,
+      "use_synonyms": true
+    },
+    "passWord": {
+      "automatically_extensible": true,
+      "data": [
+        {
+          "synonyms": [
+            "pass",
+            "pin",
+            "auth"
+          ],
+          "value": "password"
+        }
+      ],
+      "matching_strictness": 1.0,
+      "use_synonyms": true
+    },
+    "personWord": {
+      "automatically_extensible": false,
+      "data": [
+        {
+          "synonyms": [
+            "someone",
+            "a human",
+            "a person",
+            "a dude",
+            "who"
+          ],
+          "value": "person"
+        }
+      ],
+      "matching_strictness": 1.0,
+      "use_synonyms": true
+    },
+    "searchWord": {
+      "automatically_extensible": true,
+      "data": [
+        {
+          "synonyms": [
+            "find",
+            "look for",
+            "look up",
+            "check"
+          ],
+          "value": "search"
+        }
+      ],
+      "matching_strictness": 1.0,
+      "use_synonyms": true
+    },
+    "titleVar": {
+      "automatically_extensible": true,
+      "data": [],
+      "matching_strictness": 1.0,
+      "use_synonyms": true
     }
   },
   "intents": {
@@ -22,123 +97,90 @@
         {
           "data": [
             {
-              "text": "Let's talk"
+              "text": "wanna "
+            },
+            {
+              "entity": "chatWord",
+              "slot_name": "chatTerm",
+              "text": "talk"
             }
           ]
         },
         {
           "data": [
             {
-              "text": "Wanna chat?"
+              "text": "let's have a "
+            },
+            {
+              "entity": "chatWord",
+              "slot_name": "chatTerm",
+              "text": "talk"
             }
           ]
         },
         {
           "data": [
             {
-              "text": "Let's have a talk"
+              "text": "i want to "
+            },
+            {
+              "entity": "chatWord",
+              "slot_name": "chatTerm",
+              "text": "talk"
+            },
+            {
+              "text": " to you"
             }
           ]
         },
         {
           "data": [
             {
-              "text": "I want to talk to you"
+              "text": "i want to have a "
+            },
+            {
+              "entity": "chatWord",
+              "slot_name": "chatTerm",
+              "text": "discussion"
+            },
+            {
+              "text": " with you"
             }
           ]
         },
         {
           "data": [
             {
-              "text": "Can we talk"
+              "text": "can we "
+            },
+            {
+              "entity": "chatWord",
+              "slot_name": "chatTerm",
+              "text": "talk"
             }
           ]
         },
         {
           "data": [
             {
-              "text": "Chat"
-            }
-          ]
-        }
-      ]
-    },
-    "search": {
-      "utterances": [
-        {
-          "data": [
+              "text": "let's "
+            },
             {
-              "text": "search"
+              "entity": "chatWord",
+              "slot_name": "chatTerm",
+              "text": "chat"
             }
           ]
         },
         {
           "data": [
             {
-              "text": "help me search for something"
-            }
-          ]
-        },
-        {
-          "data": [
+              "text": "i want to "
+            },
             {
-              "text": "search something"
-            }
-          ]
-        },
-        {
-          "data": [
-            {
-              "text": "i want to find something"
-            }
-          ]
-        },
-        {
-          "data": [
-            {
-              "text": "can you find something for me?"
-            }
-          ]
-        },
-        {
-          "data": [
-            {
-              "text": "can you look up something for me"
-            }
-          ]
-        },
-        {
-          "data": [
-            {
-              "text": "check something for me"
-            }
-          ]
-        },
-        {
-          "data": [
-            {
-              "text": "find something for me"
-            }
-          ]
-        },
-        {
-          "data": [
-            {
-              "text": "find"
-            }
-          ]
-        },
-        {
-          "data": [
-            {
-              "text": "can you search for something?"
-            }
-          ]
-        },
-        {
-          "data": [
-            {
-              "text": "look up something"
+              "entity": "chatWord",
+              "slot_name": "chatTerm",
+              "text": "chat"
             }
           ]
         }
@@ -149,77 +191,203 @@
         {
           "data": [
             {
-              "text": "identify"
+              "text": "help me "
+            },
+            {
+              "entity": "searchWord",
+              "slot_name": "searchTerm",
+              "text": "search"
+            },
+            {
+              "text": " for "
+            },
+            {
+              "entity": "personWord",
+              "slot_name": "personTerm",
+              "text": "someone"
             }
           ]
         },
         {
           "data": [
             {
-              "text": "help me search for someone"
+              "text": "please "
+            },
+            {
+              "entity": "searchWord",
+              "slot_name": "searchTerm",
+              "text": "search"
+            },
+            {
+              "text": " "
+            },
+            {
+              "entity": "personWord",
+              "slot_name": "personTerm",
+              "text": "someone"
             }
           ]
         },
         {
           "data": [
             {
-              "text": "search for a person"
+              "text": "can you "
+            },
+            {
+              "entity": "searchWord",
+              "slot_name": "searchTerm",
+              "text": "search"
+            },
+            {
+              "text": " this "
+            },
+            {
+              "entity": "personWord",
+              "slot_name": "personTerm",
+              "text": "someone"
+            },
+            {
+              "text": "'s "
+            },
+            {
+              "entity": "infoWord",
+              "slot_name": "infoTerm",
+              "text": "information"
             }
           ]
         },
         {
           "data": [
             {
-              "text": "i want to find someone"
+              "text": "i want to "
+            },
+            {
+              "entity": "searchWord",
+              "slot_name": "searchTerm",
+              "text": "find"
+            },
+            {
+              "text": " "
+            },
+            {
+              "entity": "personWord",
+              "slot_name": "personTerm",
+              "text": "a person"
             }
           ]
         },
         {
           "data": [
             {
-              "text": "can you find someone for me?"
+              "text": "can you "
+            },
+            {
+              "entity": "searchWord",
+              "slot_name": "searchTerm",
+              "text": "look up"
+            },
+            {
+              "text": " "
+            },
+            {
+              "entity": "personWord",
+              "slot_name": "personTerm",
+              "text": "a dude"
+            },
+            {
+              "text": " for me"
             }
           ]
         },
         {
           "data": [
             {
-              "text": "can you identify someone for me"
+              "text": "can you "
+            },
+            {
+              "entity": "searchWord",
+              "slot_name": "searchTerm",
+              "text": "look"
+            },
+            {
+              "text": " "
+            },
+            {
+              "entity": "personWord",
+              "slot_name": "personTerm",
+              "text": "a dude"
+            },
+            {
+              "text": " up"
             }
           ]
         },
         {
           "data": [
             {
-              "text": "can you check who this is"
+              "text": "maybe "
+            },
+            {
+              "entity": "searchWord",
+              "slot_name": "searchTerm",
+              "text": "look for"
+            },
+            {
+              "text": " "
+            },
+            {
+              "entity": "personWord",
+              "slot_name": "personTerm",
+              "text": "someone"
+            },
+            {
+              "text": " for me"
             }
           ]
         },
         {
           "data": [
             {
-              "text": "find me this person's info"
+              "text": "please "
+            },
+            {
+              "entity": "searchWord",
+              "slot_name": "searchTerm",
+              "text": "check"
+            },
+            {
+              "text": " "
+            },
+            {
+              "entity": "personWord",
+              "slot_name": "personTerm",
+              "text": "a human"
+            },
+            {
+              "text": " for me"
             }
           ]
         },
         {
           "data": [
             {
-              "text": "look for this person's information"
-            }
-          ]
-        },
-        {
-          "data": [
+              "text": "can you "
+            },
             {
-              "text": "can you look someone up"
-            }
-          ]
-        },
-        {
-          "data": [
+              "entity": "searchWord",
+              "slot_name": "searchTerm",
+              "text": "check"
+            },
             {
-              "text": "look up someone"
+              "text": " "
+            },
+            {
+              "entity": "personWord",
+              "slot_name": "personTerm",
+              "text": "who"
+            },
+            {
+              "text": " this is"
             }
           ]
         }
@@ -230,20 +398,36 @@
         {
           "data": [
             {
-              "text": "get info for "
+              "text": "get "
             },
             {
-              "entity": "title",
+              "entity": "infoWord",
+              "slot_name": "infoTerm",
+              "text": "info"
+            },
+            {
+              "text": " for "
+            },
+            {
+              "entity": "titleVar",
               "slot_name": "title",
               "text": "upskill"
             },
             {
-              "text": " with password "
+              "text": " with "
             },
             {
-              "entity": "pass",
+              "entity": "passWord",
+              "slot_name": "passTerm",
+              "text": "pass"
+            },
+            {
+              "text": " "
+            },
+            {
+              "entity": "passVar",
               "slot_name": "pass",
-              "text": "ksjdkawjdkw"
+              "text": "kajkjdskajd"
             }
           ]
         },
@@ -253,131 +437,377 @@
               "text": "get "
             },
             {
-              "entity": "title",
+              "entity": "titleVar",
               "slot_name": "title",
-              "text": "upskill"
+              "text": "linux"
             },
             {
-              "text": "info for password "
+              "text": " "
             },
             {
-              "entity": "pass",
+              "entity": "infoWord",
+              "slot_name": "infoTerm",
+              "text": "info"
+            },
+            {
+              "text": " with "
+            },
+            {
+              "entity": "passWord",
+              "slot_name": "passTerm",
+              "text": "pin"
+            },
+            {
+              "text": " "
+            },
+            {
+              "entity": "passVar",
               "slot_name": "pass",
-              "text": "ksjdkawjdkw"
+              "text": "dwafawf"
             }
           ]
         },
         {
           "data": [
             {
-              "text": "info for "
+              "text": "get me "
             },
             {
-              "entity": "title",
+              "entity": "titleVar",
               "slot_name": "title",
-              "text": "upskill"
+              "text": "linux"
             },
             {
-              "text": ", password "
+              "text": " "
             },
             {
-              "entity": "pass",
+              "entity": "infoWord",
+              "slot_name": "infoTerm",
+              "text": "info"
+            },
+            {
+              "text": ", "
+            },
+            {
+              "entity": "passWord",
+              "slot_name": "passTerm",
+              "text": "pin"
+            },
+            {
+              "text": " is "
+            },
+            {
+              "entity": "passVar",
               "slot_name": "pass",
-              "text": "ksjdkawjdkw"
+              "text": "dwafawf"
             }
           ]
         },
         {
           "data": [
             {
-              "entity": "title",
+              "text": "can you get me "
+            },
+            {
+              "entity": "titleVar",
               "slot_name": "title",
-              "text": "upskill"
+              "text": "linux"
             },
             {
-              "text": "info, password "
+              "text": " "
             },
             {
-              "entity": "pass",
+              "entity": "infoWord",
+              "slot_name": "infoTerm",
+              "text": "info"
+            },
+            {
+              "text": ", "
+            },
+            {
+              "entity": "passWord",
+              "slot_name": "passTerm",
+              "text": "pin"
+            },
+            {
+              "text": " is "
+            },
+            {
+              "entity": "passVar",
               "slot_name": "pass",
-              "text": "ksjdkawjdkw"
+              "text": "dwafawf"
             }
           ]
         },
         {
           "data": [
             {
-              "entity": "title",
+              "text": "fetch "
+            },
+            {
+              "entity": "infoWord",
+              "slot_name": "infoTerm",
+              "text": "info"
+            },
+            {
+              "text": " for "
+            },
+            {
+              "entity": "titleVar",
               "slot_name": "title",
-              "text": "upskill"
+              "text": "ssh"
             },
             {
-              "text": "info, "
+              "text": ", "
             },
             {
-              "entity": "pass",
+              "entity": "passWord",
+              "slot_name": "passTerm",
+              "text": "pass"
+            },
+            {
+              "text": " "
+            },
+            {
+              "entity": "passVar",
               "slot_name": "pass",
-              "text": "ksjdkawjdkw"
+              "text": "dawfwaf"
             }
           ]
         },
         {
           "data": [
             {
-              "text": "info "
+              "text": "on "
             },
             {
-              "entity": "title",
+              "entity": "titleVar",
               "slot_name": "title",
-              "text": "upskill"
+              "text": "top"
             },
             {
-              "text": " password "
+              "text": " "
             },
             {
-              "entity": "pass",
+              "entity": "infoWord",
+              "slot_name": "infoTerm",
+              "text": "data"
+            },
+            {
+              "text": ", "
+            },
+            {
+              "entity": "passWord",
+              "slot_name": "passTerm",
+              "text": "pass"
+            },
+            {
+              "text": " "
+            },
+            {
+              "entity": "passVar",
               "slot_name": "pass",
-              "text": "ksjdkawjdkw"
+              "text": "jhawadw"
             }
           ]
         },
         {
           "data": [
             {
-              "text": "password "
+              "text": "check "
             },
             {
-              "entity": "pass",
+              "entity": "titleVar",
+              "slot_name": "title",
+              "text": "sudo"
+            },
+            {
+              "text": " "
+            },
+            {
+              "entity": "infoWord",
+              "slot_name": "infoTerm",
+              "text": "data"
+            },
+            {
+              "text": ", "
+            },
+            {
+              "entity": "passVar",
               "slot_name": "pass",
-              "text": "ksjdkawjdkw"
+              "text": "linuxinfo"
+            }
+          ]
+        },
+        {
+          "data": [
+            {
+              "text": "with "
+            },
+            {
+              "entity": "passWord",
+              "slot_name": "passTerm",
+              "text": "pass"
+            },
+            {
+              "text": " "
+            },
+            {
+              "entity": "passVar",
+              "slot_name": "pass",
+              "text": "jhawadw"
             },
             {
               "text": " fetch "
             },
             {
-              "entity": "title",
+              "entity": "titleVar",
               "slot_name": "title",
-              "text": "upskill"
+              "text": "sudo"
+            },
+            {
+              "text": " "
+            },
+            {
+              "entity": "infoWord",
+              "slot_name": "infoTerm",
+              "text": "data"
             }
           ]
         },
         {
           "data": [
             {
-              "text": "password is "
+              "text": "the "
             },
             {
-              "entity": "pass",
+              "entity": "passWord",
+              "slot_name": "passTerm",
+              "text": "pass"
+            },
+            {
+              "text": " is "
+            },
+            {
+              "entity": "passVar",
               "slot_name": "pass",
-              "text": "ksjdkawjdkw"
+              "text": "ladida"
             },
             {
-              "text": " get me info for "
+              "text": " get me "
             },
             {
-              "entity": "title",
+              "entity": "infoWord",
+              "slot_name": "infoTerm",
+              "text": "stuff"
+            },
+            {
+              "text": " on "
+            },
+            {
+              "entity": "titleVar",
               "slot_name": "title",
-              "text": "upskill"
+              "text": "sudo"
+            }
+          ]
+        }
+      ]
+    },
+    "search": {
+      "utterances": [
+        {
+          "data": [
+            {
+              "text": "help me "
+            },
+            {
+              "entity": "searchWord",
+              "slot_name": "searchTerm",
+              "text": "search"
+            }
+          ]
+        },
+        {
+          "data": [
+            {
+              "text": "help me "
+            },
+            {
+              "entity": "searchWord",
+              "slot_name": "searchTerm",
+              "text": "search"
+            },
+            {
+              "text": " for something"
+            }
+          ]
+        },
+        {
+          "data": [
+            {
+              "entity": "searchWord",
+              "slot_name": "searchTerm",
+              "text": "search"
+            },
+            {
+              "text": " something"
+            }
+          ]
+        },
+        {
+          "data": [
+            {
+              "text": "i want to "
+            },
+            {
+              "entity": "searchWord",
+              "slot_name": "searchTerm",
+              "text": "find"
+            },
+            {
+              "text": " something"
+            }
+          ]
+        },
+        {
+          "data": [
+            {
+              "text": "can you "
+            },
+            {
+              "entity": "searchWord",
+              "slot_name": "searchTerm",
+              "text": "look up"
+            },
+            {
+              "text": " something for me"
+            }
+          ]
+        },
+        {
+          "data": [
+            {
+              "text": "can you "
+            },
+            {
+              "entity": "searchWord",
+              "slot_name": "searchTerm",
+              "text": "look for"
+            },
+            {
+              "text": " something for me"
+            }
+          ]
+        },
+        {
+          "data": [
+            {
+              "entity": "searchWord",
+              "slot_name": "searchTerm",
+              "text": "check"
+            },
+            {
+              "text": " something for me"
             }
           ]
         }

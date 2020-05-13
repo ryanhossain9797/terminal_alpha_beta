@@ -1,3 +1,7 @@
 snips-nlu train path/to/data.json path/to/output_folder
 
 scp -P 5914 target/armv7-unknown-linux-gnueabihf/release/terminal_alpha_beta_rust alarm@192.168.0.102:terminal
+
+scp -P 5914 -r chatengine  alarm@192.168.0.102:chatengine
+
+scp -P 5914 -r actionengine  alarm@192.168.0.102:actionengine

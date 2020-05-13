@@ -197,25 +197,47 @@
   "custom_entity_parser": "custom_entity_parser",
   "dataset_metadata": {
     "entities": {
-      "pass": {
+      "chatWord": {
         "automatically_extensible": true
       },
-      "passwordWord": {
+      "infoWord": {
         "automatically_extensible": true
       },
-      "title": {
+      "passVar": {
+        "automatically_extensible": true
+      },
+      "passWord": {
+        "automatically_extensible": true
+      },
+      "personWord": {
+        "automatically_extensible": false
+      },
+      "searchWord": {
+        "automatically_extensible": true
+      },
+      "titleVar": {
         "automatically_extensible": true
       }
     },
     "language_code": "en",
     "slot_name_mappings": {
-      "chat": {},
-      "identify": {},
-      "info": {
-        "pass": "pass",
-        "title": "title"
+      "chat": {
+        "chatTerm": "chatWord"
       },
-      "search": {}
+      "identify": {
+        "infoTerm": "infoWord",
+        "personTerm": "personWord",
+        "searchTerm": "searchWord"
+      },
+      "info": {
+        "infoTerm": "infoWord",
+        "pass": "passVar",
+        "passTerm": "passWord",
+        "title": "titleVar"
+      },
+      "search": {
+        "searchTerm": "searchWord"
+      }
     }
   },
   "intent_parsers": [
