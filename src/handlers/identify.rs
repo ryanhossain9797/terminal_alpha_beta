@@ -19,12 +19,11 @@ pub async fn start_identify(message: Message) -> root::Msg {
             username: message.from.first_name.clone(),
             chat: message.chat.id(),
             last: Instant::now(),
-            state: "identify".to_string(),
-            history: Vec::new(),
+            state: root::UserState::Identify,
         });
     drop(map);
     println!("START_IDENTIFY: record added");
-    root::wipe_history(message.clone(), "identify".to_string());
+    root::wipe_history(message.clone(), root::UserState::Identify);
 
     root::Msg::Text(format!(
         "Terminal Alpha and Beta:\nGreetings unit {}\
@@ -37,7 +36,7 @@ pub async fn start_identify(message: Message) -> root::Msg {
 //---fires immediate purge history command for identify state
 #[allow(unused_variables)]
 pub async fn continue_identify(message: Message, processesed_text: String) -> root::Msg {
-    root::immediate_purge_history(message.from.clone(), "identify".to_string());
+    root::immediate_purge_history(message.from.clone(), root::UserState::Identify);
     println!("IDENTIFY: beginning identification");
     get_person_go(&processesed_text)
 }

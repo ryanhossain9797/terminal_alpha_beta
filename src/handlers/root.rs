@@ -13,6 +13,8 @@ const WAITTIME: u64 = LONGWAIT;
 use std::collections::HashMap;
 use std::env;
 
+use std::fmt;
+
 use std::fs::*;
 
 use std::mem::drop;
@@ -50,6 +52,20 @@ lazy_static! {
     };
 }
 
+#[derive(PartialEq, Eq)]
+pub enum UserState {
+    Search,
+    Identify,
+}
+impl fmt::Display for UserState {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match *self {
+            UserState::Search => write!(f, "Search"),
+            UserState::Identify => write!(f, "Identify"),
+        }
+    }
+}
+
 pub enum Msg {
     Text(String),
     TextList(Vec<String>),
@@ -61,10 +77,9 @@ pub enum Msg {
 //---History is just a vector of strings to hold misc info (ex: messages in chat state)
 pub struct UserStateRecord {
     pub username: String,
-    pub state: String,
+    pub state: UserState,
     pub last: Instant,
     pub chat: ChatId,
-    pub history: Vec<String>,
 }
 
 //----------First place to handler messages after initial filtering
@@ -95,20 +110,20 @@ pub async fn handler(
         }
         */
         //---"if state is search"
-        else if record.state == "search".to_string() {
+        else if record.state == UserState::Search {
             drop(map);
             println!("continuing search");
             search::continue_search(message.clone(), processesed_text.clone()).await
         }
         //---"if state is identify"
-        else if record.state == "identify".to_string() {
+        else if record.state == UserState::Identify {
             drop(map);
             println!("continuing identify");
             identify::continue_identify(message.clone(), processesed_text.clone()).await
         }
         //---"if state is unknown"
         else {
-            println!("some unknown state {}", record.state);
+            println!("some unknown state");
             drop(map);
             responses::unknown_state_notice()
         }
@@ -134,22 +149,16 @@ pub async fn handler(
         }
         Msg::TextList(text_list) => {
             for text in text_list {
-                API.spawn(message.chat.text(text));
+                //---Need send here because spawn would send messages out of order
+                let _ = API.send(message.chat.text(text)).await;
             }
         }
         _ => {}
     }
 
-    //---This one checks for a result to message sending. Not really needed but left for debugging
-    // match API.send(message.chat.text(msg_text)).await {
-    //     Err(e) => println!("{:?}", e),
-    //     _ => (),
-    // }
-
     Ok(())
 }
 
-//---FIX LEVEL: Works with strings
 pub async fn natural_understanding(message: Message, processed_text: String) -> Msg {
     let intents_alternatives = 1;
     let slots_alternatives = 1;
@@ -229,24 +238,35 @@ pub async fn cancel_history(message: Message) -> Msg {
 //---removes history after 30 seconds if it's not updated with a new time
 //---AND the history state matches the provided state
 //---message is provided to user
-pub fn wipe_history(message: Message, state: String) {
+pub fn wipe_history(message: Message, state: UserState) {
     tokio::spawn(async move {
         tokio::time::delay_for(Duration::from_secs(WAITTIME)).await;
         let mut map = RECORDS.lock().await;
         if let Some(r) = map.get(&message.from.id) {
-            if r.last.elapsed() > Duration::from_secs(WAITTIME) && r.state == state {
-                map.remove(&message.from.id);
-                drop(map);
-                println!("deleted state record for {}", state);
-                let notice_result = API
-                    .send(message.chat.text(format!(
-                        "you have been silent for too long\nwe cannot wait for you any longer"
-                    )))
-                    .await;
-                match notice_result {
-                    Err(e) => println!("{:?}", e),
-                    _ => (),
+            if r.state == state {
+                if r.last.elapsed() > Duration::from_secs(WAITTIME) {
+                    map.remove(&message.from.id);
+                    drop(map);
+                    println!("deleted state record for {}", state);
+                    let notice_result = API
+                        .send(message.chat.text(format!(
+                            "you have been silent for too long\nwe cannot wait for you any longer"
+                        )))
+                        .await;
+                    match notice_result {
+                        Err(e) => println!("{:?}", e),
+                        _ => (),
+                    }
+                } else {
+                    println!("aborted record delete due to recency");
+                    drop(map);
                 }
+            } else {
+                println!(
+                    "aborted record delete for {} because current state is {}",
+                    state, r.state
+                );
+                drop(map);
             }
         }
     });
@@ -255,7 +275,7 @@ pub fn wipe_history(message: Message, state: String) {
 //---immediately purges history IF provided state matches history state
 //---used to remove history after state action is completed
 //---no notice provided
-pub fn immediate_purge_history(user: User, state: String) {
+pub fn immediate_purge_history(user: User, state: UserState) {
     tokio::spawn(async move {
         let mut map = RECORDS.lock().await;
         if let Some(r) = map.get(&user.id) {

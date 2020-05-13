@@ -21,12 +21,11 @@ pub async fn start_search(message: Message) -> root::Msg {
             username: message.from.first_name.clone(),
             chat: message.chat.id(),
             last: Instant::now(),
-            state: "search".to_string(),
-            history: Vec::new(),
+            state: root::UserState::Search,
         });
     drop(map);
     println!("START_SEARCH: record added");
-    root::wipe_history(message.clone(), "search".to_string());
+    root::wipe_history(message.clone(), root::UserState::Search);
 
     root::Msg::Text(format!(
         "Terminal Alpha and Beta:\nGreetings unit {}\
@@ -48,7 +47,7 @@ pub async fn continue_search(message: Message, processesed_text: String) -> root
         search_results = "search failed".to_string();
     }
 
-    root::immediate_purge_history(message.from.clone(), "search".to_string());
+    root::immediate_purge_history(message.from.clone(), root::UserState::Search);
 
     root::Msg::Text(format!(
         "Terminal Alpha and Beta:\
