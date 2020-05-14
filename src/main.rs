@@ -16,7 +16,12 @@ const WAITTIME: u64 = 10;
 async fn main() {
     dotenv().ok();
 
-    println!("Starting up Terminal Alpha Beta");
+    println!("Starting up Terminal Alpha Beta, compiled at");
+
+    //---Prints the Date of compilation added at build time
+    if let Some(date) = option_env!("COMPILED_AT") {
+        println!("Compile date {}", date);
+    }
 
     let mut stream = API.stream();
     // Fetch new updates via long poll method
