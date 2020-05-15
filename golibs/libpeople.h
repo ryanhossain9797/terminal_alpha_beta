@@ -71,6 +71,8 @@ extern "C" {
 
 extern char* GetPerson(GoString p0);
 
+extern char* GetPersonNew(GoString p0);
+
 extern char* GetInfo(GoString p0, GoString p1);
 
 #ifdef __cplusplus

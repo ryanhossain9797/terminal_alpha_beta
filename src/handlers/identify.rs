@@ -46,9 +46,11 @@ pub async fn continue_identify(message: Message, processesed_text: String) -> ro
 //--------------RECOMMENDED MOVE TO SEPARATE CRATE
 extern "C" {
     fn GetPerson(name: GoString) -> *const c_char;
+    fn GetPersonNew(name: GoString) -> *const c_char;
 }
 
 #[repr(C)]
+#[derive(Clone, Copy)]
 struct GoString {
     a: *const c_char,
     b: isize,
@@ -62,12 +64,19 @@ fn get_person_go(name: &str) -> root::Msg {
         a: ptr,
         b: c_name.as_bytes().len() as isize,
     };
-
     let result = unsafe { GetPerson(go_string) };
     let c_str = unsafe { CStr::from_ptr(result) };
     let string = c_str
         .to_str()
         .expect("Error translating person data from library");
+    {
+        let result = unsafe { GetPersonNew(go_string) };
+        let c_str = unsafe { CStr::from_ptr(result) };
+        let string = c_str
+            .to_str()
+            .expect("Error translating person data from library");
+        println!("person from new method is => {}", string);
+    }
     root::Msg::Text(match string.is_empty() || string.starts_with("Error") {
         true => format!(
             "Terminal Alpha and Beta:\

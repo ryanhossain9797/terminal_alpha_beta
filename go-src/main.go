@@ -8,6 +8,7 @@ import (
 
 	"github.com/schollz/closestmatch"
 )
+import "encoding/json"
 
 //export GetPerson
 func GetPerson(name string) *C.char {
@@ -38,6 +39,25 @@ func GetPerson(name string) *C.char {
 	} else {
 		return C.CString(person.Description)
 	}
+}
+
+//export GetPersonNew
+func GetPersonNew(name string) *C.char {
+	fmt.Println(name + " HELLO FROM GO")
+
+	fmt.Println("identifying '" + name + "'")
+	person, err := database.FindPersonFromDB(name)
+	if err != nil {
+		fmt.Println(err)
+		return C.CString("{}")
+	}
+	personString, err := json.Marshal(person)
+	if err != nil {
+		fmt.Println(err)
+		return C.CString("{}")
+	}
+	return C.CString("{\"person\":" + string(personString) + "}")
+
 }
 
 //export GetInfo
