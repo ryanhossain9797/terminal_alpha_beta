@@ -70,6 +70,7 @@ fn get_person_go(name: &str) -> root::Msg {
         .to_str()
         .expect("Error translating person data from library");
     {
+        //---This is a test of the new method to move logic to go
         let result = unsafe { GetPersonNew(go_string) };
         let c_str = unsafe { CStr::from_ptr(result) };
         let string = c_str
