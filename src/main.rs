@@ -18,7 +18,7 @@ async fn main() {
 
     println!("Starting up Terminal Alpha Beta, compiled at");
 
-    //---Prints the Date of compilation added at build time
+    //---Prints the Date of compilation, added at compile time
     if let Some(date) = option_env!("COMPILED_AT") {
         println!("Compile date {}", date);
     }
