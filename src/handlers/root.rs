@@ -180,37 +180,38 @@ pub async fn natural_understanding(message: Message, processed_text: String) -> 
         //---tries to match against existing intents like chat, search etc
         //---only valid if confidence greater than 0.5
         if result.intent.confidence_score > 0.5 {
-            match &*intent {
-                "chat" => {
-                    println!("ACTION_PICKER: starting chat");
-                    chat::start_chat(message.clone()).await
+            //---Convert result to json string
+            if let Ok(json) = serde_json::to_string(&result) {
+                println!("ACTION_PICKER: intent json is {}", &json);
+                match &*intent {
+                    "chat" => {
+                        println!("ACTION_PICKER: starting chat");
+                        chat::start_chat(message.clone()).await
+                    }
+                    "search" => {
+                        println!("ACTION_PICKER: starting search");
+                        search::start_search(message.clone()).await
+                    }
+                    "identify" => {
+                        println!("ACTION_PICKER: starting identify");
+                        identify::start_identify(message.clone()).await
+                    }
+                    "info" => {
+                        println!("ACTION_PICKER: starting info");
+                        info::start_info(json)
+                    }
+                    _ => {
+                        //---This one is only for unimplemented but known intents
+                        //---Don't put stuff related to unknown intents here
+                        println!("ACTION_PICKER: unimplemented intent");
+                        util::log_message(processed_text);
+                        responses::unsupported_notice()
+                    }
                 }
-                "search" => {
-                    println!("ACTION_PICKER: starting search");
-                    search::start_search(message.clone()).await
-                }
-                "identify" => {
-                    println!("ACTION_PICKER: starting identify");
-                    identify::start_identify(message.clone()).await
-                }
-                "info" => {
-                    println!("ACTION_PICKER: starting info");
-                    let json_result = format!("{}", serde_json::to_string_pretty(&result).unwrap());
-                    // println!("JSON DATA IS {}", json_result);
-                    let title_pass = util::title_pass_retriever(json_result);
-                    println!(
-                        "ACTION_PICKER: info title pass is {}, {}",
-                        title_pass.0, title_pass.1
-                    );
-                    info::get_info_go(title_pass.0, title_pass.1)
-                }
-                _ => {
-                    //---This one is only for unimplemented but known intents
-                    //---Don't put stuff related to unknown intents here
-                    println!("ACTION_PICKER: unknown intent");
-                    util::log_message(processed_text);
-                    responses::unsupported_notice()
-                }
+            } else {
+                println!("ACTION_PICKER: couldn't convert intent to json");
+                util::log_message(processed_text);
+                responses::unsupported_notice()
             }
         }
         //---unknown intent if cannot match to any intent confidently

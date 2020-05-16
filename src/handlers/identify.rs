@@ -79,10 +79,9 @@ fn get_person_go(name: &str) -> root::Msg {
         println!("person from new method is => {}", string);
     }
     root::Msg::Text(match string.is_empty() || string.starts_with("Error") {
-        true => format!(
-            "Terminal Alpha and Beta:\
+        true => "Terminal Alpha and Beta:\
                     \nWe cannot identify people yet"
-        ),
+            .to_string(),
         false => string.to_string(),
     })
 }

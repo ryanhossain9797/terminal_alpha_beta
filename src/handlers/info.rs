@@ -5,6 +5,16 @@ use std::os::raw::c_char;
 
 use serde_json::Value;
 
+pub fn start_info(json: String) -> root::Msg {
+    //println!("ACTION_PICKER: intent json is {}", json);
+    let title_pass = util::title_pass_retriever(json);
+    println!(
+        "ACTION_PICKER: info title pass is {}, {}",
+        title_pass.0, title_pass.1
+    );
+    get_info_go(title_pass.0, title_pass.1)
+}
+
 //--------------THE FOLLOWING IS USED TO INTERACT WITH THE 'golibs' STUFF
 //--------------DEPENDENT ON GOLANG LIBS
 //--------------RECOMMENDED MOVE TO SEPARATE CRATE

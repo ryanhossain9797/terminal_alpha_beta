@@ -12,11 +12,12 @@ pub fn unsupported_notice() -> root::Msg {
 }
 
 pub fn unknown_state_notice() -> root::Msg {
-    root::Msg::Text(format!(
+    root::Msg::Text(
         "we could not remember what we were doing\
             \nplease be aware that we are a test system with only sub-functions available\
             \nwe can only utilize a fraction of our full capabilites on this server"
-    ))
+            .to_string(),
+    )
 }
 
 pub fn custom_response(key: String) -> root::Msg {
