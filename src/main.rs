@@ -65,7 +65,7 @@ async fn filter(message: &Message) {
         if let Ok(myname) = myname_result {
             if let Some(name) = myname.username {
                 //-----------------------remove self mention from message
-                let handle = "@".to_string() + &name;
+                let handle = format!("@{}",&name);
                 let mut msg = data.replace(&handle, "");
                 msg = msg.trim().to_string();
                 msg = msg.trim_start_matches("/").to_string();

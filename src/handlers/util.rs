@@ -53,6 +53,7 @@ pub fn title_pass_retriever(json_string: String) -> (String, String) {
 extern "C" {
     fn GetPerson(name: GoString) -> *const c_char;
     fn GetPeople() -> *const c_char;
+    fn GoogleSearch(search: GoString) -> *const c_char;
 }
 
 #[repr(C)]
@@ -134,4 +135,50 @@ pub fn get_people() -> Option<Vec<Person>> {
     } else {
         None
     }
+}
+
+pub struct SearchResult {
+    pub description: String,
+    pub link: String,
+}
+
+pub fn google_search(search: String) -> Option<Vec<SearchResult>> {
+    println!("GO GETTING SEARCH RESULTS: {}", search);
+    let c_search = CString::new(search).expect("CString::new failed");
+    let ptr = c_search.as_ptr();
+    let go_string = GoString {
+        a: ptr,
+        b: c_search.as_bytes().len() as isize,
+    };
+    let result = unsafe { GoogleSearch(go_string) };
+    let c_str = unsafe { CStr::from_ptr(result) };
+    let string = c_str
+        .to_str()
+        .expect("Error translating search data from library");
+    if let Some(json) = serde_json::from_str(&string.to_string()).ok() {
+        println!("GET_INFO: search json fetched successfully");
+        match json {
+            Value::Object(map) => match &map.get("results") {
+                Some(Value::Array(results)) => {
+                    let mut result_msgs: Vec<SearchResult> = vec![];
+
+                    for result in results {
+                        match (result.get("description"), result.get("link")) {
+                            (Some(Value::String(description)), Some(Value::String(link))) => {
+                                result_msgs.push(SearchResult {
+                                    description: description.clone(),
+                                    link: link.clone(),
+                                });
+                            }
+                            _ => (),
+                        }
+                    }
+                    return Some(result_msgs);
+                }
+                _ => (),
+            },
+            _ => (),
+        }
+    }
+    return None;
 }
