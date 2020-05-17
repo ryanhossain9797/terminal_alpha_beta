@@ -13,7 +13,7 @@ import (
 import "encoding/json"
 
 func init() {
-	fmt.Println("initialized storage")
+	fmt.Println("\nInitialized storage")
 	ctx = context.Background()
 	loadDB()
 }
@@ -26,8 +26,8 @@ var (
 )
 
 type Person struct {
-	Name        string `firestore:"name"`
-	Description string `firestore:"description"`
+	Name        string `firestore:"name" json:"name"`
+	Description string `firestore:"description" json:"description"`
 }
 
 func loadDB() {

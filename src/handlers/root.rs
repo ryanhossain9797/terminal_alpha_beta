@@ -39,8 +39,8 @@ lazy_static! {
     pub static ref RECORDS: tokio::sync::Mutex<HashMap<UserId, UserStateRecord>> =
         tokio::sync::Mutex::new(HashMap::new()) ;
     //---Snips NLU is used to pick actions when they don't match directly
-    pub static ref ENGINE: SnipsNluEngine = {
-        println!("\nLoading the nlu engine...");
+    pub static ref ACTIONENGINE: SnipsNluEngine = {
+        println!("\nLoading the action nlu engine...");
         SnipsNluEngine::from_path("actionengine/").unwrap()
     };
     pub static ref RESPONSES: Option<serde_json::Value> = {
@@ -163,7 +163,7 @@ pub async fn natural_understanding(message: Message, processed_text: String) -> 
     let intents_alternatives = 1;
     let slots_alternatives = 1;
 
-    let result = ENGINE
+    let result = ACTIONENGINE
         .parse_with_alternatives(
             &processed_text,
             None,
@@ -182,7 +182,7 @@ pub async fn natural_understanding(message: Message, processed_text: String) -> 
         if result.intent.confidence_score > 0.5 {
             //---Convert result to json string
             if let Ok(json) = serde_json::to_string(&result) {
-                println!("ACTION_PICKER: intent json is {}", &json);
+                println!("ACTION_PICKER: intent json is valid" /*, &json*/);
                 match &*intent {
                     "chat" => {
                         println!("ACTION_PICKER: starting chat");

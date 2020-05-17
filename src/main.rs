@@ -6,8 +6,8 @@ mod handlers;
 extern crate openssl_probe;
 use dotenv::dotenv;
 use futures::StreamExt;
-use handlers::root::handler;
-use handlers::root::API;
+use handlers::chat::*;
+use handlers::root::*;
 use regex::Regex;
 use std::time::Duration;
 use telegram_bot::*;
@@ -22,7 +22,13 @@ async fn main() {
     if let Some(date) = option_env!("COMPILED_AT") {
         println!("Compile date {}", date);
     }
-
+    println!("Initializing everything");
+    lazy_static::initialize(&API);
+    lazy_static::initialize(&RECORDS);
+    lazy_static::initialize(&ACTIONENGINE);
+    lazy_static::initialize(&CHATENGINE);
+    lazy_static::initialize(&RESPONSES);
+    println!("\nInitialized Everything\n");
     let mut stream = API.stream();
     // Fetch new updates via long poll method
     while let Some(update_result) = stream.next().await {

@@ -1,15 +1,14 @@
-use crate::handlers::*;
-
+use crate::handlers::root;
+use crate::handlers::util;
 use std::mem::drop;
 use std::time::Instant;
 use telegram_bot::*;
+
+extern crate closestmatch;
+use closestmatch::*;
+
 //---adds a userstate record with identify state to userstate records map
 //---fires wipe history command for identify state
-
-//---For CGO
-use std::ffi::{CStr, CString};
-use std::os::raw::c_char;
-
 pub async fn start_identify(message: Message) -> root::Msg {
     println!("START_IDENTIFY: identify initiated");
 
@@ -41,47 +40,46 @@ pub async fn continue_identify(message: Message, processesed_text: String) -> ro
     get_person_go(&processesed_text)
 }
 
-//--------------THE FOLLOWING IS USED TO INTERACT WITH THE 'golibs' STUFF
-//--------------DEPENDENT ON GOLANG LIBS
-//--------------RECOMMENDED MOVE TO SEPARATE CRATE
-extern "C" {
-    fn GetPerson(name: GoString) -> *const c_char;
-    fn GetPersonNew(name: GoString) -> *const c_char;
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct GoString {
-    a: *const c_char,
-    b: isize,
-}
-
 fn get_person_go(name: &str) -> root::Msg {
-    println!("GO GETTING PERSON: {}", name);
-    let c_name = CString::new(name).expect("CString::new failed");
-    let ptr = c_name.as_ptr();
-    let go_string = GoString {
-        a: ptr,
-        b: c_name.as_bytes().len() as isize,
-    };
-    let result = unsafe { GetPerson(go_string) };
-    let c_str = unsafe { CStr::from_ptr(result) };
-    let string = c_str
-        .to_str()
-        .expect("Error translating person data from library");
-    {
-        //---This is a test of the new method to move logic to go
-        let result = unsafe { GetPersonNew(go_string) };
-        let c_str = unsafe { CStr::from_ptr(result) };
-        let string = c_str
-            .to_str()
-            .expect("Error translating person data from library");
-        println!("person from new method is => {}", string);
+    //---This is a test of the new method to move logic to go
+
+    //---Part one
+    if let Some(person) = util::get_person(name.to_string()) {
+        return root::Msg::Text(person.description);
     }
-    root::Msg::Text(match string.is_empty() || string.starts_with("Error") {
-        true => "Terminal Alpha and Beta:\
-                    \nWe cannot identify people yet"
-            .to_string(),
-        false => string.to_string(),
-    })
+
+    //---Part two
+    match util::get_people() {
+        Some(people) => {
+            let mut names: Vec<String> = vec![];
+            people
+                .iter()
+                .for_each(|person| names.push(person.name.clone()));
+            let cm = ClosestMatch::new(names, [4, 5, 6].to_vec());
+            let closest_name = cm.get_closest(name.to_string());
+            match closest_name {
+                Some(name) => {
+                    println!("closest name is {}", name);
+                    for person in people {
+                        if person.name == name {
+                            return root::Msg::Text(format!(
+                                "We could not find that exact person\
+                            \nBut we found {}:\
+                            \n{}",
+                                person.name, person.description
+                            ));
+                        }
+                    }
+                    root::Msg::Text(
+                        "We could not find that person, Tagged for future identification"
+                            .to_string(),
+                    )
+                }
+                _ => root::Msg::Text(
+                    "We could not find that person, Tagged for future identification".to_string(),
+                ),
+            }
+        }
+        _ => root::Msg::Text("We could not access the persons database".to_string()),
+    }
 }

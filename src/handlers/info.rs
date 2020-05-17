@@ -50,7 +50,7 @@ pub fn get_info_go(title: String, pass: String) -> root::Msg {
         .expect("Error translating info data from library");
     println!("GET_INFO: got stuff from golang libs");
     if let Some(json) = serde_json::from_str(&string.to_string()).ok() {
-        println!("GET_INFO: json is {} ", json);
+        println!("GET_INFO: valid json");
         match json {
             Value::Object(map) => match &map.get("info") {
                 Some(Value::String(response)) => {

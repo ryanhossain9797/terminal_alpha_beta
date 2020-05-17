@@ -13,7 +13,7 @@ use snips_nlu_lib::SnipsNluEngine;
 
 //---Snips NLU is used to pick actions when they don't match directly
 lazy_static! {
-    pub static ref ENGINE: SnipsNluEngine = {
+    pub static ref CHATENGINE: SnipsNluEngine = {
         println!("\nLoading the nlu engine...");
         SnipsNluEngine::from_path("chatengine/").unwrap()
     };
@@ -77,7 +77,7 @@ pub async fn continue_chat(/*message: Message,*/ processed_text: String) -> root
     let intents_alternatives = 1;
     let slots_alternatives = 1;
 
-    let result = ENGINE
+    let result = CHATENGINE
         .parse_with_alternatives(
             &processed_text,
             None,

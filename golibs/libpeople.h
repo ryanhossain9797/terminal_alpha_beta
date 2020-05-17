@@ -71,7 +71,7 @@ extern "C" {
 
 extern char* GetPerson(GoString p0);
 
-extern char* GetPersonNew(GoString p0);
+extern char* GetPeople();
 
 extern char* GetInfo(GoString p0, GoString p1);
 

@@ -3,6 +3,10 @@ use std::io::prelude::*;
 
 use serde_json::Value;
 
+//---For CGO
+use std::ffi::{CStr, CString};
+use std::os::raw::c_char;
+
 pub fn log_message(processed_text: String) {
     if let Ok(mut file) = OpenOptions::new()
         .read(true)
@@ -41,4 +45,93 @@ pub fn title_pass_retriever(json_string: String) -> (String, String) {
         }
     }
     (title, pass)
+}
+
+//--------------THE FOLLOWING IS USED TO INTERACT WITH THE 'golibs' STUFF
+//--------------DEPENDENT ON GOLANG LIBS
+//--------------RECOMMENDED MOVE TO SEPARATE CRATE
+extern "C" {
+    fn GetPerson(name: GoString) -> *const c_char;
+    fn GetPeople() -> *const c_char;
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct GoString {
+    a: *const c_char,
+    b: isize,
+}
+
+pub struct Person {
+    pub name: String,
+    pub description: String,
+}
+
+pub fn get_person(name: String) -> Option<Person> {
+    println!("GO GETTING PERSON: {}", name);
+    let c_name = CString::new(name).expect("CString::new failed");
+    let ptr = c_name.as_ptr();
+    let go_string = GoString {
+        a: ptr,
+        b: c_name.as_bytes().len() as isize,
+    };
+    let result = unsafe { GetPerson(go_string) };
+    let c_str = unsafe { CStr::from_ptr(result) };
+    let string = c_str
+        .to_str()
+        .expect("Error translating person data from library");
+    if let Some(json) = serde_json::from_str(&string.to_string()).ok() {
+        println!("GET_INFO: person json is {} ", json);
+        match json {
+            Value::Object(map) => match &map.get("person") {
+                Some(Value::Object(map)) => match (&map.get("name"), &map.get("description")) {
+                    (Some(Value::String(name)), Some(Value::String(description))) => Some(Person {
+                        name: name.clone(),
+                        description: description.clone(),
+                    }),
+                    _ => None,
+                },
+                _ => None,
+            },
+            // Value::String(response) =>
+            _ => None,
+        }
+    } else {
+        None
+    }
+}
+
+pub fn get_people() -> Option<Vec<Person>> {
+    let result = unsafe { GetPeople() };
+    let c_str = unsafe { CStr::from_ptr(result) };
+    let string = c_str
+        .to_str()
+        .expect("Error translating people data from library");
+    if let Some(json) = serde_json::from_str(&string.to_string()).ok() {
+        println!("GET_INFO: people json is valid");
+        match json {
+            Value::Object(map) => match &map.get("people") {
+                Some(Value::Array(people_values)) => {
+                    let mut people: Vec<Person> = vec![];
+                    for person in people_values {
+                        match (&person["name"], &person["description"]) {
+                            (Value::String(name), Value::String(description)) => {
+                                people.push(Person {
+                                    name: name.clone(),
+                                    description: description.clone(),
+                                });
+                            }
+                            _ => (),
+                        }
+                    }
+                    Some(people)
+                }
+                _ => None,
+            },
+            // Value::String(response) =>
+            _ => None,
+        }
+    } else {
+        None
+    }
 }
