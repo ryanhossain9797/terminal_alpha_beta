@@ -52,6 +52,22 @@ utterances:
   - please [searchTerm](check) [personTerm](a human) for me
   - can you [searchTerm](check) [personTerm](who) this is
 
+# meme intent
+---
+type: intent
+name: meme
+utterances:
+  - i want a meme
+  - help me find a meme
+  - check a meme for me
+
+# unknown intent
+---
+type: intent
+name: unknown
+utterances:
+  - test unknown
+
 # info intent
 ---
 type: intent
@@ -67,14 +83,15 @@ slots:
     entity: passVar
 utterances:
   - get [infoTerm](info) for [title](upskill) with [passTerm](pass) [pass](kajkjdskajd)
-  - get [title](linux) [infoTerm](info) with [passTerm](pin) [pass](dwafawf)
+  - "[title](linux) [infoTerm](info) with [passTerm](pin) [pass](dwafawf)"
   - get me [title](linux) [infoTerm](info), [passTerm](pin) is [pass](dwafawf)
+  - "[title](linux) [infoTerm](info), [passTerm](pin) [pass](dwafawf)"
   - can you get me [title](linux) [infoTerm](info), [passTerm](pin) is [pass](dwafawf)
   - fetch [infoTerm](info) for [title](ssh), [passTerm](pass) [pass](dawfwaf)
   - on [title](top) [infoTerm](data), [passTerm](pass) [pass](jhawadw)
   - check [title](sudo) [infoTerm](data), [pass](linuxinfo)
-  - with [passTerm](pass) [pass](jhawadw) fetch [title](sudo) [infoTerm](data)
-  - the [passTerm](pass) is [pass](ladida) get me [infoTerm](stuff) on [title](sudo)
+  - "[passTerm](pass) [pass](jhawadw) fetch [title](sudo) [infoTerm](data)"
+  - "[passTerm](pass) is [pass](ladida) get me [infoTerm](stuff) on [title](sudo)"
 
 # chatWord entity
 ---

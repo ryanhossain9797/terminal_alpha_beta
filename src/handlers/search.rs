@@ -6,7 +6,7 @@ use telegram_bot::*;
 
 //---adds a userstate record with search state to userstate records map
 //---fires wipe history command for search state
-pub async fn start_search(message: Message) -> root::Msg {
+pub async fn start_search(message: Message) -> root::MsgCount {
     println!("START_SEARCH: search initiated");
 
     let mut map = root::RECORDS.lock().await;
@@ -21,28 +21,35 @@ pub async fn start_search(message: Message) -> root::Msg {
     println!("START_SEARCH: record added");
     root::wipe_history(message.clone(), root::UserState::Search);
 
-    root::Msg::Text(format!(
+    root::MsgCount::SingleMsg(root::Msg::Text(format!(
         "Terminal Alpha and Beta:\nGreetings unit {}\
         \nwhat do you want to search for?",
         &message.from.first_name
-    ))
+    )))
 }
 
 //---finishes search
 //---fires immediate purge history command for search state
-pub async fn continue_search(message: Message, processesed_text: String) -> root::Msg {
+pub async fn continue_search(message: Message, processesed_text: String) -> root::MsgCount {
+    root::immediate_purge_history(message.from.clone(), root::UserState::Search);
     let search_option = google_search(processesed_text);
 
-    root::immediate_purge_history(message.from.clone(), root::UserState::Search);
     match search_option {
         Some(results) => {
-            let mut msgs: Vec<String> = vec!["These are the results we retrieved".to_string()];
+            let mut msgs: Vec<root::Msg> = vec![root::Msg::Text(
+                "These are the results we retrieved".to_string(),
+            )];
             for result in results {
-                msgs.push(format!("{}\nurl: {}", result.description, result.link));
+                msgs.push(root::Msg::Text(format!(
+                    "{}\nurl: {}",
+                    result.description, result.link
+                )));
             }
-            root::Msg::TextList(msgs)
+            root::MsgCount::MultiMsg(msgs)
         }
-        _ => root::Msg::Text("We couldn't conduct the search operation, excuse us".to_string()),
+        _ => root::MsgCount::SingleMsg(root::Msg::Text(
+            "We couldn't conduct the search operation, excuse us".to_string(),
+        )),
     }
 }
 

@@ -3,6 +3,7 @@
 pub mod chat;
 pub mod identify;
 pub mod info;
+pub mod meme;
 pub mod responses;
 pub mod root;
 pub mod search;

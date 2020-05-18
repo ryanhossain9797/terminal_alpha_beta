@@ -5,7 +5,7 @@ use std::os::raw::c_char;
 
 use serde_json::Value;
 
-pub fn start_info(json: String) -> root::Msg {
+pub fn start_info(json: String) -> root::MsgCount {
     //println!("ACTION_PICKER: intent json is {}", json);
     let title_pass = util::title_pass_retriever(json);
     println!(
@@ -28,7 +28,7 @@ struct GoString {
     b: isize,
 }
 
-pub fn get_info_go(title: String, pass: String) -> root::Msg {
+pub fn get_info_go(title: String, pass: String) -> root::MsgCount {
     println!("GO GETTING INFO: {}", title);
     let c_title = CString::new(title).expect("CString::new failed");
     let t_ptr = c_title.as_ptr();
@@ -53,9 +53,9 @@ pub fn get_info_go(title: String, pass: String) -> root::Msg {
         println!("GET_INFO: valid json");
         match json {
             Value::Object(map) => match &map.get("info") {
-                Some(Value::String(response)) => {
-                    root::Msg::Text(response.to_string().replace("\\n", "\n"))
-                }
+                Some(Value::String(response)) => root::MsgCount::SingleMsg(root::Msg::Text(
+                    response.to_string().replace("\\n", "\n"),
+                )),
                 _ => responses::unsupported_notice(),
             },
             // Value::String(response) =>

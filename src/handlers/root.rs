@@ -1,6 +1,7 @@
 use crate::handlers::chat;
 use crate::handlers::identify;
 use crate::handlers::info;
+use crate::handlers::meme;
 use crate::handlers::responses;
 use crate::handlers::search;
 use crate::handlers::util;
@@ -56,20 +57,29 @@ lazy_static! {
 pub enum UserState {
     Search,
     Identify,
+    Meme,
+    Unknown,
 }
 impl fmt::Display for UserState {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
             UserState::Search => write!(f, "Search"),
             UserState::Identify => write!(f, "Identify"),
+            UserState::Meme => write!(f, "Meme"),
+            UserState::Unknown => write!(f, "Unknown"),
         }
     }
 }
 
+pub enum MsgCount {
+    SingleMsg(Msg),
+    MultiMsg(Vec<Msg>),
+    NoMsg,
+}
+
 pub enum Msg {
     Text(String),
-    TextList(Vec<String>),
-    NoMsg,
+    File(String),
 }
 
 //---A user state record holds an individual user's state
@@ -121,6 +131,12 @@ pub async fn handler(
             println!("continuing identify");
             identify::continue_identify(message.clone(), processesed_text.clone()).await
         }
+        //---"if state is meme"
+        else if record.state == UserState::Meme {
+            drop(map);
+            println!("continuing meme");
+            meme::continue_meme(message.clone(), processesed_text.clone()).await
+        }
         //---"if state is unknown"
         else {
             println!("some unknown state");
@@ -134,23 +150,37 @@ pub async fn handler(
         drop(map);
         //---cancel last does nothing as there's nothing to cancel
         if processesed_text == "cancel last" {
-            Msg::Text("nothing to cancel".to_string())
+            MsgCount::SingleMsg(Msg::Text("nothing to cancel".to_string()))
         }
         //---hand over to the natural understanding system for advanced matching
         else {
             natural_understanding(message.clone(), processesed_text).await
         }
     } else {
-        Msg::NoMsg
+        MsgCount::NoMsg
     };
     match received_message {
-        Msg::Text(text) => {
-            API.spawn(message.chat.text(text));
-        }
-        Msg::TextList(text_list) => {
-            for text in text_list {
+        MsgCount::SingleMsg(msg) => match msg {
+            Msg::Text(text) => {
+                API.spawn(message.chat.text(text));
+            }
+            Msg::File(url) => {
+                API.spawn(message.chat.photo(InputFileUpload::with_path(url)));
+            }
+        },
+        MsgCount::MultiMsg(msg_list) => {
+            for msg in msg_list {
                 //---Need send here because spawn would send messages out of order
-                let _ = API.send(message.chat.text(text)).await;
+                match msg {
+                    Msg::Text(text) => {
+                        let _ = API.send(message.chat.text(text)).await;
+                    }
+                    Msg::File(url) => {
+                        let _ = API
+                            .send(message.chat.photo(InputFileUpload::with_path(url)))
+                            .await;
+                    }
+                }
             }
         }
         _ => {}
@@ -159,7 +189,7 @@ pub async fn handler(
     Ok(())
 }
 
-pub async fn natural_understanding(message: Message, processed_text: String) -> Msg {
+pub async fn natural_understanding(message: Message, processed_text: String) -> MsgCount {
     let intents_alternatives = 1;
     let slots_alternatives = 1;
 
@@ -186,7 +216,7 @@ pub async fn natural_understanding(message: Message, processed_text: String) -> 
                 match &*intent {
                     "chat" => {
                         println!("ACTION_PICKER: starting chat");
-                        chat::start_chat(message.clone()).await
+                        chat::start_chat().await
                     }
                     "search" => {
                         println!("ACTION_PICKER: starting search");
@@ -196,9 +226,17 @@ pub async fn natural_understanding(message: Message, processed_text: String) -> 
                         println!("ACTION_PICKER: starting identify");
                         identify::start_identify(message.clone()).await
                     }
+                    "meme" => {
+                        println!("ACTION_PICKER: starting meme");
+                        meme::start_meme(message.clone()).await
+                    }
                     "info" => {
                         println!("ACTION_PICKER: starting info");
                         info::start_info(json)
+                    }
+                    "unknown" => {
+                        println!("ACTION_PICKER: starting unknown state test");
+                        util::start_unknown(message.clone()).await
                     }
                     _ => {
                         //---This one is only for unimplemented but known intents
@@ -229,11 +267,13 @@ pub async fn natural_understanding(message: Message, processed_text: String) -> 
 //---removes current history with a cancellation message
 //---doesn't care about state
 //---used with the cancel last command
-pub async fn cancel_history(message: Message) -> Msg {
+pub async fn cancel_history(message: Message) -> MsgCount {
     let mut map = RECORDS.lock().await;
     map.remove(&message.from.id);
     drop(map);
-    Msg::Text(format!("understood. we will not prolong this conversation"))
+    MsgCount::SingleMsg(Msg::Text(format!(
+        "understood. we will not prolong this conversation"
+    )))
 }
 
 //---removes history after 30 seconds if it's not updated with a new time

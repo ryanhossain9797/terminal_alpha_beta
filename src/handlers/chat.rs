@@ -1,6 +1,5 @@
 use crate::handlers::util;
 use crate::handlers::*;
-use telegram_bot::*;
 //------Chat will not be a state any more.
 //------Rather any unknown message will be handled by chat in default
 //use std::mem::drop;
@@ -22,7 +21,7 @@ lazy_static! {
 //---FIX LEVEL: Returns Strings (y)
 //---adds a userstate record with chat state to userstate records map
 //---fires wipe history command for chat state
-pub async fn start_chat(message: Message) -> root::Msg {
+pub async fn start_chat() -> root::MsgCount {
     println!("START_CHAT: chat initiated");
     //------Chat will not be a state any more.
     //------Rather any unknown message will be handled by chat in default
@@ -42,20 +41,14 @@ pub async fn start_chat(message: Message) -> root::Msg {
     */
     println!("START_CHAT: responding to chat intent");
 
-    root::Msg::Text(format!(
-        "Greetings unit {}.\
-        \nYou are free to ask any questions.\
-        \nWhether we answer or not depends on us.\
-        \nNote that in public groups you must mention us by our handle.",
-        &message.from.first_name
-    ))
+    responses::custom_response("chat-start".to_string())
 }
 
 //---FIX LEVEL: Works with strings
 //---updated to implement RETURN STRINGS
 //---updates userstate record map with chat messages list and new time
 //---fires wipe history command for chat state
-pub async fn continue_chat(/*message: Message,*/ processed_text: String) -> root::Msg {
+pub async fn continue_chat(/*message: Message,*/ processed_text: String) -> root::MsgCount {
     //------Chat will not be a state any more.
     //------Rather any unknown message will be handled by chat in default
     /*
@@ -96,13 +89,13 @@ pub async fn continue_chat(/*message: Message,*/ processed_text: String) -> root
         if result.intent.confidence_score > 0.5 {
             if intent == "greet" {
                 println!("starting greet");
-                responses::custom_response("greet".to_string())
+                responses::custom_response("chat-greet".to_string())
             } else if intent == "about" {
                 println!("starting about");
-                responses::custom_response("about".to_string())
+                responses::custom_response("chat-about".to_string())
             } else if intent == "technology" {
                 println!("starting technology");
-                responses::custom_response("technology".to_string())
+                responses::custom_response("chat-technology".to_string())
             } else {
                 responses::unsupported_notice()
             }

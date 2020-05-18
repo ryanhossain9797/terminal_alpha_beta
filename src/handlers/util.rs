@@ -1,5 +1,9 @@
+use crate::handlers::root;
 use std::fs::OpenOptions;
 use std::io::prelude::*;
+
+use std::time::Instant;
+use telegram_bot::*;
 
 use serde_json::Value;
 
@@ -181,4 +185,26 @@ pub fn google_search(search: String) -> Option<Vec<SearchResult>> {
         }
     }
     return None;
+}
+
+pub async fn start_unknown(message: Message) -> root::MsgCount {
+    println!("START_UNKNOWN: unknown state initiated");
+
+    let mut map = root::RECORDS.lock().await;
+    map.entry(message.from.id)
+        .or_insert_with(|| root::UserStateRecord {
+            username: message.from.first_name.clone(),
+            chat: message.chat.id(),
+            last: Instant::now(),
+            state: root::UserState::Unknown,
+        });
+    drop(map);
+    println!("START_UNKNOWN: record added");
+    root::wipe_history(message.clone(), root::UserState::Unknown);
+
+    root::MsgCount::SingleMsg(root::Msg::Text(format!(
+        "Terminal Alpha and Beta:\nGreetings unit {}\
+        \nintentional unknown state set up",
+        &message.from.first_name
+    )))
 }

@@ -434,9 +434,6 @@
         {
           "data": [
             {
-              "text": "get "
-            },
-            {
               "entity": "titleVar",
               "slot_name": "title",
               "text": "linux"
@@ -495,6 +492,39 @@
             },
             {
               "text": " is "
+            },
+            {
+              "entity": "passVar",
+              "slot_name": "pass",
+              "text": "dwafawf"
+            }
+          ]
+        },
+        {
+          "data": [
+            {
+              "entity": "titleVar",
+              "slot_name": "title",
+              "text": "linux"
+            },
+            {
+              "text": " "
+            },
+            {
+              "entity": "infoWord",
+              "slot_name": "infoTerm",
+              "text": "info"
+            },
+            {
+              "text": ", "
+            },
+            {
+              "entity": "passWord",
+              "slot_name": "passTerm",
+              "text": "pin"
+            },
+            {
+              "text": " "
             },
             {
               "entity": "passVar",
@@ -642,9 +672,6 @@
         {
           "data": [
             {
-              "text": "with "
-            },
-            {
               "entity": "passWord",
               "slot_name": "passTerm",
               "text": "pass"
@@ -678,9 +705,6 @@
         {
           "data": [
             {
-              "text": "the "
-            },
-            {
               "entity": "passWord",
               "slot_name": "passTerm",
               "text": "pass"
@@ -708,6 +732,31 @@
               "entity": "titleVar",
               "slot_name": "title",
               "text": "sudo"
+            }
+          ]
+        }
+      ]
+    },
+    "meme": {
+      "utterances": [
+        {
+          "data": [
+            {
+              "text": "i want a meme"
+            }
+          ]
+        },
+        {
+          "data": [
+            {
+              "text": "help me find a meme"
+            }
+          ]
+        },
+        {
+          "data": [
+            {
+              "text": "check a meme for me"
             }
           ]
         }
@@ -808,6 +857,17 @@
             },
             {
               "text": " something for me"
+            }
+          ]
+        }
+      ]
+    },
+    "unknown": {
+      "utterances": [
+        {
+          "data": [
+            {
+              "text": "test unknown"
             }
           ]
         }
