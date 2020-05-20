@@ -5,3 +5,5 @@ scp -P 5914 target/armv7-unknown-linux-gnueabihf/release/terminal_alpha_beta_rus
 scp -P 5914 -r chatengine  alarm@192.168.0.102:chatengine
 
 scp -P 5914 -r actionengine  alarm@192.168.0.102:actionengine
+
+scp -P 5914 responses.json  alarm@192.168.0.102:responses.json

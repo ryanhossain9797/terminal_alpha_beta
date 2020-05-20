@@ -1,3 +1,4 @@
+use crate::handlers::responses;
 use crate::handlers::root;
 use crate::handlers::util;
 use std::mem::drop;
@@ -25,11 +26,12 @@ pub async fn start_identify(message: Message) -> root::MsgCount {
     println!("START_IDENTIFY: record added for id {}", id);
     root::wipe_history(message.clone(), root::UserState::Identify);
 
-    root::MsgCount::SingleMsg(root::Msg::Text(format!(
-        "Terminal Alpha and Beta:\nGreetings unit {}\
-        \nwho do you want to look up?",
-        &message.from.first_name
-    )))
+    root::MsgCount::SingleMsg(root::Msg::Text(
+        match responses::load_response("identify-start") {
+            Some(response) => response,
+            _ => responses::response_unavailable(),
+        },
+    ))
 }
 
 //---finishes identify
@@ -63,26 +65,36 @@ fn get_person_go(name: &str) -> root::MsgCount {
                     println!("closest name is {}", name);
                     for person in people {
                         if person.name == name {
-                            return root::MsgCount::SingleMsg(root::Msg::Text(format!(
-                                "We could not find that exact person\
-                            \nBut we found {}:\
-                            \n{}",
-                                person.name, person.description
-                            )));
+                            return root::MsgCount::SingleMsg(root::Msg::Text(
+                                match responses::load_response("identify-partialmatch") {
+                                    Some(response) => response
+                                        .replace("{name}", &person.name)
+                                        .replace("{description}", &person.description),
+                                    _ => responses::response_unavailable(),
+                                },
+                            ));
                         }
                     }
                     root::MsgCount::SingleMsg(root::Msg::Text(
-                        "We could not find that person, Tagged for future identification"
-                            .to_string(),
+                        match responses::load_response("identify-notfound") {
+                            Some(response) => response,
+                            _ => responses::response_unavailable(),
+                        },
                     ))
                 }
                 _ => root::MsgCount::SingleMsg(root::Msg::Text(
-                    "We could not find that person, Tagged for future identification".to_string(),
+                    match responses::load_response("identify-notfound") {
+                        Some(response) => response,
+                        _ => responses::response_unavailable(),
+                    },
                 )),
             }
         }
         _ => root::MsgCount::SingleMsg(root::Msg::Text(
-            "We could not access the persons database".to_string(),
+            match responses::load_response("identify-dberror") {
+                Some(response) => response,
+                _ => responses::response_unavailable(),
+            },
         )),
     }
 }
