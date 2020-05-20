@@ -152,7 +152,12 @@ pub async fn handler(message: &Message, processesed_text: String, will_respond: 
         drop(map);
         //---cancel last does nothing as there's nothing to cancel
         if processesed_text == "cancel last" {
-            MsgCount::SingleMsg(Msg::Text("nothing to cancel".to_string()))
+            MsgCount::SingleMsg(Msg::Text(
+                match responses::load_response("cancel-nothing") {
+                    Some(response) => response,
+                    _ => responses::response_unavailable(),
+                },
+            ))
         }
         //---hand over to the natural understanding system for advanced matching
         else {
@@ -249,9 +254,10 @@ pub async fn cancel_history(message: Message) -> MsgCount {
         &format!("{}", id)
     });
     drop(map);
-    MsgCount::SingleMsg(Msg::Text(format!(
-        "understood. we will not prolong this conversation"
-    )))
+    MsgCount::SingleMsg(Msg::Text(match responses::load_response("cancel-state") {
+        Some(response) => response,
+        _ => responses::response_unavailable(),
+    }))
 }
 
 //---removes history after 30 seconds if it's not updated with a new time
@@ -273,10 +279,13 @@ pub fn wipe_history(message: Message, state: UserState) {
                     });
                     drop(map);
                     println!("deleted state record for {}", state);
-                    let notice_result = API
-                        .send(message.chat.text(format!(
-                            "you have been silent for too long\nwe cannot wait for you any longer"
-                        )))
+                    let notice_result =
+                        API.send(message.chat.text(
+                            match responses::load_response("delay-notice") {
+                                Some(response) => response,
+                                _ => responses::response_unavailable(),
+                            },
+                        ))
                         .await;
                     match notice_result {
                         Err(e) => println!("{:?}", e),

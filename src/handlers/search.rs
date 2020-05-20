@@ -22,11 +22,12 @@ pub async fn start_search(message: Message) -> root::MsgCount {
     println!("START_SEARCH: record added for id {}", id);
     root::wipe_history(message.clone(), root::UserState::Search);
 
-    root::MsgCount::SingleMsg(root::Msg::Text(format!(
-        "Terminal Alpha and Beta:\nGreetings unit {}\
-        \nwhat do you want to search for?",
-        &message.from.first_name
-    )))
+    root::MsgCount::SingleMsg(root::Msg::Text(
+        match responses::load_response("search-start") {
+            Some(response) => response,
+            _ => responses::response_unavailable(),
+        },
+    ))
 }
 
 //---finishes search
@@ -38,18 +39,29 @@ pub async fn continue_search(message: Message, processesed_text: String) -> root
     match search_option {
         Some(results) => {
             let mut msgs: Vec<root::Msg> = vec![root::Msg::Text(
-                "These are the results we retrieved".to_string(),
+                match responses::load_response("search-success") {
+                    Some(response) => response,
+                    _ => responses::response_unavailable(),
+                },
             )];
+            let search_template = match responses::load_response("search-content") {
+                Some(response) => response,
+                _ => responses::response_unavailable(),
+            };
             for result in results {
-                msgs.push(root::Msg::Text(format!(
-                    "{}\nurl: {}",
-                    result.description, result.link
-                )));
+                msgs.push(root::Msg::Text(
+                    search_template
+                        .replace("{description}", &result.description)
+                        .replace("{url}", &result.link),
+                ));
             }
             root::MsgCount::MultiMsg(msgs)
         }
         _ => root::MsgCount::SingleMsg(root::Msg::Text(
-            "We couldn't conduct the search operation, excuse us".to_string(),
+            match responses::load_response("search-fail") {
+                Some(response) => response,
+                _ => responses::response_unavailable(),
+            },
         )),
     }
 }

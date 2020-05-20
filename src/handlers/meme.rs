@@ -21,12 +21,12 @@ pub async fn start_meme(message: Message) -> root::MsgCount {
     println!("START_MEME: record added for id {}", id);
     root::wipe_history(message.clone(), root::UserState::Meme);
 
-    root::MsgCount::SingleMsg(root::Msg::Text(format!(
-        "Terminal Alpha and Beta:\nGreetings unit {}\
-        \nyou want to find a so called \"MEME\"?\
-        \nvery well, name one",
-        &message.from.first_name
-    )))
+    root::MsgCount::SingleMsg(root::Msg::Text(
+        match responses::load_response("meme-start") {
+            Some(response) => response,
+            _ => responses::response_unavailable(),
+        },
+    ))
 }
 
 //---finishes meme fetching

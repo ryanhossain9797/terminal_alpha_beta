@@ -7,7 +7,16 @@
     "identify-partialmatch": "We could not find that exact person\nBut we found a {name}:\n{description}",
     "identify-notfound": "We could not find that person, Tagged for future identification",
     "identify-dberror": "We could not access the people database",
+    "meme-start": "Terminal Alpha and Beta:\nGreetings unit\nyou want to find a so called \"MEME\"?\nvery well, name one",
+    "search-start": "Terminal Alpha and Beta:\nGreetings unit\nwhat do you want to search for?",
+    "search-success": "These are the results we retrieved from the archives",
+    "search-content": "{description}\nURL: {url}",
+    "search-fail": "We couldn't conduct the search operation, excuse us",
+    "cancel-state": "Very well, we will not prolong this conversation",
+    "cancel-nothing": "Nothing to cancel",
+    "delay-notice": "You have been unresponsive for too long\nwe cannot wait for you any longer",
     "unknown-state": "we could not remember what we were doing\nplease be aware that we are a test system with only sub-functions available\nwe can only utilize a fraction of our full capabilites on this server",
     "unsupported-notice-1": "we could not understand that\nplease be aware that we are a test system with only sub-functions available\nwe can only utilize a fraction of our full capabilites on this server",
-    "unsupported-notice-2": "note that this query may be stored for further analysis of intent"
+    "unsupported-notice-2": "note that this query may be stored for further analysis of intent",
+    "intentional-unknownstate": "intentional unknown state set up"
 }

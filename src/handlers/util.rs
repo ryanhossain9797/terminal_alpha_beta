@@ -1,3 +1,4 @@
+use crate::handlers::responses;
 use crate::handlers::root;
 use std::fs::OpenOptions;
 use std::io::prelude::*;
@@ -203,9 +204,10 @@ pub async fn start_unknown(message: Message) -> root::MsgCount {
     println!("START_UNKNOWN: record added for id {}", id);
     root::wipe_history(message.clone(), root::UserState::Unknown);
 
-    root::MsgCount::SingleMsg(root::Msg::Text(format!(
-        "Terminal Alpha and Beta:\nGreetings unit {}\
-        \nintentional unknown state set up",
-        &message.from.first_name
-    )))
+    root::MsgCount::SingleMsg(root::Msg::Text(
+        match responses::load_response("intentional-unknownstate") {
+            Some(response) => response,
+            _ => responses::response_unavailable(),
+        },
+    ))
 }
