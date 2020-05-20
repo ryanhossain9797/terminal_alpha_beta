@@ -13,7 +13,8 @@ pub async fn start_identify(message: Message) -> root::MsgCount {
     println!("START_IDENTIFY: identify initiated");
 
     let mut map = root::RECORDS.lock().await;
-    map.entry(message.from.id)
+    let id: i64 = message.from.id.into();
+    map.entry(format!("{}", id))
         .or_insert_with(|| root::UserStateRecord {
             username: message.from.first_name.clone(),
             chat: message.chat.id(),
@@ -21,7 +22,7 @@ pub async fn start_identify(message: Message) -> root::MsgCount {
             state: root::UserState::Identify,
         });
     drop(map);
-    println!("START_IDENTIFY: record added");
+    println!("START_IDENTIFY: record added for id {}", id);
     root::wipe_history(message.clone(), root::UserState::Identify);
 
     root::MsgCount::SingleMsg(root::Msg::Text(format!(

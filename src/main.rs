@@ -12,6 +12,7 @@ use regex::Regex;
 use std::time::Duration;
 use telegram_bot::*;
 const WAITTIME: u64 = 10;
+
 #[tokio::main]
 async fn main() {
     dotenv().ok();
@@ -65,7 +66,7 @@ async fn filter(message: &Message) {
         if let Ok(myname) = myname_result {
             if let Some(name) = myname.username {
                 //-----------------------remove self mention from message
-                let handle = format!("@{}",&name);
+                let handle = format!("@{}", &name);
                 let mut msg = data.replace(&handle, "");
                 msg = msg.trim().to_string();
                 msg = msg.trim_start_matches("/").to_string();
@@ -82,15 +83,15 @@ async fn filter(message: &Message) {
                     if data.contains(&handle) {
                         //---true means message is to be processed even if no conversation is in progress
                         //---if bot is mentioned new convo can start
-                        handler(&message, msg, true).await
+                        sender(&message, msg, true).await
                     } else {
                         //---false means message won't start a new conversation
                         //---required because ongoing conversation will continue regardless of true or false
-                        handler(&message, msg, false).await
+                        sender(&message, msg, false).await
                     }
                 } else {
                     //---if not in group chat mentions aren't necessary and any message will be replied by the bot
-                    handler(&message, msg, true).await
+                    sender(&message, msg, true).await
                 };
                 match send_result {
                     Err(err) => println!("Message send failed, err => {}", err),
@@ -100,3 +101,83 @@ async fn filter(message: &Message) {
         }
     }
 }
+
+async fn sender(
+    message: &Message,
+    processed_text: String,
+    will_respond: bool,
+) -> Result<(), Error> {
+    match handlers::root::handler(message, processed_text, will_respond).await {
+        MsgCount::SingleMsg(msg) => match msg {
+            Msg::Text(text) => {
+                API.spawn(message.chat.text(text));
+            }
+            Msg::File(url) => {
+                API.spawn(message.chat.photo(InputFileUpload::with_path(url)));
+            }
+        },
+        MsgCount::MultiMsg(msg_list) => {
+            for msg in msg_list {
+                //---Need send here because spawn would send messages out of order
+                match msg {
+                    Msg::Text(text) => {
+                        let _ = API.send(message.chat.text(text)).await;
+                    }
+                    Msg::File(url) => {
+                        let _ = API
+                            .send(message.chat.photo(InputFileUpload::with_path(url)))
+                            .await;
+                    }
+                }
+            }
+        }
+        _ => {}
+    }
+    Ok(())
+}
+
+//---These will be used to generalize telegram messages with other platforms
+struct TelegramMessage {
+    api: &'static Api,
+    message: Message,
+}
+
+impl handlers::root::MessageUpdate for TelegramMessage {
+    fn get_name(&self) -> String {
+        self.message.from.first_name.clone()
+    }
+    fn get_id(&self) -> String {
+        let id: i64 = self.message.from.id.into();
+        format!("{}", id)
+    }
+    fn send_message(&self, message: handlers::root::MsgCount) {
+        match message {
+            MsgCount::SingleMsg(msg) => match msg {
+                Msg::Text(text) => {
+                    API.spawn(self.message.chat.text(text));
+                }
+                Msg::File(url) => {
+                    API.spawn(self.message.chat.photo(InputFileUpload::with_path(url)));
+                }
+            },
+            MsgCount::MultiMsg(msg_list) => {
+                for msg in msg_list {
+                    //---Need send here because spawn would send messages out of order
+                    let sender = &self.message.chat.clone();
+                    match msg {
+                        Msg::Text(text) => {
+                            let _ = self.api.send(sender.text(text));
+                        }
+                        Msg::File(url) => {
+                            let _ = self
+                                .api
+                                .send(sender.photo(InputFileUpload::with_path(url)).clone());
+                        }
+                    }
+                }
+            }
+            _ => {}
+        }
+    }
+}
+//------------------------------------------------------------------

@@ -11,23 +11,26 @@ const LONGWAIT: u64 = 30;
 const SHORTWAIT: u64 = 10;
 const WAITTIME: u64 = LONGWAIT;
 
+use serde_json;
 use std::collections::HashMap;
 use std::env;
-
 use std::fmt;
-
 use std::fs::*;
-
 use std::mem::drop;
 use std::time::{Duration, Instant};
 use telegram_bot::*;
-
-use serde_json;
 
 //
 extern crate snips_nlu_lib;
 use snips_nlu_lib::SnipsNluEngine;
 //
+
+//---Will be used in the future to generalize bot for other platforms in future versions
+pub trait MessageUpdate {
+    fn get_name(&self) -> String;
+    fn get_id(&self) -> String;
+    fn send_message(&self, message: MsgCount);
+}
 
 lazy_static! {
     //---Global API access
@@ -37,7 +40,7 @@ lazy_static! {
         api
     };
     //---Record is a map holding all users state record info
-    pub static ref RECORDS: tokio::sync::Mutex<HashMap<UserId, UserStateRecord>> =
+    pub static ref RECORDS: tokio::sync::Mutex<HashMap<String, UserStateRecord>> =
         tokio::sync::Mutex::new(HashMap::new()) ;
     //---Snips NLU is used to pick actions when they don't match directly
     pub static ref ACTIONENGINE: SnipsNluEngine = {
@@ -93,14 +96,13 @@ pub struct UserStateRecord {
 }
 
 //----------First place to handler messages after initial filtering
-pub async fn handler(
-    message: &Message,
-    processesed_text: String,
-    will_respond: bool,
-) -> Result<(), Error> {
+pub async fn handler(message: &Message, processesed_text: String, will_respond: bool) -> MsgCount {
     println!("processed text is '{}'", processesed_text);
     let map = RECORDS.lock().await;
-    let entry_option = map.get(&message.from.id);
+    let entry_option = map.get({
+        let id: i64 = message.from.id.into();
+        &format!("{}", id)
+    });
     //---If record from user exists (A Some(record)), some conversation is ongoing
     //---So will be replied regardless of groups or mentions and stuff ('will_respond' is ignored)
     let received_message = if let Some(record) = entry_option {
@@ -159,34 +161,7 @@ pub async fn handler(
     } else {
         MsgCount::NoMsg
     };
-    match received_message {
-        MsgCount::SingleMsg(msg) => match msg {
-            Msg::Text(text) => {
-                API.spawn(message.chat.text(text));
-            }
-            Msg::File(url) => {
-                API.spawn(message.chat.photo(InputFileUpload::with_path(url)));
-            }
-        },
-        MsgCount::MultiMsg(msg_list) => {
-            for msg in msg_list {
-                //---Need send here because spawn would send messages out of order
-                match msg {
-                    Msg::Text(text) => {
-                        let _ = API.send(message.chat.text(text)).await;
-                    }
-                    Msg::File(url) => {
-                        let _ = API
-                            .send(message.chat.photo(InputFileUpload::with_path(url)))
-                            .await;
-                    }
-                }
-            }
-        }
-        _ => {}
-    }
-
-    Ok(())
+    received_message
 }
 
 pub async fn natural_understanding(message: Message, processed_text: String) -> MsgCount {
@@ -269,7 +244,10 @@ pub async fn natural_understanding(message: Message, processed_text: String) -> 
 //---used with the cancel last command
 pub async fn cancel_history(message: Message) -> MsgCount {
     let mut map = RECORDS.lock().await;
-    map.remove(&message.from.id);
+    map.remove({
+        let id: i64 = message.from.id.into();
+        &format!("{}", id)
+    });
     drop(map);
     MsgCount::SingleMsg(Msg::Text(format!(
         "understood. we will not prolong this conversation"
@@ -283,10 +261,16 @@ pub fn wipe_history(message: Message, state: UserState) {
     tokio::spawn(async move {
         tokio::time::delay_for(Duration::from_secs(WAITTIME)).await;
         let mut map = RECORDS.lock().await;
-        if let Some(r) = map.get(&message.from.id) {
+        if let Some(r) = map.get({
+            let id: i64 = message.from.id.into();
+            &format!("{}", id)
+        }) {
             if r.state == state {
                 if r.last.elapsed() > Duration::from_secs(WAITTIME) {
-                    map.remove(&message.from.id);
+                    map.remove({
+                        let id: i64 = message.from.id.into();
+                        &format!("{}", id)
+                    });
                     drop(map);
                     println!("deleted state record for {}", state);
                     let notice_result = API
@@ -319,9 +303,15 @@ pub fn wipe_history(message: Message, state: UserState) {
 pub fn immediate_purge_history(user: User, state: UserState) {
     tokio::spawn(async move {
         let mut map = RECORDS.lock().await;
-        if let Some(r) = map.get(&user.id) {
+        if let Some(r) = map.get({
+            let id: i64 = user.id.into();
+            &format!("{}", id)
+        }) {
             if r.state == state {
-                map.remove(&user.id);
+                map.remove({
+                    let id: i64 = user.id.into();
+                    &format!("{}", id)
+                });
                 drop(map);
                 println!("deleted state record for {}", state);
             }

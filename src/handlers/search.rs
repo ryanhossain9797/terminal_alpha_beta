@@ -10,7 +10,8 @@ pub async fn start_search(message: Message) -> root::MsgCount {
     println!("START_SEARCH: search initiated");
 
     let mut map = root::RECORDS.lock().await;
-    map.entry(message.from.id)
+    let id: i64 = message.from.id.into();
+    map.entry(format!("{}", id))
         .or_insert_with(|| root::UserStateRecord {
             username: message.from.first_name.clone(),
             chat: message.chat.id(),
@@ -18,7 +19,7 @@ pub async fn start_search(message: Message) -> root::MsgCount {
             state: root::UserState::Search,
         });
     drop(map);
-    println!("START_SEARCH: record added");
+    println!("START_SEARCH: record added for id {}", id);
     root::wipe_history(message.clone(), root::UserState::Search);
 
     root::MsgCount::SingleMsg(root::Msg::Text(format!(

@@ -9,7 +9,8 @@ pub async fn start_meme(message: Message) -> root::MsgCount {
     println!("START_MEME: meme initiated");
 
     let mut map = root::RECORDS.lock().await;
-    map.entry(message.from.id)
+    let id: i64 = message.from.id.into();
+    map.entry(format!("{}", id))
         .or_insert_with(|| root::UserStateRecord {
             username: message.from.first_name.clone(),
             chat: message.chat.id(),
@@ -17,7 +18,7 @@ pub async fn start_meme(message: Message) -> root::MsgCount {
             state: root::UserState::Meme,
         });
     drop(map);
-    println!("START_MEME: record added");
+    println!("START_MEME: record added for id {}", id);
     root::wipe_history(message.clone(), root::UserState::Meme);
 
     root::MsgCount::SingleMsg(root::Msg::Text(format!(
