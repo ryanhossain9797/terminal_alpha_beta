@@ -10,10 +10,19 @@ use futures::StreamExt;
 use handlers::chat::*;
 use handlers::root::*;
 use regex::Regex;
+use std::env;
 use std::time::Duration;
 use telegram_bot::*;
 const WAITTIME: u64 = 10;
 
+lazy_static! {
+    //---Global API access
+    pub static ref API: Api = {
+        let token = env::var("TELEGRAM_TOKEN").expect("TELEGRAM_TOKEN not set");
+        let api = Api::new(token);
+        api
+    };
+}
 #[tokio::main]
 async fn main() {
     dotenv().ok();
@@ -43,7 +52,7 @@ async fn main() {
                         println!("<{}>: {}", &message.from.first_name, data);
                         // Spawn a handler for the message.
 
-                        tokio::spawn(async move { filter(&message).await });
+                        filter(&message).await;
                     }
                 }
             }
@@ -105,32 +114,7 @@ async fn sender(message: &Message, processed_text: String, will_respond: bool) {
     let tele_msg = Box::new(TelegramMessage {
         message: message.clone(),
     }) as Box<dyn BotMessage + Send + Sync>;
-    match handlers::root::handler(tele_msg, message, processed_text, will_respond).await {
-        MsgCount::SingleMsg(msg) => match msg {
-            Msg::Text(text) => {
-                API.spawn(message.chat.text(text));
-            }
-            Msg::File(url) => {
-                API.spawn(message.chat.photo(InputFileUpload::with_path(url)));
-            }
-        },
-        MsgCount::MultiMsg(msg_list) => {
-            for msg in msg_list {
-                //---Need send here because spawn would send messages out of order
-                match msg {
-                    Msg::Text(text) => {
-                        let _ = API.send(message.chat.text(text)).await;
-                    }
-                    Msg::File(url) => {
-                        let _ = API
-                            .send(message.chat.photo(InputFileUpload::with_path(url)))
-                            .await;
-                    }
-                }
-            }
-        }
-        _ => {}
-    }
+    handlers::root::distributor(tele_msg, processed_text, will_respond).await;
 }
 
 //---These will be used to generalize telegram messages with other platforms

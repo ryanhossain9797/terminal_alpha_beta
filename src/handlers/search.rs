@@ -2,38 +2,40 @@ use crate::handlers::util::*;
 use crate::handlers::*;
 use std::mem::drop;
 use std::time::Instant;
-use telegram_bot::*;
 
 //---adds a userstate record with search state to userstate records map
 //---fires wipe history command for search state
-pub async fn start_search(message: Message) -> root::MsgCount {
+pub async fn start_search(m: Box<dyn root::BotMessage + Send + Sync>) -> root::MsgCount {
     println!("START_SEARCH: search initiated");
 
     let mut map = root::RECORDS.lock().await;
-    let id: i64 = message.from.id.into();
+    let id = (*m).get_id();
     map.entry(format!("{}", id))
         .or_insert_with(|| root::UserStateRecord {
-            username: message.from.first_name.clone(),
-
+            username: (*m).get_name(),
             last: Instant::now(),
             state: root::UserState::Search,
         });
     drop(map);
     println!("START_SEARCH: record added for id {}", id);
-    root::wipe_history(message.clone(), root::UserState::Search);
-
-    root::MsgCount::SingleMsg(root::Msg::Text(
+    root::wipe_history(m.clone(), root::UserState::Search);
+    (*m).send_msg(root::MsgCount::SingleMsg(root::Msg::Text(
         match responses::load_response("search-start") {
             Some(response) => response,
             _ => responses::response_unavailable(),
         },
-    ))
+    )))
+    .await;
+    root::MsgCount::NoMsg
 }
 
 //---finishes search
 //---fires immediate purge history command for search state
-pub async fn continue_search(message: Message, processesed_text: String) -> root::MsgCount {
-    root::immediate_purge_history(message.from.clone(), root::UserState::Search);
+pub async fn continue_search(
+    m: Box<dyn root::BotMessage + Send + Sync>,
+    processesed_text: String,
+) -> root::MsgCount {
+    root::immediate_purge_history(m.clone(), root::UserState::Search);
     let search_option = google_search(processesed_text);
 
     match search_option {

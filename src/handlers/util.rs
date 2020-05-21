@@ -3,7 +3,6 @@ use crate::handlers::root;
 use std::fs::OpenOptions;
 use std::io::prelude::*;
 use std::time::{Duration, Instant};
-use telegram_bot::*;
 
 use serde_json::Value;
 
@@ -187,29 +186,31 @@ pub fn google_search(search: String) -> Option<Vec<SearchResult>> {
     return None;
 }
 
-pub async fn start_unknown(message: Message) -> root::MsgCount {
+pub async fn start_unknown(m: Box<dyn root::BotMessage + Send + Sync>) -> root::MsgCount {
     println!("START_UNKNOWN: unknown state initiated");
 
     let mut map = root::RECORDS.lock().await;
-    let id: i64 = message.from.id.into();
+    let id = (*m).get_id();
     map.entry(format!("{}", id))
         .or_insert_with(|| root::UserStateRecord {
-            username: message.from.first_name.clone(),
+            username: (*m).get_name(),
             last: Instant::now(),
             state: root::UserState::Unknown,
         });
     drop(map);
     println!("START_UNKNOWN: record added for id {}", id);
-    root::wipe_history(message.clone(), root::UserState::Unknown);
-
-    root::MsgCount::SingleMsg(root::Msg::Text(
+    root::wipe_history(m.clone(), root::UserState::Unknown);
+    (*m).send_msg(root::MsgCount::SingleMsg(root::Msg::Text(
         match responses::load_response("intentional-unknownstate") {
             Some(response) => response,
             _ => responses::response_unavailable(),
         },
-    ))
+    )))
+    .await;
+    root::MsgCount::NoMsg
 }
 
+#[allow(dead_code)]
 pub fn refactor_tester(m: Box<dyn root::BotMessage + Send + Sync>) {
     tokio::spawn(async move {
         tokio::time::delay_for(Duration::from_secs(10)).await;

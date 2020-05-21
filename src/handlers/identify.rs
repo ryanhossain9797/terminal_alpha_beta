@@ -3,42 +3,45 @@ use crate::handlers::root;
 use crate::handlers::util;
 use std::mem::drop;
 use std::time::Instant;
-use telegram_bot::*;
 
 extern crate closestmatch;
 use closestmatch::*;
 
 //---adds a userstate record with identify state to userstate records map
 //---fires wipe history command for identify state
-pub async fn start_identify(message: Message) -> root::MsgCount {
+pub async fn start_identify(m: Box<dyn root::BotMessage + Send + Sync>) -> root::MsgCount {
     println!("START_IDENTIFY: identify initiated");
 
     let mut map = root::RECORDS.lock().await;
-    let id: i64 = message.from.id.into();
+    let id = (*m).get_id();
     map.entry(format!("{}", id))
         .or_insert_with(|| root::UserStateRecord {
-            username: message.from.first_name.clone(),
-
+            username: (*m).get_name(),
             last: Instant::now(),
             state: root::UserState::Identify,
         });
     drop(map);
     println!("START_IDENTIFY: record added for id {}", id);
-    root::wipe_history(message.clone(), root::UserState::Identify);
-
-    root::MsgCount::SingleMsg(root::Msg::Text(
+    root::wipe_history(m.clone(), root::UserState::Identify);
+    (*m).send_msg(root::MsgCount::SingleMsg(root::Msg::Text(
         match responses::load_response("identify-start") {
             Some(response) => response,
             _ => responses::response_unavailable(),
         },
-    ))
+    )))
+    .await;
+    root::MsgCount::NoMsg
 }
 
 //---finishes identify
 //---fires immediate purge history command for identify state
 #[allow(unused_variables)]
-pub async fn continue_identify(message: Message, processesed_text: String) -> root::MsgCount {
-    root::immediate_purge_history(message.from.clone(), root::UserState::Identify);
+pub async fn continue_identify(
+    m: Box<dyn root::BotMessage + Send + Sync>,
+
+    processesed_text: String,
+) -> root::MsgCount {
+    root::immediate_purge_history(m, root::UserState::Identify);
     println!("IDENTIFY: beginning identification");
     get_person_go(&processesed_text)
 }

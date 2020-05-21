@@ -14,12 +14,10 @@ const WAITTIME: u64 = LONGWAIT;
 use async_trait::async_trait;
 use serde_json;
 use std::collections::HashMap;
-use std::env;
 use std::fmt;
 use std::fs::*;
 use std::mem::drop;
 use std::time::{Duration, Instant};
-use telegram_bot::*;
 
 //
 extern crate snips_nlu_lib;
@@ -27,12 +25,8 @@ use snips_nlu_lib::SnipsNluEngine;
 //
 
 lazy_static! {
-    //---Global API access
-    pub static ref API: Api = {
-        let token = env::var("TELEGRAM_TOKEN").expect("TELEGRAM_TOKEN not set");
-        let api = Api::new(token);
-        api
-    };
+
+
     //---Record is a map holding all users state record info
     pub static ref RECORDS: tokio::sync::Mutex<HashMap<String, UserStateRecord>> =
         tokio::sync::Mutex::new(HashMap::new()) ;
@@ -104,30 +98,35 @@ impl Clone for Box<dyn BotMessage + Send + Sync> {
     }
 }
 
-pub async fn distributor(m: Box<dyn BotMessage + Send + Sync>) {
-    util::refactor_tester(m.clone());
+#[allow(dead_code)]
+pub async fn distributor(
+    m: Box<dyn BotMessage + Send + Sync>,
+    processesed_text: String,
+    will_respond: bool,
+) {
+    tokio::spawn(async move { handler(m, processesed_text, will_respond).await });
 }
 
 //----------First place to handler messages after initial filtering
 pub async fn handler(
     m: Box<dyn BotMessage + Send + Sync>,
-    message: &Message,
     processesed_text: String,
     will_respond: bool,
-) -> MsgCount {
+) {
     println!("processed text is '{}'", processesed_text);
     let map = RECORDS.lock().await;
     let entry_option = map.get({
-        let id: i64 = message.from.id.into();
+        let id = (*m).get_id();
         &format!("{}", id)
     });
+    let responder = m.clone();
     //---If record from user exists (A Some(record)), some conversation is ongoing
     //---So will be replied regardless of groups or mentions and stuff ('will_respond' is ignored)
     let received_message = if let Some(record) = entry_option {
         //---"cancel last will shut off the conversation"
         if processesed_text == "cancel last" {
             drop(map);
-            cancel_history(message.clone()).await
+            cancel_history(m).await
         }
         //---"if state is chat"
         //------Chat will not be a state any more.
@@ -143,19 +142,19 @@ pub async fn handler(
         else if record.state == UserState::Search {
             drop(map);
             println!("continuing search");
-            search::continue_search(message.clone(), processesed_text.clone()).await
+            search::continue_search(m, processesed_text.clone()).await
         }
         //---"if state is identify"
         else if record.state == UserState::Identify {
             drop(map);
             println!("continuing identify");
-            identify::continue_identify(message.clone(), processesed_text.clone()).await
+            identify::continue_identify(m, processesed_text.clone()).await
         }
         //---"if state is meme"
         else if record.state == UserState::Meme {
             drop(map);
             println!("continuing meme");
-            meme::continue_meme(message.clone(), processesed_text.clone()).await
+            meme::continue_meme(m, processesed_text.clone()).await
         }
         //---"if state is unknown"
         else {
@@ -168,7 +167,7 @@ pub async fn handler(
     //---will start processing new info
     else if will_respond {
         drop(map);
-        distributor(m).await;
+        //distributor(m).await;
         //---cancel last does nothing as there's nothing to cancel
         if processesed_text == "cancel last" {
             MsgCount::SingleMsg(Msg::Text(
@@ -180,15 +179,19 @@ pub async fn handler(
         }
         //---hand over to the natural understanding system for advanced matching
         else {
-            natural_understanding(message.clone(), processesed_text).await
+            natural_understanding(m, processesed_text).await
         }
     } else {
         MsgCount::NoMsg
     };
-    received_message
+    (*responder).send_msg(received_message).await;
 }
 
-pub async fn natural_understanding(message: Message, processed_text: String) -> MsgCount {
+pub async fn natural_understanding(
+    m: Box<dyn BotMessage + Send + Sync>,
+
+    processed_text: String,
+) -> MsgCount {
     let intents_alternatives = 1;
     let slots_alternatives = 1;
 
@@ -219,15 +222,15 @@ pub async fn natural_understanding(message: Message, processed_text: String) -> 
                     }
                     "search" => {
                         println!("ACTION_PICKER: starting search");
-                        search::start_search(message.clone()).await
+                        search::start_search(m).await
                     }
                     "identify" => {
                         println!("ACTION_PICKER: starting identify");
-                        identify::start_identify(message.clone()).await
+                        identify::start_identify(m).await
                     }
                     "meme" => {
                         println!("ACTION_PICKER: starting meme");
-                        meme::start_meme(message.clone()).await
+                        meme::start_meme(m).await
                     }
                     "info" => {
                         println!("ACTION_PICKER: starting info");
@@ -235,7 +238,7 @@ pub async fn natural_understanding(message: Message, processed_text: String) -> 
                     }
                     "unknown" => {
                         println!("ACTION_PICKER: starting unknown state test");
-                        util::start_unknown(message.clone()).await
+                        util::start_unknown(m).await
                     }
                     _ => {
                         //---This one is only for unimplemented but known intents
@@ -266,10 +269,10 @@ pub async fn natural_understanding(message: Message, processed_text: String) -> 
 //---removes current history with a cancellation message
 //---doesn't care about state
 //---used with the cancel last command
-pub async fn cancel_history(message: Message) -> MsgCount {
+pub async fn cancel_history(m: Box<dyn BotMessage + Send + Sync>) -> MsgCount {
     let mut map = RECORDS.lock().await;
     map.remove({
-        let id: i64 = message.from.id.into();
+        let id = (*m).get_id();
         &format!("{}", id)
     });
     drop(map);
@@ -282,34 +285,23 @@ pub async fn cancel_history(message: Message) -> MsgCount {
 //---removes history after 30 seconds if it's not updated with a new time
 //---AND the history state matches the provided state
 //---message is provided to user
-pub fn wipe_history(message: Message, state: UserState) {
+pub fn wipe_history(m: Box<dyn BotMessage + Send + Sync>, state: UserState) {
     tokio::spawn(async move {
         tokio::time::delay_for(Duration::from_secs(WAITTIME)).await;
         let mut map = RECORDS.lock().await;
-        if let Some(r) = map.get({
-            let id: i64 = message.from.id.into();
-            &format!("{}", id)
-        }) {
+        if let Some(r) = map.get(&format!("{}", (*m).get_id())) {
             if r.state == state {
                 if r.last.elapsed() > Duration::from_secs(WAITTIME) {
-                    map.remove({
-                        let id: i64 = message.from.id.into();
-                        &format!("{}", id)
-                    });
+                    map.remove(&format!("{}", (*m).get_id()));
                     drop(map);
                     println!("deleted state record for {}", state);
-                    let notice_result =
-                        API.send(message.chat.text(
-                            match responses::load_response("delay-notice") {
-                                Some(response) => response,
-                                _ => responses::response_unavailable(),
-                            },
-                        ))
-                        .await;
-                    match notice_result {
-                        Err(e) => println!("{:?}", e),
-                        _ => (),
-                    }
+                    (*m).send_msg(MsgCount::SingleMsg(Msg::Text(
+                        match responses::load_response("delay-notice") {
+                            Some(response) => response,
+                            _ => responses::response_unavailable(),
+                        },
+                    )))
+                    .await;
                 } else {
                     println!("aborted record delete due to recency");
                     drop(map);
@@ -328,18 +320,12 @@ pub fn wipe_history(message: Message, state: UserState) {
 //---immediately purges history IF provided state matches history state
 //---used to remove history after state action is completed
 //---no notice provided
-pub fn immediate_purge_history(user: User, state: UserState) {
+pub fn immediate_purge_history(m: Box<dyn BotMessage + Send + Sync>, state: UserState) {
     tokio::spawn(async move {
         let mut map = RECORDS.lock().await;
-        if let Some(r) = map.get({
-            let id: i64 = user.id.into();
-            &format!("{}", id)
-        }) {
+        if let Some(r) = map.get(&format!("{}", (*m).get_id())) {
             if r.state == state {
-                map.remove({
-                    let id: i64 = user.id.into();
-                    &format!("{}", id)
-                });
+                map.remove(&format!("{}", (*m).get_id()));
                 drop(map);
                 println!("deleted state record for {}", state);
             }
