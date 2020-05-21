@@ -13,7 +13,7 @@ pub async fn start_meme(message: Message) -> root::MsgCount {
     map.entry(format!("{}", id))
         .or_insert_with(|| root::UserStateRecord {
             username: message.from.first_name.clone(),
-            chat: message.chat.id(),
+
             last: Instant::now(),
             state: root::UserState::Meme,
         });

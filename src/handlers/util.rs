@@ -2,8 +2,7 @@ use crate::handlers::responses;
 use crate::handlers::root;
 use std::fs::OpenOptions;
 use std::io::prelude::*;
-
-use std::time::Instant;
+use std::time::{Duration, Instant};
 use telegram_bot::*;
 
 use serde_json::Value;
@@ -196,7 +195,6 @@ pub async fn start_unknown(message: Message) -> root::MsgCount {
     map.entry(format!("{}", id))
         .or_insert_with(|| root::UserStateRecord {
             username: message.from.first_name.clone(),
-            chat: message.chat.id(),
             last: Instant::now(),
             state: root::UserState::Unknown,
         });
@@ -210,4 +208,14 @@ pub async fn start_unknown(message: Message) -> root::MsgCount {
             _ => responses::response_unavailable(),
         },
     ))
+}
+
+pub fn refactor_tester(m: Box<dyn root::BotMessage + Send + Sync>) {
+    tokio::spawn(async move {
+        tokio::time::delay_for(Duration::from_secs(10)).await;
+        (*m).send_msg(root::MsgCount::SingleMsg(root::Msg::Text(
+            "testing success".to_string(),
+        )))
+        .await;
+    });
 }

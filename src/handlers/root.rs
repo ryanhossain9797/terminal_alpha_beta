@@ -11,6 +11,7 @@ const LONGWAIT: u64 = 30;
 const SHORTWAIT: u64 = 10;
 const WAITTIME: u64 = LONGWAIT;
 
+use async_trait::async_trait;
 use serde_json;
 use std::collections::HashMap;
 use std::env;
@@ -24,13 +25,6 @@ use telegram_bot::*;
 extern crate snips_nlu_lib;
 use snips_nlu_lib::SnipsNluEngine;
 //
-
-//---Will be used in the future to generalize bot for other platforms in future versions
-pub trait MessageUpdate {
-    fn get_name(&self) -> String;
-    fn get_id(&self) -> String;
-    fn send_message(&self, message: MsgCount);
-}
 
 lazy_static! {
     //---Global API access
@@ -92,11 +86,26 @@ pub struct UserStateRecord {
     pub username: String,
     pub state: UserState,
     pub last: Instant,
-    pub chat: ChatId,
+}
+//---Will be used in the future to generalize bot for other platforms in future versions
+#[async_trait]
+pub trait BotMessage {
+    fn get_name(&self) -> String;
+    fn get_id(&self) -> String;
+    async fn send_msg(&self, message: MsgCount);
+}
+
+pub async fn distributor(m: Box<dyn BotMessage + Send + Sync>) {
+    util::refactor_tester(m);
 }
 
 //----------First place to handler messages after initial filtering
-pub async fn handler(message: &Message, processesed_text: String, will_respond: bool) -> MsgCount {
+pub async fn handler(
+    m: Box<dyn BotMessage + Send + Sync>,
+    message: &Message,
+    processesed_text: String,
+    will_respond: bool,
+) -> MsgCount {
     println!("processed text is '{}'", processesed_text);
     let map = RECORDS.lock().await;
     let entry_option = map.get({
@@ -150,6 +159,7 @@ pub async fn handler(message: &Message, processesed_text: String, will_respond: 
     //---will start processing new info
     else if will_respond {
         drop(map);
+        distributor(m).await;
         //---cancel last does nothing as there's nothing to cancel
         if processesed_text == "cancel last" {
             MsgCount::SingleMsg(Msg::Text(

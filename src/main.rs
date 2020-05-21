@@ -4,6 +4,7 @@ extern crate snips_nlu_lib;
 mod handlers;
 
 extern crate openssl_probe;
+use async_trait::async_trait;
 use dotenv::dotenv;
 use futures::StreamExt;
 use handlers::chat::*;
@@ -41,6 +42,7 @@ async fn main() {
                         // Print received text message to stdout.
                         println!("<{}>: {}", &message.from.first_name, data);
                         // Spawn a handler for the message.
+
                         tokio::spawn(async move { filter(&message).await });
                     }
                 }
@@ -77,7 +79,7 @@ async fn filter(message: &Message) {
                 let msg_str: &str = &msg[..];
                 msg = space_trimmer.replace_all(msg_str, " ").to_string();
                 //-----------------------check if message is from a group chat.......
-                let send_result = if let MessageChat::Group(group) = &message.chat {
+                if let MessageChat::Group(group) = &message.chat {
                     println!("{:?}", group);
                     //-----------------------......and check if handle is present if message IS from group chat
                     if data.contains(&handle) {
@@ -93,21 +95,17 @@ async fn filter(message: &Message) {
                     //---if not in group chat mentions aren't necessary and any message will be replied by the bot
                     sender(&message, msg, true).await
                 };
-                match send_result {
-                    Err(err) => println!("Message send failed, err => {}", err),
-                    _ => (),
-                }
             }
         }
     }
 }
 
-async fn sender(
-    message: &Message,
-    processed_text: String,
-    will_respond: bool,
-) -> Result<(), Error> {
-    match handlers::root::handler(message, processed_text, will_respond).await {
+//---Sender handles forwarding the message, receiving response and sending it to the user
+async fn sender(message: &Message, processed_text: String, will_respond: bool) {
+    let tele_msg = Box::new(TelegramMessage {
+        message: message.clone(),
+    }) as Box<dyn BotMessage + Send + Sync>;
+    match handlers::root::handler(tele_msg, message, processed_text, will_respond).await {
         MsgCount::SingleMsg(msg) => match msg {
             Msg::Text(text) => {
                 API.spawn(message.chat.text(text));
@@ -133,16 +131,16 @@ async fn sender(
         }
         _ => {}
     }
-    Ok(())
 }
 
 //---These will be used to generalize telegram messages with other platforms
+
 struct TelegramMessage {
-    api: &'static Api,
     message: Message,
 }
 
-impl handlers::root::MessageUpdate for TelegramMessage {
+#[async_trait]
+impl handlers::root::BotMessage for TelegramMessage {
     fn get_name(&self) -> String {
         self.message.from.first_name.clone()
     }
@@ -150,8 +148,8 @@ impl handlers::root::MessageUpdate for TelegramMessage {
         let id: i64 = self.message.from.id.into();
         format!("{}", id)
     }
-    fn send_message(&self, message: handlers::root::MsgCount) {
-        match message {
+    async fn send_msg(&self, msg: handlers::root::MsgCount) {
+        match msg {
             MsgCount::SingleMsg(msg) => match msg {
                 Msg::Text(text) => {
                     API.spawn(self.message.chat.text(text));
@@ -163,15 +161,14 @@ impl handlers::root::MessageUpdate for TelegramMessage {
             MsgCount::MultiMsg(msg_list) => {
                 for msg in msg_list {
                     //---Need send here because spawn would send messages out of order
-                    let sender = &self.message.chat.clone();
                     match msg {
                         Msg::Text(text) => {
-                            let _ = self.api.send(sender.text(text));
+                            let _ = API.send(self.message.chat.text(text)).await;
                         }
                         Msg::File(url) => {
-                            let _ = self
-                                .api
-                                .send(sender.photo(InputFileUpload::with_path(url)).clone());
+                            let _ = API
+                                .send(self.message.chat.photo(InputFileUpload::with_path(url)))
+                                .await;
                         }
                     }
                 }
