@@ -135,12 +135,16 @@ async fn sender(message: &Message, processed_text: String, will_respond: bool) {
 
 //---These will be used to generalize telegram messages with other platforms
 
+#[derive(Clone)]
 struct TelegramMessage {
     message: Message,
 }
 
 #[async_trait]
 impl handlers::root::BotMessage for TelegramMessage {
+    fn clone_bot_message(&self) -> Box<dyn BotMessage + Send + Sync> {
+        Box::new(self.clone())
+    }
     fn get_name(&self) -> String {
         self.message.from.first_name.clone()
     }

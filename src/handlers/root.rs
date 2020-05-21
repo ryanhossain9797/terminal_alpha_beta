@@ -90,13 +90,22 @@ pub struct UserStateRecord {
 //---Will be used in the future to generalize bot for other platforms in future versions
 #[async_trait]
 pub trait BotMessage {
+    // this is used to make cloneable box< send + sync> version of itself
+    fn clone_bot_message(&self) -> Box<dyn BotMessage + Send + Sync>;
     fn get_name(&self) -> String;
     fn get_id(&self) -> String;
     async fn send_msg(&self, message: MsgCount);
 }
 
+// Implment clone for this trait
+impl Clone for Box<dyn BotMessage + Send + Sync> {
+    fn clone(&self) -> Self {
+        self.clone_bot_message()
+    }
+}
+
 pub async fn distributor(m: Box<dyn BotMessage + Send + Sync>) {
-    util::refactor_tester(m);
+    util::refactor_tester(m.clone());
 }
 
 //----------First place to handler messages after initial filtering
