@@ -155,6 +155,7 @@ impl handlers::root::BotMessage for TelegramMessage {
                             API.spawn(self.message.chat.photo(InputFileUpload::with_path(url)));
                         }
                     }
+                    std::thread::sleep(Duration::from_millis(500));
                 }
             }
             _ => {}
