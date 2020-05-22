@@ -14,6 +14,11 @@ use std::time::Duration;
 use telegram_bot::*;
 const WAITTIME: u64 = 10;
 
+#[tokio::main]
+async fn main() {
+    run_telgram().await;
+}
+//--------TELGRAM CODE
 lazy_static! {
     //---Global API access
     pub static ref API: Api = {
@@ -22,8 +27,8 @@ lazy_static! {
         api
     };
 }
-#[tokio::main]
-async fn main() {
+
+async fn run_telgram() {
     dotenv().ok();
 
     println!("Starting up Terminal Alpha Beta, compiled at");
@@ -163,3 +168,4 @@ impl handlers::root::BotMessage for TelegramMessage {
     }
 }
 //------------------------------------------------------------------
+//--------TELGRAM CODE END
