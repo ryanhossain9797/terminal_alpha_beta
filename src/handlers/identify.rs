@@ -11,7 +11,6 @@ use closestmatch::*;
 //---fires wipe history command for identify state
 pub async fn start_identify(m: Box<dyn root::BotMessage + Send + Sync>) {
     println!("START_IDENTIFY: identify initiated");
-
     let mut map = root::RECORDS.lock().await;
     let id = (*m).get_id();
     map.entry(format!("{}", id))
@@ -33,11 +32,9 @@ pub async fn start_identify(m: Box<dyn root::BotMessage + Send + Sync>) {
 
 //---finishes identify
 //---fires immediate purge history command for identify state
-#[allow(unused_variables)]
 pub async fn continue_identify(m: Box<dyn root::BotMessage + Send + Sync>, name: String) {
     root::immediate_purge_history(m.clone(), root::UserState::Identify);
     println!("IDENTIFY: beginning identification");
-
     match util::get_person(name.to_string()) {
         //---Part one
         Some(person) => {
