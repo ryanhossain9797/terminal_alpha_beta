@@ -186,7 +186,7 @@ pub fn google_search(search: String) -> Option<Vec<SearchResult>> {
     return None;
 }
 
-pub async fn start_unknown(m: Box<dyn root::BotMessage + Send + Sync>) -> root::MsgCount {
+pub async fn start_unknown(m: Box<dyn root::BotMessage + Send + Sync>) {
     println!("START_UNKNOWN: unknown state initiated");
 
     let mut map = root::RECORDS.lock().await;
@@ -205,9 +205,7 @@ pub async fn start_unknown(m: Box<dyn root::BotMessage + Send + Sync>) -> root::
             Some(response) => response,
             _ => responses::response_unavailable(),
         },
-    )))
-    .await;
-    root::MsgCount::NoMsg
+    )));
 }
 
 #[allow(dead_code)]
@@ -216,7 +214,6 @@ pub fn refactor_tester(m: Box<dyn root::BotMessage + Send + Sync>) {
         tokio::time::delay_for(Duration::from_secs(10)).await;
         (*m).send_msg(root::MsgCount::SingleMsg(root::Msg::Text(
             "testing success".to_string(),
-        )))
-        .await;
+        )));
     });
 }

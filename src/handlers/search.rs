@@ -5,7 +5,7 @@ use std::time::Instant;
 
 //---adds a userstate record with search state to userstate records map
 //---fires wipe history command for search state
-pub async fn start_search(m: Box<dyn root::BotMessage + Send + Sync>) -> root::MsgCount {
+pub async fn start_search(m: Box<dyn root::BotMessage + Send + Sync>) {
     println!("START_SEARCH: search initiated");
 
     let mut map = root::RECORDS.lock().await;
@@ -24,21 +24,16 @@ pub async fn start_search(m: Box<dyn root::BotMessage + Send + Sync>) -> root::M
             Some(response) => response,
             _ => responses::response_unavailable(),
         },
-    )))
-    .await;
-    root::MsgCount::NoMsg
+    )));
 }
 
 //---finishes search
 //---fires immediate purge history command for search state
-pub async fn continue_search(
-    m: Box<dyn root::BotMessage + Send + Sync>,
-    processesed_text: String,
-) -> root::MsgCount {
+pub async fn continue_search(m: Box<dyn root::BotMessage + Send + Sync>, processesed_text: String) {
     root::immediate_purge_history(m.clone(), root::UserState::Search);
     let search_option = google_search(processesed_text);
 
-    match search_option {
+    let response = match search_option {
         Some(results) => {
             let mut msgs: Vec<root::Msg> = vec![root::Msg::Text(
                 match responses::load_response("search-success") {
@@ -65,7 +60,8 @@ pub async fn continue_search(
                 _ => responses::response_unavailable(),
             },
         )),
-    }
+    };
+    (*m).send_msg(response);
 }
 
 //--------------WEB scraper to search through google

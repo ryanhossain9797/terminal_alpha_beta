@@ -21,7 +21,7 @@ lazy_static! {
 //---FIX LEVEL: Returns Strings (y)
 //---adds a userstate record with chat state to userstate records map
 //---fires wipe history command for chat state
-pub async fn start_chat() -> root::MsgCount {
+pub async fn start_chat(m: Box<dyn root::BotMessage + Send + Sync>) {
     println!("START_CHAT: chat initiated");
     //------Chat will not be a state any more.
     //------Rather any unknown message will be handled by chat in default
@@ -41,14 +41,14 @@ pub async fn start_chat() -> root::MsgCount {
     */
     println!("START_CHAT: responding to chat intent");
 
-    responses::custom_response("chat-start".to_string())
+    responses::custom_response(m, "chat-start".to_string())
 }
 
 //---FIX LEVEL: Works with strings
 //---updated to implement RETURN STRINGS
 //---updates userstate record map with chat messages list and new time
 //---fires wipe history command for chat state
-pub async fn continue_chat(/*message: Message,*/ processed_text: String) -> root::MsgCount {
+pub async fn continue_chat(m: Box<dyn root::BotMessage + Send + Sync>, processed_text: String) {
     //------Chat will not be a state any more.
     //------Rather any unknown message will be handled by chat in default
     /*
@@ -79,7 +79,7 @@ pub async fn continue_chat(/*message: Message,*/ processed_text: String) -> root
             slots_alternatives,
         )
         .unwrap();
-    let response = if let Some(intent) = result.intent.intent_name {
+    if let Some(intent) = result.intent.intent_name {
         println!(
             "{} with confidence {}",
             intent, result.intent.confidence_score
@@ -89,34 +89,33 @@ pub async fn continue_chat(/*message: Message,*/ processed_text: String) -> root
         if result.intent.confidence_score > 0.5 {
             if intent == "greet" {
                 println!("starting greet");
-                responses::custom_response("chat-greet".to_string())
+                responses::custom_response(m, "chat-greet".to_string())
             } else if intent == "about" {
                 println!("starting about");
-                responses::custom_response("chat-about".to_string())
+                responses::custom_response(m, "chat-about".to_string())
             } else if intent == "technology" {
                 println!("starting technology");
-                responses::custom_response("chat-technology".to_string())
+                responses::custom_response(m, "chat-technology".to_string())
             } else {
-                responses::unsupported_notice()
+                responses::unsupported_notice(m)
             }
         }
         //---unknown intent if cannot match to any intent confidently
         else {
             println!("unsure intent");
             util::log_message(processed_text.clone());
-            responses::unsupported_notice()
+            responses::unsupported_notice(m)
         }
     }
     //---unknown intent if can't match intent at all
     else {
         println!("unknown intent");
         util::log_message(processed_text.clone());
-        responses::unsupported_notice()
+        responses::unsupported_notice(m)
     };
     //------Chat will not be a state any more.
     //------Rather any unknown message will be handled by chat in default
     /*
     root::wipe_history(message.clone(), "chat".to_string());
     */
-    response
 }

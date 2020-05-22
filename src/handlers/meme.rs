@@ -4,7 +4,7 @@ use std::time::Instant;
 
 //---adds a userstate record with meme state to userstate records map
 //---fires wipe history command for meme state
-pub async fn start_meme(m: Box<dyn root::BotMessage + Send + Sync>) -> root::MsgCount {
+pub async fn start_meme(m: Box<dyn root::BotMessage + Send + Sync>) {
     println!("START_MEME: meme initiated");
 
     let mut map = root::RECORDS.lock().await;
@@ -24,19 +24,16 @@ pub async fn start_meme(m: Box<dyn root::BotMessage + Send + Sync>) -> root::Msg
             Some(response) => response,
             _ => responses::response_unavailable(),
         },
-    )))
-    .await;
-    root::MsgCount::NoMsg
+    )));
 }
 
 //---finishes meme fetching
 //---fires immediate purge history command for meme state
 #[allow(unused_variables)]
-pub async fn continue_meme(
-    m: Box<dyn root::BotMessage + Send + Sync>,
-    processesed_text: String,
-) -> root::MsgCount {
+pub async fn continue_meme(m: Box<dyn root::BotMessage + Send + Sync>, processesed_text: String) {
     println!("CONTINUE_MEME: meme response");
     root::immediate_purge_history(m.clone(), root::UserState::Meme);
-    root::MsgCount::SingleMsg(root::Msg::File("files/dp.jpg".to_string()))
+    (*m).send_msg(root::MsgCount::SingleMsg(root::Msg::File(
+        "files/dp.jpg".to_string(),
+    )));
 }

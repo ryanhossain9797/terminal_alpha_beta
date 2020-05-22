@@ -9,7 +9,7 @@ use closestmatch::*;
 
 //---adds a userstate record with identify state to userstate records map
 //---fires wipe history command for identify state
-pub async fn start_identify(m: Box<dyn root::BotMessage + Send + Sync>) -> root::MsgCount {
+pub async fn start_identify(m: Box<dyn root::BotMessage + Send + Sync>) {
     println!("START_IDENTIFY: identify initiated");
 
     let mut map = root::RECORDS.lock().await;
@@ -28,76 +28,76 @@ pub async fn start_identify(m: Box<dyn root::BotMessage + Send + Sync>) -> root:
             Some(response) => response,
             _ => responses::response_unavailable(),
         },
-    )))
-    .await;
-    root::MsgCount::NoMsg
+    )));
 }
 
 //---finishes identify
 //---fires immediate purge history command for identify state
 #[allow(unused_variables)]
-pub async fn continue_identify(
-    m: Box<dyn root::BotMessage + Send + Sync>,
-
-    processesed_text: String,
-) -> root::MsgCount {
-    root::immediate_purge_history(m, root::UserState::Identify);
+pub async fn continue_identify(m: Box<dyn root::BotMessage + Send + Sync>, name: String) {
+    root::immediate_purge_history(m.clone(), root::UserState::Identify);
     println!("IDENTIFY: beginning identification");
-    get_person_go(&processesed_text)
-}
 
-fn get_person_go(name: &str) -> root::MsgCount {
-    //---This is a test of the new method to move logic to go
+    match util::get_person(name.to_string()) {
+        //---Part one
+        Some(person) => {
+            (*m).send_msg(root::MsgCount::SingleMsg(root::Msg::Text(
+                person.description,
+            )));
+        }
 
-    //---Part one
-    if let Some(person) = util::get_person(name.to_string()) {
-        return root::MsgCount::SingleMsg(root::Msg::Text(person.description));
-    }
-
-    //---Part two
-    match util::get_people() {
-        Some(people) => {
-            let mut names: Vec<String> = vec![];
-            people
-                .iter()
-                .for_each(|person| names.push(person.name.clone()));
-            let cm = ClosestMatch::new(names, [4, 5, 6].to_vec());
-            let closest_name = cm.get_closest(name.to_string());
-            match closest_name {
-                Some(name) => {
-                    println!("closest name is {}", name);
-                    for person in people {
-                        if person.name == name {
-                            return root::MsgCount::SingleMsg(root::Msg::Text(
-                                match responses::load_response("identify-partialmatch") {
-                                    Some(response) => response
-                                        .replace("{name}", &person.name)
-                                        .replace("{description}", &person.description),
-                                    _ => responses::response_unavailable(),
-                                },
-                            ));
+        //---Part two
+        _ => {
+            let partial_match = match util::get_people() {
+                Some(people) => {
+                    let mut names: Vec<String> = vec![];
+                    people
+                        .iter()
+                        .for_each(|person| names.push(person.name.clone()));
+                    let cm = ClosestMatch::new(names, [4, 5, 6].to_vec());
+                    let closest_name = cm.get_closest(name.to_string());
+                    match closest_name {
+                        Some(name) => {
+                            println!("closest name is {}", name);
+                            let mut matched_option: Option<String> = None;
+                            for person in people {
+                                if person.name == name {
+                                    matched_option = Some(
+                                        match responses::load_response("identify-partialmatch") {
+                                            Some(response) => response
+                                                .replace("{name}", &person.name)
+                                                .replace("{description}", &person.description),
+                                            _ => responses::response_unavailable(),
+                                        },
+                                    )
+                                }
+                            }
+                            match matched_option {
+                                Some(person) => root::MsgCount::SingleMsg(root::Msg::Text(person)),
+                                None => root::MsgCount::SingleMsg(root::Msg::Text(
+                                    match responses::load_response("identify-notfound") {
+                                        Some(response) => response,
+                                        _ => responses::response_unavailable(),
+                                    },
+                                )),
+                            }
                         }
+                        _ => root::MsgCount::SingleMsg(root::Msg::Text(
+                            match responses::load_response("identify-notfound") {
+                                Some(response) => response,
+                                _ => responses::response_unavailable(),
+                            },
+                        )),
                     }
-                    root::MsgCount::SingleMsg(root::Msg::Text(
-                        match responses::load_response("identify-notfound") {
-                            Some(response) => response,
-                            _ => responses::response_unavailable(),
-                        },
-                    ))
                 }
                 _ => root::MsgCount::SingleMsg(root::Msg::Text(
-                    match responses::load_response("identify-notfound") {
+                    match responses::load_response("identify-dberror") {
                         Some(response) => response,
                         _ => responses::response_unavailable(),
                     },
                 )),
-            }
+            };
+            (*m).send_msg(partial_match);
         }
-        _ => root::MsgCount::SingleMsg(root::Msg::Text(
-            match responses::load_response("identify-dberror") {
-                Some(response) => response,
-                _ => responses::response_unavailable(),
-            },
-        )),
     }
 }

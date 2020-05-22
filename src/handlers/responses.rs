@@ -1,8 +1,8 @@
 use crate::handlers::*;
 use serde_json::Value;
 
-pub fn unsupported_notice() -> root::MsgCount {
-    root::MsgCount::MultiMsg(vec![
+pub fn unsupported_notice(m: Box<dyn root::BotMessage + Send + Sync>) {
+    (*m).send_msg(root::MsgCount::MultiMsg(vec![
         root::Msg::Text(match load_response("unsupported-notice-1") {
             Some(response) => response,
             None => response_unavailable(),
@@ -11,21 +11,25 @@ pub fn unsupported_notice() -> root::MsgCount {
             Some(response) => response,
             None => response_unavailable(),
         }),
-    ])
+    ]));
 }
 
-pub fn unknown_state_notice() -> root::MsgCount {
-    root::MsgCount::SingleMsg(root::Msg::Text(match load_response("unknown-state") {
-        Some(response) => response,
-        None => response_unavailable(),
-    }))
+pub fn unknown_state_notice(m: Box<dyn root::BotMessage + Send + Sync>) {
+    (*m).send_msg(root::MsgCount::SingleMsg(root::Msg::Text(
+        match load_response("unknown-state") {
+            Some(response) => response,
+            None => response_unavailable(),
+        },
+    )));
 }
 
-pub fn custom_response(key: String) -> root::MsgCount {
-    root::MsgCount::SingleMsg(root::Msg::Text(match load_response(&key) {
-        Some(response) => response,
-        _ => "we could not understand your question".to_string(),
-    }))
+pub fn custom_response(m: Box<dyn root::BotMessage + Send + Sync>, key: String) {
+    (*m).send_msg(root::MsgCount::SingleMsg(root::Msg::Text(
+        match load_response(&key) {
+            Some(response) => response,
+            _ => "we could not understand your question".to_string(),
+        },
+    )));
 }
 pub fn load_response(key: &str) -> Option<String> {
     if let Some(json) = &*root::RESPONSES {

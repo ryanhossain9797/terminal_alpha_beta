@@ -5,14 +5,18 @@ use std::os::raw::c_char;
 
 use serde_json::Value;
 
-pub fn start_info(json: String) -> root::MsgCount {
+pub fn start_info(m: Box<dyn root::BotMessage + Send + Sync>, json: String) {
     //println!("ACTION_PICKER: intent json is {}", json);
     let title_pass = util::title_pass_retriever(json);
     println!(
         "ACTION_PICKER: info title pass is {}, {}",
         title_pass.0, title_pass.1
     );
-    get_info_go(title_pass.0, title_pass.1)
+    if let Some(info) = get_info_go(title_pass.0, title_pass.1) {
+        (*m).send_msg(root::MsgCount::SingleMsg(root::Msg::Text(info)));
+    } else {
+        responses::unsupported_notice(m);
+    }
 }
 
 //--------------THE FOLLOWING IS USED TO INTERACT WITH THE 'golibs' STUFF
@@ -28,7 +32,7 @@ struct GoString {
     b: isize,
 }
 
-pub fn get_info_go(title: String, pass: String) -> root::MsgCount {
+pub fn get_info_go(title: String, pass: String) -> Option<String> {
     println!("GO GETTING INFO: {}", title);
     let c_title = CString::new(title).expect("CString::new failed");
     let t_ptr = c_title.as_ptr();
@@ -53,15 +57,13 @@ pub fn get_info_go(title: String, pass: String) -> root::MsgCount {
         println!("GET_INFO: valid json");
         match json {
             Value::Object(map) => match &map.get("info") {
-                Some(Value::String(response)) => root::MsgCount::SingleMsg(root::Msg::Text(
-                    response.to_string().replace("\\n", "\n"),
-                )),
-                _ => responses::unsupported_notice(),
+                Some(Value::String(response)) => Some(response.to_string().replace("\\n", "\n")),
+                _ => None,
             },
             // Value::String(response) =>
-            _ => responses::unsupported_notice(),
+            _ => None,
         }
     } else {
-        responses::unsupported_notice()
+        None
     }
 }

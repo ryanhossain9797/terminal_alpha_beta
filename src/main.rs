@@ -4,7 +4,6 @@ extern crate snips_nlu_lib;
 mod handlers;
 
 extern crate openssl_probe;
-use async_trait::async_trait;
 use dotenv::dotenv;
 use futures::StreamExt;
 use handlers::chat::*;
@@ -124,7 +123,6 @@ struct TelegramMessage {
     message: Message,
 }
 
-#[async_trait]
 impl handlers::root::BotMessage for TelegramMessage {
     fn clone_bot_message(&self) -> Box<dyn BotMessage + Send + Sync> {
         Box::new(self.clone())
@@ -136,7 +134,7 @@ impl handlers::root::BotMessage for TelegramMessage {
         let id: i64 = self.message.from.id.into();
         format!("{}", id)
     }
-    async fn send_msg(&self, msg: handlers::root::MsgCount) {
+    fn send_msg(&self, msg: handlers::root::MsgCount) {
         match msg {
             MsgCount::SingleMsg(msg) => match msg {
                 Msg::Text(text) => {
@@ -151,12 +149,10 @@ impl handlers::root::BotMessage for TelegramMessage {
                     //---Need send here because spawn would send messages out of order
                     match msg {
                         Msg::Text(text) => {
-                            let _ = API.send(self.message.chat.text(text)).await;
+                            API.spawn(self.message.chat.text(text));
                         }
                         Msg::File(url) => {
-                            let _ = API
-                                .send(self.message.chat.photo(InputFileUpload::with_path(url)))
-                                .await;
+                            API.spawn(self.message.chat.photo(InputFileUpload::with_path(url)));
                         }
                     }
                 }

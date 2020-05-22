@@ -11,7 +11,6 @@ const LONGWAIT: u64 = 30;
 const SHORTWAIT: u64 = 10;
 const WAITTIME: u64 = LONGWAIT;
 
-use async_trait::async_trait;
 use serde_json;
 use std::collections::HashMap;
 use std::fmt;
@@ -82,13 +81,13 @@ pub struct UserStateRecord {
     pub last: Instant,
 }
 //---Will be used in the future to generalize bot for other platforms in future versions
-#[async_trait]
+
 pub trait BotMessage {
     // this is used to make cloneable box< send + sync> version of itself
     fn clone_bot_message(&self) -> Box<dyn BotMessage + Send + Sync>;
     fn get_name(&self) -> String;
     fn get_id(&self) -> String;
-    async fn send_msg(&self, message: MsgCount);
+    fn send_msg(&self, message: MsgCount);
 }
 
 // Implment clone for this trait
@@ -98,7 +97,6 @@ impl Clone for Box<dyn BotMessage + Send + Sync> {
     }
 }
 
-#[allow(dead_code)]
 pub async fn distributor(
     m: Box<dyn BotMessage + Send + Sync>,
     processesed_text: String,
@@ -119,14 +117,13 @@ pub async fn handler(
         let id = (*m).get_id();
         &format!("{}", id)
     });
-    let responder = m.clone();
     //---If record from user exists (A Some(record)), some conversation is ongoing
     //---So will be replied regardless of groups or mentions and stuff ('will_respond' is ignored)
-    let received_message = if let Some(record) = entry_option {
+    if let Some(record) = entry_option {
         //---"cancel last will shut off the conversation"
         if processesed_text == "cancel last" {
             drop(map);
-            cancel_history(m).await
+            cancel_history(m).await;
         }
         //---"if state is chat"
         //------Chat will not be a state any more.
@@ -142,25 +139,25 @@ pub async fn handler(
         else if record.state == UserState::Search {
             drop(map);
             println!("continuing search");
-            search::continue_search(m, processesed_text.clone()).await
+            search::continue_search(m, processesed_text.clone()).await;
         }
         //---"if state is identify"
         else if record.state == UserState::Identify {
             drop(map);
             println!("continuing identify");
-            identify::continue_identify(m, processesed_text.clone()).await
+            identify::continue_identify(m, processesed_text.clone()).await;
         }
         //---"if state is meme"
         else if record.state == UserState::Meme {
             drop(map);
             println!("continuing meme");
-            meme::continue_meme(m, processesed_text.clone()).await
+            meme::continue_meme(m, processesed_text.clone()).await;
         }
         //---"if state is unknown"
         else {
             println!("some unknown state");
             drop(map);
-            responses::unknown_state_notice()
+            responses::unknown_state_notice(m);
         }
     }
     //---if record from user doesn't exist, but is either IN A PRIVATE CHAT or MENTIONED IN A GROUP CHAT
@@ -170,28 +167,21 @@ pub async fn handler(
         //distributor(m).await;
         //---cancel last does nothing as there's nothing to cancel
         if processesed_text == "cancel last" {
-            MsgCount::SingleMsg(Msg::Text(
+            (*m).send_msg(MsgCount::SingleMsg(Msg::Text(
                 match responses::load_response("cancel-nothing") {
                     Some(response) => response,
                     _ => responses::response_unavailable(),
                 },
-            ))
+            )));
         }
         //---hand over to the natural understanding system for advanced matching
         else {
-            natural_understanding(m, processesed_text).await
+            natural_understanding(m, processesed_text).await;
         }
-    } else {
-        MsgCount::NoMsg
-    };
-    (*responder).send_msg(received_message).await;
+    }
 }
 
-pub async fn natural_understanding(
-    m: Box<dyn BotMessage + Send + Sync>,
-
-    processed_text: String,
-) -> MsgCount {
+pub async fn natural_understanding(m: Box<dyn BotMessage + Send + Sync>, processed_text: String) {
     let intents_alternatives = 1;
     let slots_alternatives = 1;
 
@@ -204,7 +194,7 @@ pub async fn natural_understanding(
             slots_alternatives,
         )
         .unwrap();
-    let response = if let Some(intent) = result.intent.intent_name.clone() {
+    if let Some(intent) = result.intent.intent_name.clone() {
         println!(
             "{} with confidence {}",
             intent, result.intent.confidence_score
@@ -218,7 +208,7 @@ pub async fn natural_understanding(
                 match &*intent {
                     "chat" => {
                         println!("ACTION_PICKER: starting chat");
-                        chat::start_chat().await
+                        chat::start_chat(m).await
                     }
                     "search" => {
                         println!("ACTION_PICKER: starting search");
@@ -234,7 +224,7 @@ pub async fn natural_understanding(
                     }
                     "info" => {
                         println!("ACTION_PICKER: starting info");
-                        info::start_info(json)
+                        info::start_info(m, json)
                     }
                     "unknown" => {
                         println!("ACTION_PICKER: starting unknown state test");
@@ -245,41 +235,42 @@ pub async fn natural_understanding(
                         //---Don't put stuff related to unknown intents here
                         println!("ACTION_PICKER: unimplemented intent");
                         util::log_message(processed_text);
-                        responses::unsupported_notice()
+                        responses::unsupported_notice(m)
                     }
                 }
             } else {
                 println!("ACTION_PICKER: couldn't convert intent to json");
                 util::log_message(processed_text);
-                responses::unsupported_notice()
+                responses::unsupported_notice(m)
             }
         }
         //---unknown intent if cannot match to any intent confidently
         else {
-            chat::continue_chat(processed_text).await
+            chat::continue_chat(m, processed_text).await
         }
     }
     //---unknown intent if can't match intent at all
     else {
-        chat::continue_chat(processed_text).await
+        chat::continue_chat(m, processed_text).await
     };
-    response
 }
 
 //---removes current history with a cancellation message
 //---doesn't care about state
 //---used with the cancel last command
-pub async fn cancel_history(m: Box<dyn BotMessage + Send + Sync>) -> MsgCount {
+pub async fn cancel_history(m: Box<dyn BotMessage + Send + Sync>) {
     let mut map = RECORDS.lock().await;
     map.remove({
         let id = (*m).get_id();
         &format!("{}", id)
     });
     drop(map);
-    MsgCount::SingleMsg(Msg::Text(match responses::load_response("cancel-state") {
-        Some(response) => response,
-        _ => responses::response_unavailable(),
-    }))
+    (*m).send_msg(MsgCount::SingleMsg(Msg::Text(
+        match responses::load_response("cancel-state") {
+            Some(response) => response,
+            _ => responses::response_unavailable(),
+        },
+    )));
 }
 
 //---removes history after 30 seconds if it's not updated with a new time
@@ -300,8 +291,7 @@ pub fn wipe_history(m: Box<dyn BotMessage + Send + Sync>, state: UserState) {
                             Some(response) => response,
                             _ => responses::response_unavailable(),
                         },
-                    )))
-                    .await;
+                    )));
                 } else {
                     println!("aborted record delete due to recency");
                     drop(map);
