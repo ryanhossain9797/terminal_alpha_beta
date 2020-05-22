@@ -113,7 +113,7 @@ async fn sender(message: &Message, processed_text: String, will_respond: bool) {
     let tele_msg = Box::new(TelegramMessage {
         message: message.clone(),
     }) as Box<dyn BotMessage + Send + Sync>;
-    handlers::root::distributor(tele_msg, processed_text, will_respond).await;
+    handlers::root::distributor(tele_msg, processed_text, will_respond);
 }
 
 //---These will be used to generalize telegram messages with other platforms

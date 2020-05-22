@@ -97,7 +97,7 @@ impl Clone for Box<dyn BotMessage + Send + Sync> {
     }
 }
 
-pub async fn distributor(
+pub fn distributor(
     m: Box<dyn BotMessage + Send + Sync>,
     processesed_text: String,
     will_respond: bool,
@@ -105,7 +105,7 @@ pub async fn distributor(
     tokio::spawn(async move { handler(m, processesed_text, will_respond).await });
 }
 
-//----------First place to handler messages after initial filtering
+//----------First place to handle messages after initial filtering
 pub async fn handler(
     m: Box<dyn BotMessage + Send + Sync>,
     processesed_text: String,
