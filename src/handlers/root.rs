@@ -88,6 +88,7 @@ pub trait BotMessage {
     fn get_name(&self) -> String;
     fn get_id(&self) -> String;
     fn send_msg(&self, message: MsgCount);
+    fn start_conversation(&self) -> bool;
 }
 
 // Implment clone for this trait
@@ -97,20 +98,13 @@ impl Clone for Box<dyn BotMessage + Send + Sync> {
     }
 }
 
-pub fn distributor(
-    m: Box<dyn BotMessage + Send + Sync>,
-    processesed_text: String,
-    will_respond: bool,
-) {
-    tokio::spawn(async move { handler(m, processesed_text, will_respond).await });
+///Distributes incoming requests to separate threads
+pub fn distributor(m: Box<dyn BotMessage + Send + Sync>, processesed_text: String) {
+    tokio::spawn(async move { handler(m, processesed_text).await });
 }
 
-//----------First place to handle messages after initial filtering
-pub async fn handler(
-    m: Box<dyn BotMessage + Send + Sync>,
-    processesed_text: String,
-    will_respond: bool,
-) {
+///First place to handle messages after distribution
+pub async fn handler(m: Box<dyn BotMessage + Send + Sync>, processesed_text: String) {
     println!("processed text is '{}'", processesed_text);
     let map = RECORDS.lock().await;
     let entry_option = map.get({
@@ -162,9 +156,8 @@ pub async fn handler(
     }
     //---if record from user doesn't exist, but is either IN A PRIVATE CHAT or MENTIONED IN A GROUP CHAT
     //---will start processing new info
-    else if will_respond {
+    else if (*m).start_conversation() {
         drop(map);
-        //distributor(m).await;
         //---cancel last does nothing as there's nothing to cancel
         if processesed_text == "cancel last" {
             (*m).send_msg(MsgCount::SingleMsg(Msg::Text(
@@ -181,6 +174,7 @@ pub async fn handler(
     }
 }
 
+///Uses natural understanding to determine intent if no state is found
 pub async fn natural_understanding(m: Box<dyn BotMessage + Send + Sync>, processed_text: String) {
     let intents_alternatives = 1;
     let slots_alternatives = 1;

@@ -16,8 +16,32 @@ const WAITTIME: u64 = 10;
 
 #[tokio::main]
 async fn main() {
-    run_telgram().await;
+    println!("-----Starting TELEGRAM and DISCORD-----\n");
+    let local = tokio::task::LocalSet::new();
+    local
+        .run_until(async move {
+            let tasks = vec![
+                tokio::task::spawn_local(async move {
+                    run_telgram().await;
+                }),
+                tokio::task::spawn_local(async move {
+                    run_discord().await;
+                }),
+            ];
+            futures::future::join_all(tasks).await;
+        })
+        .await;
 }
+
+//--------DISCORD CODE
+async fn run_discord() {
+    println!("Discord Started");
+    for i in 0..3 {
+        println!("Discord is running {}", i);
+        tokio::time::delay_for(Duration::from_secs(WAITTIME)).await;
+    }
+}
+//--------DISCORD CODE END
 //--------TELGRAM CODE
 lazy_static! {
     //---Global API access
@@ -56,7 +80,7 @@ async fn run_telgram() {
                         println!("<{}>: {}", &message.from.first_name, data);
                         // Spawn a handler for the message.
 
-                        filter(&message).await;
+                        filter(message).await;
                     }
                 }
             }
@@ -75,7 +99,7 @@ async fn run_telgram() {
 //--- => removes / from start if it's there ("/hellow    @machinelifeformbot   world" becomes "hellow    @machinelifeformbot   world")
 //--- => removes mentions of the bot from the message ("hellow    @machinelifeformbot   world" becomes "hellow      world")
 //--- => replaces redundant spaces with single spaces using regex ("hellow      world" becomes "hellow world")
-async fn filter(message: &Message) {
+async fn filter(message: Message) {
     if let MessageKind::Text { ref data, .. } = message.kind {
         let myname_result = API.send(GetMe).await;
         if let Ok(myname) = myname_result {
@@ -114,11 +138,12 @@ async fn filter(message: &Message) {
 }
 
 //---Sender handles forwarding the message, receiving response and sending it to the user
-async fn sender(message: &Message, processed_text: String, will_respond: bool) {
+async fn sender(message: &Message, processed_text: String, start_conversation: bool) {
     let tele_msg = Box::new(TelegramMessage {
         message: message.clone(),
+        start_conversation: start_conversation,
     }) as Box<dyn BotMessage + Send + Sync>;
-    handlers::root::distributor(tele_msg, processed_text, will_respond);
+    handlers::root::distributor(tele_msg, processed_text);
 }
 
 //---These will be used to generalize telegram messages with other platforms
@@ -126,6 +151,7 @@ async fn sender(message: &Message, processed_text: String, will_respond: bool) {
 #[derive(Clone)]
 struct TelegramMessage {
     message: Message,
+    start_conversation: bool,
 }
 
 impl handlers::root::BotMessage for TelegramMessage {
@@ -138,6 +164,9 @@ impl handlers::root::BotMessage for TelegramMessage {
     fn get_id(&self) -> String {
         let id: i64 = self.message.from.id.into();
         format!("{}", id)
+    }
+    fn start_conversation(&self) -> bool {
+        self.start_conversation
     }
     fn send_msg(&self, msg: handlers::root::MsgCount) {
         match msg {

@@ -1,5 +1,5 @@
 [package]
-name = "terminal_alpha_beta_rust"
+name = "terminal_alpha_beta"
 version = "0.1.0"
 authors = ["zireael9797 <ryanhossain9797@gmail.com>"]
 edition = "2018"
