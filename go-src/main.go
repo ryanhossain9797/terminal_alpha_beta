@@ -54,11 +54,11 @@ func GetPeople() *C.char {
 
 //export GetInfo
 func GetInfo(title string, pass string) *C.char {
-	fmt.Println("GETINFO: Getting info for " + title)
+	fmt.Println("GET_INFO_GO: Getting info for " + title)
 
 	data := database.FindInfoFromDB(title, pass)
 
-	fmt.Println("GETINFO: got data " + data)
+	fmt.Println("GET_INFO_GO: got data")
 
 	return C.CString(data)
 
@@ -71,7 +71,7 @@ type SearchResult struct {
 
 //export GoogleSearch
 func GoogleSearch(search string) *C.char {
-	fmt.Println("GO: fetching results for " + search)
+	fmt.Println("GOOGLE_SEARCH_GO: fetching results for " + search)
 	results, err := googlesearch.Search(ctx, search, googlesearch.SearchOptions{Limit: 5})
 	if err == nil {
 		fmt.Printf("fetched %d results\n", len(results))

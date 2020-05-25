@@ -2,7 +2,7 @@ use crate::handlers::responses;
 use crate::handlers::root;
 use std::fs::OpenOptions;
 use std::io::prelude::*;
-use std::time::{Duration, Instant};
+use std::time::Instant;
 
 use serde_json::Value;
 
@@ -208,12 +208,21 @@ pub async fn start_unknown(m: Box<dyn root::BotMessage + Send + Sync>) {
     )));
 }
 
-#[allow(dead_code)]
-pub fn refactor_tester(m: Box<dyn root::BotMessage + Send + Sync>) {
-    tokio::spawn(async move {
-        tokio::time::delay_for(Duration::from_secs(10)).await;
-        (*m).send_msg(root::MsgCount::SingleMsg(root::Msg::Text(
-            "testing success".to_string(),
-        )));
-    });
+pub async fn get_request_json(url: &str) -> Option<String> {
+    let req_result = reqwest::get(url).await;
+    match req_result {
+        Ok(result) => match result.text().await {
+            Ok(body) => {
+                println!("Fetched JSON successfully");
+                return Some(format!("{}", body));
+            }
+            Err(error) => {
+                println!("{}", error);
+            }
+        },
+        Err(error) => {
+            println!("{}", error);
+        }
+    }
+    return None;
 }

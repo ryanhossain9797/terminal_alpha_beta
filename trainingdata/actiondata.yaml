@@ -52,14 +52,25 @@ utterances:
   - please [searchTerm](check) [personTerm](a human) for me
   - can you [searchTerm](check) [personTerm](who) this is
 
-# meme intent
+# animation intent
 ---
 type: intent
-name: meme
+name: animation
 utterances:
-  - i want a meme
-  - help me find a meme
-  - check a meme for me
+  - i want a gif
+  - help me find a gif
+  - check a gif for me
+  - get me a gif
+  - find me an animation
+  - fetch me a gif
+
+# corona intent
+---
+type: intent
+name: corona
+utterances:
+  - corona
+  - covid 19
 
 # unknown intent
 ---
@@ -133,14 +144,14 @@ automatically_extensible: yes
 values:
 - [password, pass, pin, auth]
 
-# passWord entity
+# titleVar entity
 ---
 type: entity
 name: titleVar
 automatically_extensible: yes
 
 
-# passWord entity
+# passVar entity
 ---
 type: entity
 name: passVar

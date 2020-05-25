@@ -186,28 +186,32 @@
   },
   "slot_fillers": [
     {
-      "intent": "chat",
+      "intent": "animation",
       "slot_filler_name": "slot_filler_0"
     },
     {
-      "intent": "identify",
+      "intent": "chat",
       "slot_filler_name": "slot_filler_1"
     },
     {
-      "intent": "info",
+      "intent": "corona",
       "slot_filler_name": "slot_filler_2"
     },
     {
-      "intent": "meme",
+      "intent": "identify",
       "slot_filler_name": "slot_filler_3"
     },
     {
-      "intent": "search",
+      "intent": "info",
       "slot_filler_name": "slot_filler_4"
     },
     {
-      "intent": "unknown",
+      "intent": "search",
       "slot_filler_name": "slot_filler_5"
+    },
+    {
+      "intent": "unknown",
+      "slot_filler_name": "slot_filler_6"
     }
   ]
 }

@@ -1,28 +1,44 @@
 #[macro_use]
 extern crate lazy_static;
 extern crate snips_nlu_lib;
+// extern crate discord;
 mod handlers;
 
 extern crate openssl_probe;
 use dotenv::dotenv;
 use futures::StreamExt;
-use handlers::chat::*;
 use handlers::root::*;
 use regex::Regex;
 use std::env;
 use std::time::Duration;
+use tokio::prelude::*;
+
+// use discord::model::Event;
+// use discord::Discord;
+
 use telegram_bot::*;
+
 const WAITTIME: u64 = 10;
 
 #[tokio::main]
 async fn main() {
+    dotenv().ok();
+    println!("Starting up Terminal Alpha Beta, compiled at");
     println!("-----Starting TELEGRAM and DISCORD-----\n");
+    //---Prints the Date of compilation, added at compile time
+    if let Some(date) = option_env!("COMPILED_AT") {
+        println!("Compile date {}", date);
+    }
+    println!("Initializing everything");
+    lazy_static::initialize(&API);
+    handlers::root::initialize();
+    println!("\nInitialized Everything\n");
     let local = tokio::task::LocalSet::new();
     local
         .run_until(async move {
             let tasks = vec![
                 tokio::task::spawn_local(async move {
-                    run_telgram().await;
+                    run_telegram().await;
                 }),
                 tokio::task::spawn_local(async move {
                     run_discord().await;
@@ -34,14 +50,50 @@ async fn main() {
 }
 
 //--------DISCORD CODE
+
 async fn run_discord() {
-    println!("Discord Started");
     for i in 0..3 {
-        println!("Discord is running {}", i);
-        tokio::time::delay_for(Duration::from_secs(WAITTIME)).await;
+        println!("discord running {}", i);
+        tokio::time::delay_for(Duration::from_secs(10)).await;
     }
+    //discord_main();
 }
+#[allow(dead_code)]
+fn discord_main() {
+    //     let discord = Discord::from_bot_token(&env::var("DISCORD_TOKEN").expect("Expected token"))
+    //     .expect("login failed");
+
+    //     // Establish and use a websocket connection
+    //     let (mut connection, _) = discord.connect().expect("connect failed");
+    //     println!("Ready.");
+    //     loop {
+    //         match connection.recv_event() {
+    //         Ok(Event::MessageCreate(message)) => {
+    //             println!("{} says: {}", message.author.name, message.content);
+    //             if message.content == "!test" {
+    //                 let _ = discord.send_message(
+    //                     message.channel_id,
+    //                     "This is a reply to the test.",
+    //                     "",
+    //                     false,
+    //                 );
+    //             } else if message.content == "!quit" {
+    //                 println!("Quitting.");
+    //                 break;
+    //             }
+    //         }
+    //         Ok(_) => {}
+    //         Err(discord::Error::Closed(code, body)) => {
+    //             println!("Gateway closed on us with code {:?}: {}", code, body);
+    //             break;
+    //         }
+    //         Err(err) => println!("Receive error: {:?}", err),
+    //     }
+    // }
+}
+
 //--------DISCORD CODE END
+
 //--------TELGRAM CODE
 lazy_static! {
     //---Global API access
@@ -52,22 +104,10 @@ lazy_static! {
     };
 }
 
-async fn run_telgram() {
-    dotenv().ok();
-
-    println!("Starting up Terminal Alpha Beta, compiled at");
-
-    //---Prints the Date of compilation, added at compile time
-    if let Some(date) = option_env!("COMPILED_AT") {
-        println!("Compile date {}", date);
-    }
-    println!("Initializing everything");
-    lazy_static::initialize(&API);
-    lazy_static::initialize(&RECORDS);
-    lazy_static::initialize(&ACTIONENGINE);
-    lazy_static::initialize(&CHATENGINE);
-    lazy_static::initialize(&RESPONSES);
-    println!("\nInitialized Everything\n");
+async fn run_telegram() {
+    telegram_main().await;
+}
+async fn telegram_main() {
     let mut stream = API.stream();
     // Fetch new updates via long poll method
     while let Some(update_result) = stream.next().await {
@@ -99,7 +139,7 @@ async fn run_telgram() {
 //--- => removes / from start if it's there ("/hellow    @machinelifeformbot   world" becomes "hellow    @machinelifeformbot   world")
 //--- => removes mentions of the bot from the message ("hellow    @machinelifeformbot   world" becomes "hellow      world")
 //--- => replaces redundant spaces with single spaces using regex ("hellow      world" becomes "hellow world")
-async fn filter(message: Message) {
+async fn filter(message: telegram_bot::Message) {
     if let MessageKind::Text { ref data, .. } = message.kind {
         let myname_result = API.send(GetMe).await;
         if let Ok(myname) = myname_result {
@@ -138,7 +178,7 @@ async fn filter(message: Message) {
 }
 
 //---Sender handles forwarding the message, receiving response and sending it to the user
-async fn sender(message: &Message, processed_text: String, start_conversation: bool) {
+async fn sender(message: &telegram_bot::Message, processed_text: String, start_conversation: bool) {
     let tele_msg = Box::new(TelegramMessage {
         message: message.clone(),
         start_conversation: start_conversation,
@@ -150,7 +190,7 @@ async fn sender(message: &Message, processed_text: String, start_conversation: b
 
 #[derive(Clone)]
 struct TelegramMessage {
-    message: Message,
+    message: telegram_bot::Message,
     start_conversation: bool,
 }
 
@@ -175,7 +215,12 @@ impl handlers::root::BotMessage for TelegramMessage {
                     API.spawn(self.message.chat.text(text));
                 }
                 Msg::File(url) => {
-                    API.spawn(self.message.chat.photo(InputFileUpload::with_path(url)));
+                    // API.spawn(
+                    //     self.message
+                    //         .chat
+                    //         .photo(InputFileUpload::with_path("files/dp.jpg")),
+                    // );
+                    API.spawn(self.message.chat.text(url));
                 }
             },
             MsgCount::MultiMsg(msg_list) => {
@@ -186,7 +231,12 @@ impl handlers::root::BotMessage for TelegramMessage {
                             API.spawn(self.message.chat.text(text));
                         }
                         Msg::File(url) => {
-                            API.spawn(self.message.chat.photo(InputFileUpload::with_path(url)));
+                            // API.spawn(
+                            //     self.message
+                            //         .chat
+                            //         .photo(InputFileUpload::with_path("files/dp.jpg")),
+                            // );
+                            API.spawn(self.message.chat.text(url));
                         }
                     }
                     std::thread::sleep(Duration::from_millis(500));
@@ -198,3 +248,12 @@ impl handlers::root::BotMessage for TelegramMessage {
 }
 //------------------------------------------------------------------
 //--------TELGRAM CODE END
+#[allow(dead_code)]
+async fn download_file(url: String) -> Result<String, Box<dyn std::error::Error>> {
+    let mut response = reqwest::get(&url).await?;
+    let mut file = tokio::fs::File::open("temp/file.gif").await?;
+    while let Some(chunk) = response.chunk().await? {
+        file.write_all(&chunk).await?;
+    }
+    Ok("temp/file.gif".to_string())
+}

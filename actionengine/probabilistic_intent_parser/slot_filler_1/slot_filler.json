@@ -100,9 +100,7 @@
       },
       {
         "args": {
-          "entities": [
-            "personWord"
-          ],
+          "entities": [],
           "entity_filter": {
             "automatically_extensible": false
           },
@@ -119,8 +117,7 @@
       {
         "args": {
           "entities": [
-            "infoWord",
-            "searchWord"
+            "chatWord"
           ],
           "entity_filter": {
             "automatically_extensible": true
@@ -179,11 +176,9 @@
     "unit_name": "crf_slot_filler"
   },
   "crf_model_file": "model.crfsuite",
-  "intent": "identify",
+  "intent": "chat",
   "language_code": "en",
   "slot_name_mapping": {
-    "infoTerm": "infoWord",
-    "personTerm": "personWord",
-    "searchTerm": "searchWord"
+    "chatTerm": "chatWord"
   }
 }

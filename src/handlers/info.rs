@@ -5,7 +5,7 @@ use std::os::raw::c_char;
 
 use serde_json::Value;
 
-pub fn start_info(m: Box<dyn root::BotMessage + Send + Sync>, json: String) {
+pub async fn start_info(m: Box<dyn root::BotMessage + Send + Sync>, json: String) {
     //println!("ACTION_PICKER: intent json is {}", json);
     let title_pass = util::title_pass_retriever(json);
     println!(

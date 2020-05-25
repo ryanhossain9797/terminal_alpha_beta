@@ -92,6 +92,52 @@
     }
   },
   "intents": {
+    "animation": {
+      "utterances": [
+        {
+          "data": [
+            {
+              "text": "i want a gif"
+            }
+          ]
+        },
+        {
+          "data": [
+            {
+              "text": "help me find a gif"
+            }
+          ]
+        },
+        {
+          "data": [
+            {
+              "text": "check a gif for me"
+            }
+          ]
+        },
+        {
+          "data": [
+            {
+              "text": "get me a gif"
+            }
+          ]
+        },
+        {
+          "data": [
+            {
+              "text": "find me an animation"
+            }
+          ]
+        },
+        {
+          "data": [
+            {
+              "text": "fetch me a gif"
+            }
+          ]
+        }
+      ]
+    },
     "chat": {
       "utterances": [
         {
@@ -181,6 +227,24 @@
               "entity": "chatWord",
               "slot_name": "chatTerm",
               "text": "chat"
+            }
+          ]
+        }
+      ]
+    },
+    "corona": {
+      "utterances": [
+        {
+          "data": [
+            {
+              "text": "corona"
+            }
+          ]
+        },
+        {
+          "data": [
+            {
+              "text": "covid 19"
             }
           ]
         }
@@ -732,31 +796,6 @@
               "entity": "titleVar",
               "slot_name": "title",
               "text": "sudo"
-            }
-          ]
-        }
-      ]
-    },
-    "meme": {
-      "utterances": [
-        {
-          "data": [
-            {
-              "text": "i want a meme"
-            }
-          ]
-        },
-        {
-          "data": [
-            {
-              "text": "help me find a meme"
-            }
-          ]
-        },
-        {
-          "data": [
-            {
-              "text": "check a meme for me"
             }
           ]
         }

@@ -10,10 +10,12 @@ edition = "2018"
 futures = "0.3.5"
 tokio = {version = "0.2.21", features = ["full"]}
 telegram-bot = "0.7"
+# discord = { git = "https://github.com/SpaceManiac/discord-rs" }
 dotenv = "0.15.0"
 lazy_static = "1.4.0"
 base64 = "0.12.1"
 regex = "1"
+rand = "0.7"
 reqwest = "0.10.4"
 scraper = "0.12.0"
 select = "0.4.3"
@@ -21,5 +23,6 @@ openssl = { version = "0.10", features = ["vendored"] }
 openssl-probe = "0.1.2"
 closestmatch = "0.1.2"
 serde = "1.0.110"
+async-trait = "0.1.31"
 serde_json = "1.0"
 snips-nlu-lib = { git = "https://github.com/snipsco/snips-nlu-rs", branch = "master" }

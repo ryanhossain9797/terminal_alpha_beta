@@ -1,7 +1,8 @@
+use crate::handlers::animation;
 use crate::handlers::chat;
+use crate::handlers::corona;
 use crate::handlers::identify;
 use crate::handlers::info;
-use crate::handlers::meme;
 use crate::handlers::responses;
 use crate::handlers::search;
 use crate::handlers::util;
@@ -11,6 +12,7 @@ const LONGWAIT: u64 = 30;
 const SHORTWAIT: u64 = 10;
 const WAITTIME: u64 = LONGWAIT;
 
+// use async_trait::async_trait;
 use serde_json;
 use std::collections::HashMap;
 use std::fmt;
@@ -24,8 +26,6 @@ use snips_nlu_lib::SnipsNluEngine;
 //
 
 lazy_static! {
-
-
     //---Record is a map holding all users state record info
     pub static ref RECORDS: tokio::sync::Mutex<HashMap<String, UserStateRecord>> =
         tokio::sync::Mutex::new(HashMap::new()) ;
@@ -41,13 +41,24 @@ lazy_static! {
             Err(_) => None,
         }
     };
+    pub static ref CLIENT: reqwest::Client = {
+        println!("\nLoading Api Client");
+        reqwest::Client::new()
+    };
+}
+
+pub fn initialize() {
+    lazy_static::initialize(&RECORDS);
+    lazy_static::initialize(&ACTIONENGINE);
+    lazy_static::initialize(&chat::CHATENGINE);
+    lazy_static::initialize(&RESPONSES);
 }
 
 #[derive(PartialEq, Eq)]
 pub enum UserState {
     Search,
     Identify,
-    Meme,
+    Animation,
     Unknown,
 }
 impl fmt::Display for UserState {
@@ -55,7 +66,7 @@ impl fmt::Display for UserState {
         match *self {
             UserState::Search => write!(f, "Search"),
             UserState::Identify => write!(f, "Identify"),
-            UserState::Meme => write!(f, "Meme"),
+            UserState::Animation => write!(f, "Animation"),
             UserState::Unknown => write!(f, "Unknown"),
         }
     }
@@ -141,11 +152,11 @@ pub async fn handler(m: Box<dyn BotMessage + Send + Sync>, processesed_text: Str
             println!("continuing identify");
             identify::continue_identify(m, processesed_text.clone()).await;
         }
-        //---"if state is meme"
-        else if record.state == UserState::Meme {
+        //---"if state is animatios"
+        else if record.state == UserState::Animation {
             drop(map);
-            println!("continuing meme");
-            meme::continue_meme(m, processesed_text.clone()).await;
+            println!("continuing animation");
+            animation::continue_gif(m, processesed_text.clone()).await;
         }
         //---"if state is unknown"
         else {
@@ -212,13 +223,17 @@ pub async fn natural_understanding(m: Box<dyn BotMessage + Send + Sync>, process
                         println!("ACTION_PICKER: starting identify");
                         identify::start_identify(m).await
                     }
-                    "meme" => {
-                        println!("ACTION_PICKER: starting meme");
-                        meme::start_meme(m).await
+                    "animation" => {
+                        println!("ACTION_PICKER: starting animation");
+                        animation::start_gif(m).await
                     }
                     "info" => {
                         println!("ACTION_PICKER: starting info");
-                        info::start_info(m, json)
+                        info::start_info(m, json).await
+                    }
+                    "corona" => {
+                        println!("ACTION_PICKER: starting corona");
+                        corona::start_corona(m).await
                     }
                     "unknown" => {
                         println!("ACTION_PICKER: starting unknown state test");
@@ -287,12 +302,12 @@ pub fn wipe_history(m: Box<dyn BotMessage + Send + Sync>, state: UserState) {
                         },
                     )));
                 } else {
-                    println!("aborted record delete due to recency");
+                    println!("WIPE_HISTORY: aborted record delete due to recency");
                     drop(map);
                 }
             } else {
                 println!(
-                    "aborted record delete for {} because current state is {}",
+                    "WIPE_HISTORY: aborted record delete for {} because current state is {}",
                     state, r.state
                 );
                 drop(map);

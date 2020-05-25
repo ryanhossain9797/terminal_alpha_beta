@@ -221,9 +221,11 @@
     },
     "language_code": "en",
     "slot_name_mappings": {
+      "animation": {},
       "chat": {
         "chatTerm": "chatWord"
       },
+      "corona": {},
       "identify": {
         "infoTerm": "infoWord",
         "personTerm": "personWord",
@@ -235,7 +237,6 @@
         "passTerm": "passWord",
         "title": "titleVar"
       },
-      "meme": {},
       "search": {
         "searchTerm": "searchWord"
       },
