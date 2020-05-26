@@ -93,7 +93,7 @@ pub async fn start_corona(m: Box<dyn root::BotMessage + Send + Sync>) {
                             for country in &countries[..10] {
                                 total_cases_message += &format!(
                                     "\nname: {}\ntotal confirmed: {}\ntotal deaths: {}\n",
-                                    country.country, country.new_confirmed, country.new_deaths
+                                    country.country, country.total_confirmed, country.total_deaths
                                 );
                             }
                             (*m).send_message(root::MsgCount::SingleMsg(root::Msg::Text(
