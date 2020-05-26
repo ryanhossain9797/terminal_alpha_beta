@@ -3,11 +3,11 @@ extern crate lazy_static;
 extern crate snips_nlu_lib;
 // extern crate discord;
 mod handlers;
+mod utils;
 
 extern crate openssl_probe;
 use dotenv::dotenv;
 use futures::StreamExt;
-use handlers::root::*;
 use regex::Regex;
 use std::env;
 use std::time::Duration;
@@ -31,7 +31,7 @@ async fn main() {
     }
     println!("Initializing everything");
     lazy_static::initialize(&API);
-    handlers::root::initialize();
+    handlers::initialize();
     println!("\nInitialized Everything\n");
     let local = tokio::task::LocalSet::new();
     local
@@ -182,8 +182,8 @@ async fn sender(message: &telegram_bot::Message, processed_text: String, start_c
     let tele_msg = Box::new(TelegramMessage {
         message: message.clone(),
         start_conversation: start_conversation,
-    }) as Box<dyn BotMessage + Send + Sync>;
-    handlers::root::distributor(tele_msg, processed_text);
+    }) as Box<dyn handlers::BotMessage + Send + Sync>;
+    handlers::distributor(tele_msg, processed_text);
 }
 
 //---These will be used to generalize telegram messages with other platforms
@@ -194,8 +194,8 @@ struct TelegramMessage {
     start_conversation: bool,
 }
 
-impl handlers::root::BotMessage for TelegramMessage {
-    fn clone_bot_message(&self) -> Box<dyn BotMessage + Send + Sync> {
+impl handlers::BotMessage for TelegramMessage {
+    fn clone_bot_message(&self) -> Box<dyn handlers::BotMessage + Send + Sync> {
         Box::new(self.clone())
     }
     fn get_name(&self) -> String {
@@ -208,13 +208,13 @@ impl handlers::root::BotMessage for TelegramMessage {
     fn start_conversation(&self) -> bool {
         self.start_conversation
     }
-    fn send_message(&self, msg: handlers::root::MsgCount) {
+    fn send_message(&self, msg: handlers::MsgCount) {
         match msg {
-            MsgCount::SingleMsg(msg) => match msg {
-                Msg::Text(text) => {
+            handlers::MsgCount::SingleMsg(msg) => match msg {
+                handlers::Msg::Text(text) => {
                     API.spawn(self.message.chat.text(text));
                 }
-                Msg::File(url) => {
+                handlers::Msg::File(url) => {
                     // API.spawn(
                     //     self.message
                     //         .chat
@@ -223,14 +223,14 @@ impl handlers::root::BotMessage for TelegramMessage {
                     API.spawn(self.message.chat.text(url));
                 }
             },
-            MsgCount::MultiMsg(msg_list) => {
+            handlers::MsgCount::MultiMsg(msg_list) => {
                 for msg in msg_list {
                     //---Need send here because spawn would send messages out of order
                     match msg {
-                        Msg::Text(text) => {
+                        handlers::Msg::Text(text) => {
                             API.spawn(self.message.chat.text(text));
                         }
-                        Msg::File(url) => {
+                        handlers::Msg::File(url) => {
                             // API.spawn(
                             //     self.message
                             //         .chat

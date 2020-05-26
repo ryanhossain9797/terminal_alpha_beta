@@ -1,5 +1,4 @@
-use crate::handlers::util;
-use crate::handlers::*;
+use super::*;
 //------Chat will not be a state any more.
 //------Rather any unknown message will be handled by chat in default
 //use std::mem::drop;
@@ -21,14 +20,14 @@ lazy_static! {
 //---FIX LEVEL: Returns Strings (y)
 //---adds a userstate record with chat state to userstate records map
 //---fires wipe history command for chat state
-pub async fn start_chat(m: Box<dyn root::BotMessage + Send + Sync>) {
+pub async fn start_chat(m: Box<dyn BotMessage + Send + Sync>) {
     println!("START_CHAT: chat initiated");
     //------Chat will not be a state any more.
     //------Rather any unknown message will be handled by chat in default
     /*
-    let mut map = root::RECORDS.lock().await;
+    let mut map = RECORDS.lock().await;
     map.entry(message.from.id)
-        .or_insert_with(|| root::UserStateRecord {
+        .or_insert_with(|| UserStateRecord {
             username: message.from.first_name.clone(),
             chat: message.chat.id(),
             last: Instant::now(),
@@ -36,7 +35,7 @@ pub async fn start_chat(m: Box<dyn root::BotMessage + Send + Sync>) {
             history: Vec::new(),
         });
     drop(map);
-    root::wipe_history(message.clone(), "chat".to_string());
+    wipe_history(message.clone(), "chat".to_string());
     println!("START_CHAT: record added");
     */
     println!("START_CHAT: responding to chat intent");
@@ -48,14 +47,14 @@ pub async fn start_chat(m: Box<dyn root::BotMessage + Send + Sync>) {
 //---updated to implement RETURN STRINGS
 //---updates userstate record map with chat messages list and new time
 //---fires wipe history command for chat state
-pub async fn continue_chat(m: Box<dyn root::BotMessage + Send + Sync>, processed_text: String) {
+pub async fn continue_chat(m: Box<dyn BotMessage + Send + Sync>, processed_text: String) {
     //------Chat will not be a state any more.
     //------Rather any unknown message will be handled by chat in default
     /*
-    let mut map = root::RECORDS.lock().await;
+    let mut map = RECORDS.lock().await;
     let entry = map
         .entry(message.from.id)
-        .or_insert_with(|| root::UserStateRecord {
+        .or_insert_with(|| UserStateRecord {
             username: message.from.first_name.clone(),
             chat: message.chat.id(),
             last: Instant::now(),
@@ -103,19 +102,19 @@ pub async fn continue_chat(m: Box<dyn root::BotMessage + Send + Sync>, processed
         //---unknown intent if cannot match to any intent confidently
         else {
             println!("unsure intent");
-            util::log_message(processed_text.clone());
+            general::log_message(processed_text.clone());
             responses::unsupported_notice(m)
         }
     }
     //---unknown intent if can't match intent at all
     else {
         println!("unknown intent");
-        util::log_message(processed_text.clone());
+        general::log_message(processed_text.clone());
         responses::unsupported_notice(m)
     };
     //------Chat will not be a state any more.
     //------Rather any unknown message will be handled by chat in default
     /*
-    root::wipe_history(message.clone(), "chat".to_string());
+    wipe_history(message.clone(), "chat".to_string());
     */
 }

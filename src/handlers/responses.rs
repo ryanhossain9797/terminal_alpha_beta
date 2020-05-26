@@ -1,21 +1,21 @@
-use crate::handlers::*;
+use super::*;
 use serde_json::Value;
 
-pub fn unsupported_notice(m: Box<dyn root::BotMessage + Send + Sync>) {
-    (*m).send_message(root::MsgCount::MultiMsg(vec![
-        root::Msg::Text(match load_response("unsupported-notice-1") {
+pub fn unsupported_notice(m: Box<dyn BotMessage + Send + Sync>) {
+    (*m).send_message(MsgCount::MultiMsg(vec![
+        Msg::Text(match load_response("unsupported-notice-1") {
             Some(response) => response,
             None => response_unavailable(),
         }),
-        root::Msg::Text(match load_response("unsupported-notice-2") {
+        Msg::Text(match load_response("unsupported-notice-2") {
             Some(response) => response,
             None => response_unavailable(),
         }),
     ]));
 }
 
-pub fn unknown_state_notice(m: Box<dyn root::BotMessage + Send + Sync>) {
-    (*m).send_message(root::MsgCount::SingleMsg(root::Msg::Text(
+pub fn unknown_state_notice(m: Box<dyn BotMessage + Send + Sync>) {
+    (*m).send_message(MsgCount::SingleMsg(Msg::Text(
         match load_response("unknown-state") {
             Some(response) => response,
             None => response_unavailable(),
@@ -23,16 +23,14 @@ pub fn unknown_state_notice(m: Box<dyn root::BotMessage + Send + Sync>) {
     )));
 }
 
-pub fn custom_response(m: Box<dyn root::BotMessage + Send + Sync>, key: String) {
-    (*m).send_message(root::MsgCount::SingleMsg(root::Msg::Text(
-        match load_response(&key) {
-            Some(response) => response,
-            _ => "we could not understand your question".to_string(),
-        },
-    )));
+pub fn custom_response(m: Box<dyn BotMessage + Send + Sync>, key: String) {
+    (*m).send_message(MsgCount::SingleMsg(Msg::Text(match load_response(&key) {
+        Some(response) => response,
+        _ => "we could not understand your question".to_string(),
+    })));
 }
 pub fn load_response(key: &str) -> Option<String> {
-    if let Some(json) = &*root::RESPONSES {
+    if let Some(json) = &*RESPONSES {
         match &json[key] {
             Value::String(response) => {
                 return Some(response.to_string());

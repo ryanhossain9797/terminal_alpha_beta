@@ -1,8 +1,5 @@
-use crate::handlers::responses;
-use crate::handlers::root;
 use std::fs::OpenOptions;
 use std::io::prelude::*;
-use std::time::Instant;
 
 use serde_json::Value;
 
@@ -145,6 +142,9 @@ pub struct SearchResult {
     pub link: String,
 }
 
+//WARNING!! unsafe calls made here
+//Google searches using GoLang lib
+//Returns list of SearchResult structs
 pub fn google_search(search: String) -> Option<Vec<SearchResult>> {
     println!("GO GETTING SEARCH RESULTS: {}", search);
     let c_search = CString::new(search).expect("CString::new failed");
@@ -186,35 +186,15 @@ pub fn google_search(search: String) -> Option<Vec<SearchResult>> {
     return None;
 }
 
-pub async fn start_unknown(m: Box<dyn root::BotMessage + Send + Sync>) {
-    println!("START_UNKNOWN: unknown state initiated");
-
-    let mut map = root::RECORDS.lock().await;
-    let id = (*m).get_id();
-    map.entry(format!("{}", id))
-        .or_insert_with(|| root::UserStateRecord {
-            username: (*m).get_name(),
-            last: Instant::now(),
-            state: root::UserState::Unknown,
-        });
-    drop(map);
-    println!("START_UNKNOWN: record added for id {}", id);
-    root::wipe_history(m.clone(), root::UserState::Unknown);
-    (*m).send_message(root::MsgCount::SingleMsg(root::Msg::Text(
-        match responses::load_response("intentional-unknownstate") {
-            Some(response) => response,
-            _ => responses::response_unavailable(),
-        },
-    )));
-}
-
-pub async fn get_request_json(url: &str) -> Option<String> {
+//Makes a simple get request to the provided url
+//Return an Option<serde_json::Value>
+pub async fn get_request_json(url: &str) -> Option<serde_json::Value> {
     let req_result = reqwest::get(url).await;
     match req_result {
         Ok(result) => match result.text().await {
             Ok(body) => {
                 println!("Fetched JSON successfully");
-                return Some(format!("{}", body));
+                return serde_json::from_str(&body).ok();
             }
             Err(error) => {
                 println!("{}", error);
