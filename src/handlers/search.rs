@@ -19,7 +19,7 @@ pub async fn start_search(m: Box<dyn root::BotMessage + Send + Sync>) {
     drop(map);
     println!("START_SEARCH: record added for id {}", id);
     root::wipe_history(m.clone(), root::UserState::Search);
-    (*m).send_msg(root::MsgCount::SingleMsg(root::Msg::Text(
+    (*m).send_message(root::MsgCount::SingleMsg(root::Msg::Text(
         match responses::load_response("search-start") {
             Some(response) => response,
             _ => responses::response_unavailable(),
@@ -61,7 +61,7 @@ pub async fn continue_search(m: Box<dyn root::BotMessage + Send + Sync>, process
             },
         )),
     };
-    (*m).send_msg(response);
+    (*m).send_message(response);
 }
 
 //--------------WEB scraper to search through google

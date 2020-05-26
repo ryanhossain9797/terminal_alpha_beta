@@ -208,7 +208,7 @@ impl handlers::root::BotMessage for TelegramMessage {
     fn start_conversation(&self) -> bool {
         self.start_conversation
     }
-    fn send_msg(&self, msg: handlers::root::MsgCount) {
+    fn send_message(&self, msg: handlers::root::MsgCount) {
         match msg {
             MsgCount::SingleMsg(msg) => match msg {
                 Msg::Text(text) => {

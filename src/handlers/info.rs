@@ -13,7 +13,7 @@ pub async fn start_info(m: Box<dyn root::BotMessage + Send + Sync>, json: String
         title_pass.0, title_pass.1
     );
     if let Some(info) = get_info_go(title_pass.0, title_pass.1) {
-        (*m).send_msg(root::MsgCount::SingleMsg(root::Msg::Text(info)));
+        (*m).send_message(root::MsgCount::SingleMsg(root::Msg::Text(info)));
     } else {
         responses::unsupported_notice(m);
     }

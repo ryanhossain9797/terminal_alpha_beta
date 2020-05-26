@@ -98,7 +98,7 @@ pub trait BotMessage {
     fn clone_bot_message(&self) -> Box<dyn BotMessage + Send + Sync>;
     fn get_name(&self) -> String;
     fn get_id(&self) -> String;
-    fn send_msg(&self, message: MsgCount);
+    fn send_message(&self, message: MsgCount);
     fn start_conversation(&self) -> bool;
 }
 
@@ -171,7 +171,7 @@ pub async fn handler(m: Box<dyn BotMessage + Send + Sync>, processesed_text: Str
         drop(map);
         //---cancel last does nothing as there's nothing to cancel
         if processesed_text == "cancel last" {
-            (*m).send_msg(MsgCount::SingleMsg(Msg::Text(
+            (*m).send_message(MsgCount::SingleMsg(Msg::Text(
                 match responses::load_response("cancel-nothing") {
                     Some(response) => response,
                     _ => responses::response_unavailable(),
@@ -274,7 +274,7 @@ pub async fn cancel_history(m: Box<dyn BotMessage + Send + Sync>) {
         &format!("{}", id)
     });
     drop(map);
-    (*m).send_msg(MsgCount::SingleMsg(Msg::Text(
+    (*m).send_message(MsgCount::SingleMsg(Msg::Text(
         match responses::load_response("cancel-state") {
             Some(response) => response,
             _ => responses::response_unavailable(),
@@ -295,7 +295,7 @@ pub fn wipe_history(m: Box<dyn BotMessage + Send + Sync>, state: UserState) {
                     map.remove(&format!("{}", (*m).get_id()));
                     drop(map);
                     println!("deleted state record for {}", state);
-                    (*m).send_msg(MsgCount::SingleMsg(Msg::Text(
+                    (*m).send_message(MsgCount::SingleMsg(Msg::Text(
                         match responses::load_response("delay-notice") {
                             Some(response) => response,
                             _ => responses::response_unavailable(),

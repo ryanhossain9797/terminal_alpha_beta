@@ -15,7 +15,7 @@
     "search-fail": "We couldn't conduct the search operation, excuse us",
     "corona-header": "This is the records we found of the Covid 19 pandemic",
     "corona-body": "Total Confirmed: {confirmed}\nTotal Deaths: {deaths}",
-    "corona-footer": "The virus seemed to performing well",
+    "corona-footer": "The virus seemed to be performing well, ha ha ha",
     "corona-fail": "Sorry it seems we Could not fetch the info on Covid 19",
     "cancel-state": "Very well, we will not prolong this conversation",
     "cancel-nothing": "Nothing to cancel",

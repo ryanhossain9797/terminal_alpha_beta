@@ -19,7 +19,7 @@ pub async fn start_gif(m: Box<dyn root::BotMessage + Send + Sync>) {
     println!("START_ANIMATION: record added for id {}", id);
     root::wipe_history(m.clone(), root::UserState::Animation);
 
-    (*m).send_msg(root::MsgCount::SingleMsg(root::Msg::Text(
+    (*m).send_message(root::MsgCount::SingleMsg(root::Msg::Text(
         match responses::load_response("animation-start") {
             Some(response) => response,
             _ => responses::response_unavailable(),
@@ -46,7 +46,7 @@ pub async fn continue_gif(m: Box<dyn root::BotMessage + Send + Sync>, processed_
                             match gif.get("max2mbGif") {
                                 Some(Value::String(url)) => {
                                     println!("gif url is {}", url);
-                                    (*m).send_msg(root::MsgCount::SingleMsg(root::Msg::File(
+                                    (*m).send_message(root::MsgCount::SingleMsg(root::Msg::File(
                                         url.to_string(),
                                     )));
                                     return;
@@ -63,7 +63,7 @@ pub async fn continue_gif(m: Box<dyn root::BotMessage + Send + Sync>, processed_
         },
         _ => {}
     }
-    (*m).send_msg(root::MsgCount::SingleMsg(root::Msg::Text(
+    (*m).send_message(root::MsgCount::SingleMsg(root::Msg::Text(
         match responses::load_response("animation-fail") {
             Some(response) => response,
             _ => responses::response_unavailable(),

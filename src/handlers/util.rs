@@ -200,7 +200,7 @@ pub async fn start_unknown(m: Box<dyn root::BotMessage + Send + Sync>) {
     drop(map);
     println!("START_UNKNOWN: record added for id {}", id);
     root::wipe_history(m.clone(), root::UserState::Unknown);
-    (*m).send_msg(root::MsgCount::SingleMsg(root::Msg::Text(
+    (*m).send_message(root::MsgCount::SingleMsg(root::Msg::Text(
         match responses::load_response("intentional-unknownstate") {
             Some(response) => response,
             _ => responses::response_unavailable(),

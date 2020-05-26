@@ -22,7 +22,7 @@ pub async fn start_identify(m: Box<dyn root::BotMessage + Send + Sync>) {
     drop(map);
     println!("START_IDENTIFY: record added for id {}", id);
     root::wipe_history(m.clone(), root::UserState::Identify);
-    (*m).send_msg(root::MsgCount::SingleMsg(root::Msg::Text(
+    (*m).send_message(root::MsgCount::SingleMsg(root::Msg::Text(
         match responses::load_response("identify-start") {
             Some(response) => response,
             _ => responses::response_unavailable(),
@@ -38,7 +38,7 @@ pub async fn continue_identify(m: Box<dyn root::BotMessage + Send + Sync>, name:
     match util::get_person(name.to_string()) {
         //---Part one
         Some(person) => {
-            (*m).send_msg(root::MsgCount::SingleMsg(root::Msg::Text(
+            (*m).send_message(root::MsgCount::SingleMsg(root::Msg::Text(
                 person.description,
             )));
         }
@@ -94,7 +94,7 @@ pub async fn continue_identify(m: Box<dyn root::BotMessage + Send + Sync>, name:
                     },
                 )),
             };
-            (*m).send_msg(partial_match);
+            (*m).send_message(partial_match);
         }
     }
 }
