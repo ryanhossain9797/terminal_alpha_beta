@@ -197,7 +197,13 @@
   "custom_entity_parser": "custom_entity_parser",
   "dataset_metadata": {
     "entities": {
+      "animationWord": {
+        "automatically_extensible": true
+      },
       "chatWord": {
+        "automatically_extensible": true
+      },
+      "coronaWord": {
         "automatically_extensible": true
       },
       "infoWord": {
@@ -221,11 +227,15 @@
     },
     "language_code": "en",
     "slot_name_mappings": {
-      "animation": {},
+      "animation": {
+        "animationTerm": "animationWord"
+      },
       "chat": {
         "chatTerm": "chatWord"
       },
-      "corona": {},
+      "corona": {
+        "infoTerm": "infoWord"
+      },
       "identify": {
         "infoTerm": "infoWord",
         "personTerm": "personWord",
@@ -237,6 +247,7 @@
         "passTerm": "passWord",
         "title": "titleVar"
       },
+      "notes": {},
       "search": {
         "searchTerm": "searchWord"
       },

@@ -13,7 +13,6 @@ pub async fn start_identify(m: Box<dyn BotMessage + Send + Sync>) {
     let id = (*m).get_id();
     map.entry(format!("{}", id))
         .or_insert_with(|| UserStateRecord {
-            username: (*m).get_name(),
             last: Instant::now(),
             state: UserState::Identify,
         });

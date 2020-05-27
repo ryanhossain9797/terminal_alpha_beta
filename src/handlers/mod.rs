@@ -6,10 +6,11 @@ mod corona;
 mod extras;
 mod identify;
 mod info;
+mod notes;
 mod responses;
 mod search;
 
-use super::utils::*;
+use crate::functions::*;
 
 const LONGWAIT: u64 = 30;
 
@@ -60,18 +61,21 @@ pub fn initialize() {
 }
 
 #[derive(PartialEq, Eq)]
-pub enum UserState {
+enum UserState {
     Search,
     Identify,
     Animation,
+    Notes,
     Unknown,
 }
+
 impl fmt::Display for UserState {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
             UserState::Search => write!(f, "Search"),
             UserState::Identify => write!(f, "Identify"),
             UserState::Animation => write!(f, "Animation"),
+            UserState::Notes => write!(f, "Notes"),
             UserState::Unknown => write!(f, "Unknown"),
         }
     }
@@ -92,9 +96,8 @@ pub enum Msg {
 //---Last holds when it was last updated
 //---History is just a vector of strings to hold misc info (ex: messages in chat state)
 pub struct UserStateRecord {
-    pub username: String,
-    pub state: UserState,
-    pub last: Instant,
+    state: UserState,
+    last: Instant,
 }
 //---Will be used in the future to generalize bot for other platforms in future versions
 
@@ -120,7 +123,7 @@ pub fn distributor(m: Box<dyn BotMessage + Send + Sync>, processesed_text: Strin
 }
 
 ///First place to handle messages after distribution
-pub async fn handler(m: Box<dyn BotMessage + Send + Sync>, processesed_text: String) {
+async fn handler(m: Box<dyn BotMessage + Send + Sync>, processesed_text: String) {
     println!("processed text is '{}'", processesed_text);
     let map = RECORDS.lock().await;
     let entry_option = map.get({
@@ -163,6 +166,12 @@ pub async fn handler(m: Box<dyn BotMessage + Send + Sync>, processesed_text: Str
             println!("continuing animation");
             animation::continue_gif(m, processesed_text.clone()).await;
         }
+        //---"if state is animatios"
+        else if record.state == UserState::Notes {
+            drop(map);
+            println!("continuing notes");
+            notes::continue_notes(m, processesed_text.clone()).await;
+        }
         //---"if state is unknown"
         else {
             println!("some unknown state");
@@ -191,7 +200,7 @@ pub async fn handler(m: Box<dyn BotMessage + Send + Sync>, processesed_text: Str
 }
 
 ///Uses natural understanding to determine intent if no state is found
-pub async fn natural_understanding(m: Box<dyn BotMessage + Send + Sync>, processed_text: String) {
+async fn natural_understanding(m: Box<dyn BotMessage + Send + Sync>, processed_text: String) {
     let intents_alternatives = 1;
     let slots_alternatives = 1;
 
@@ -236,6 +245,10 @@ pub async fn natural_understanding(m: Box<dyn BotMessage + Send + Sync>, process
                         println!("ACTION_PICKER: starting info");
                         info::start_info(m, json).await
                     }
+                    "notes" => {
+                        println!("ACTION_PICKER: starting notes");
+                        notes::start_notes(m).await
+                    }
                     "corona" => {
                         println!("ACTION_PICKER: starting corona");
                         corona::start_corona(m).await
@@ -272,7 +285,7 @@ pub async fn natural_understanding(m: Box<dyn BotMessage + Send + Sync>, process
 //---removes current history with a cancellation message
 //---doesn't care about state
 //---used with the cancel last command
-pub async fn cancel_history(m: Box<dyn BotMessage + Send + Sync>) {
+async fn cancel_history(m: Box<dyn BotMessage + Send + Sync>) {
     let mut map = RECORDS.lock().await;
     map.remove({
         let id = (*m).get_id();
@@ -290,7 +303,7 @@ pub async fn cancel_history(m: Box<dyn BotMessage + Send + Sync>) {
 //---removes history after 30 seconds if it's not updated with a new time
 //---AND the history state matches the provided state
 //---message is provided to user
-pub fn wipe_history(m: Box<dyn BotMessage + Send + Sync>, state: UserState) {
+fn wipe_history(m: Box<dyn BotMessage + Send + Sync>, state: UserState) {
     tokio::spawn(async move {
         tokio::time::delay_for(Duration::from_secs(WAITTIME)).await;
         let mut map = RECORDS.lock().await;
@@ -299,7 +312,7 @@ pub fn wipe_history(m: Box<dyn BotMessage + Send + Sync>, state: UserState) {
                 if r.last.elapsed() > Duration::from_secs(WAITTIME) {
                     map.remove(&format!("{}", (*m).get_id()));
                     drop(map);
-                    println!("deleted state record for {}", state);
+                    println!("WIPE_HISTORY: deleted state record for {}", state);
                     (*m).send_message(MsgCount::SingleMsg(Msg::Text(
                         match responses::load_response("delay-notice") {
                             Some(response) => response,
@@ -307,16 +320,23 @@ pub fn wipe_history(m: Box<dyn BotMessage + Send + Sync>, state: UserState) {
                         },
                     )));
                 } else {
-                    println!("WIPE_HISTORY: aborted record delete due to recency");
                     drop(map);
+                    util::log_info("WIPE_HISTORY: aborted record delete due to recency");
                 }
             } else {
-                println!(
+                util::log_info(&format!(
                     "WIPE_HISTORY: aborted record delete for {} because current state is {}",
                     state, r.state
-                );
+                ));
                 drop(map);
             }
+        } else {
+            drop(map);
+            util::log_info(&format!(
+                "WIPE_HISTORY: aborted record delete for {}, there is no recorded state for {}",
+                state,
+                (*m).get_id()
+            ))
         }
     });
 }
@@ -324,7 +344,7 @@ pub fn wipe_history(m: Box<dyn BotMessage + Send + Sync>, state: UserState) {
 //---immediately purges history IF provided state matches history state
 //---used to remove history after state action is completed
 //---no notice provided
-pub fn immediate_purge_history(m: Box<dyn BotMessage + Send + Sync>, state: UserState) {
+fn immediate_purge_history(m: Box<dyn BotMessage + Send + Sync>, state: UserState) {
     tokio::spawn(async move {
         let mut map = RECORDS.lock().await;
         if let Some(r) = map.get(&format!("{}", (*m).get_id())) {

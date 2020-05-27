@@ -3,7 +3,7 @@ extern crate lazy_static;
 extern crate snips_nlu_lib;
 // extern crate discord;
 mod handlers;
-mod utils;
+mod functions;
 
 extern crate openssl_probe;
 use dotenv::dotenv;

@@ -56,21 +56,34 @@ utterances:
 ---
 type: intent
 name: animation
+slots:
+  - name: animationTerm
+    entity: animationWord
 utterances:
-  - i want a gif
-  - help me find a gif
-  - check a gif for me
-  - get me a gif
-  - find me an animation
-  - fetch me a gif
+  - i want an [animationTerm](animation)
+  - help me find a [animationTerm](gif)
+  - check a [animationTerm](vid) for me
+  - get me a [animationTerm](meme)
+  - find me an [animationTerm](video)
+  - fetch me a [animationTerm](gif)
 
 # corona intent
 ---
 type: intent
 name: corona
+slots:
+  - name: infoTerm
+    entity: infoWord
+  - name: coronaTerm
+    entity: coronaWord
 utterances:
-  - corona
-  - covid 19
+  - "[infoTerm](info) on coronaTerm(coronavirus)"
+  - covid 19 [infoTerm](data)
+  - can you get me [infoTerm](info) on coronaTerm(corona)
+  - give me coronaTerm(corona) news
+  - coronaTerm(covid-19) news
+  - what's up with the coronaTerm(virus)
+
 
 # unknown intent
 ---
@@ -78,6 +91,9 @@ type: intent
 name: unknown
 utterances:
   - test unknown
+  - unknown
+  - do an unknown test
+  - test unknown intent
 
 # info intent
 ---
@@ -103,6 +119,20 @@ utterances:
   - check [title](sudo) [infoTerm](data), [pass](linuxinfo)
   - "[passTerm](pass) [pass](jhawadw) fetch [title](sudo) [infoTerm](data)"
   - "[passTerm](pass) is [pass](ladida) get me [infoTerm](stuff) on [title](sudo)"
+
+# notes intent
+---
+type: intent
+name: notes
+utterances:
+  - check notes
+  - my notes
+  - get notes
+  - view notes
+  - notes
+  - i want to save a note
+  - update a note
+  - delete note
 
 # chatWord entity
 ---
@@ -144,12 +174,27 @@ automatically_extensible: yes
 values:
 - [password, pass, pin, auth]
 
+# animationWord entity
+---
+type: entity
+name: animationWord
+automatically_extensible: yes
+values:
+- [animation, anim, gif, video, meme, sticker, vid]
+
+# coronaWord entity
+---
+type: entity
+name: coronaWord
+automatically_extensible: yes
+values:
+- [corona, covid 19, covid, covid-19, coronavirus, corona virus, virus]
+
 # titleVar entity
 ---
 type: entity
 name: titleVar
 automatically_extensible: yes
-
 
 # passVar entity
 ---

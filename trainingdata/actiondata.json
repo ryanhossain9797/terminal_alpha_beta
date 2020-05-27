@@ -1,5 +1,23 @@
 {
   "entities": {
+    "animationWord": {
+      "automatically_extensible": true,
+      "data": [
+        {
+          "synonyms": [
+            "anim",
+            "gif",
+            "video",
+            "meme",
+            "sticker",
+            "vid"
+          ],
+          "value": "animation"
+        }
+      ],
+      "matching_strictness": 1.0,
+      "use_synonyms": true
+    },
     "chatWord": {
       "automatically_extensible": true,
       "data": [
@@ -10,6 +28,24 @@
             "discuss"
           ],
           "value": "chat"
+        }
+      ],
+      "matching_strictness": 1.0,
+      "use_synonyms": true
+    },
+    "coronaWord": {
+      "automatically_extensible": true,
+      "data": [
+        {
+          "synonyms": [
+            "covid 19",
+            "covid",
+            "covid-19",
+            "coronavirus",
+            "corona virus",
+            "virus"
+          ],
+          "value": "corona"
         }
       ],
       "matching_strictness": 1.0,
@@ -97,42 +133,75 @@
         {
           "data": [
             {
-              "text": "i want a gif"
+              "text": "i want an "
+            },
+            {
+              "entity": "animationWord",
+              "slot_name": "animationTerm",
+              "text": "animation"
             }
           ]
         },
         {
           "data": [
             {
-              "text": "help me find a gif"
+              "text": "help me find a "
+            },
+            {
+              "entity": "animationWord",
+              "slot_name": "animationTerm",
+              "text": "gif"
             }
           ]
         },
         {
           "data": [
             {
-              "text": "check a gif for me"
+              "text": "check a "
+            },
+            {
+              "entity": "animationWord",
+              "slot_name": "animationTerm",
+              "text": "vid"
+            },
+            {
+              "text": " for me"
             }
           ]
         },
         {
           "data": [
             {
-              "text": "get me a gif"
+              "text": "get me a "
+            },
+            {
+              "entity": "animationWord",
+              "slot_name": "animationTerm",
+              "text": "meme"
             }
           ]
         },
         {
           "data": [
             {
-              "text": "find me an animation"
+              "text": "find me an "
+            },
+            {
+              "entity": "animationWord",
+              "slot_name": "animationTerm",
+              "text": "video"
             }
           ]
         },
         {
           "data": [
             {
-              "text": "fetch me a gif"
+              "text": "fetch me a "
+            },
+            {
+              "entity": "animationWord",
+              "slot_name": "animationTerm",
+              "text": "gif"
             }
           ]
         }
@@ -237,14 +306,60 @@
         {
           "data": [
             {
-              "text": "corona"
+              "entity": "infoWord",
+              "slot_name": "infoTerm",
+              "text": "info"
+            },
+            {
+              "text": " on coronaTerm(coronavirus)"
             }
           ]
         },
         {
           "data": [
             {
-              "text": "covid 19"
+              "text": "covid 19 "
+            },
+            {
+              "entity": "infoWord",
+              "slot_name": "infoTerm",
+              "text": "data"
+            }
+          ]
+        },
+        {
+          "data": [
+            {
+              "text": "can you get me "
+            },
+            {
+              "entity": "infoWord",
+              "slot_name": "infoTerm",
+              "text": "info"
+            },
+            {
+              "text": " on coronaTerm(corona)"
+            }
+          ]
+        },
+        {
+          "data": [
+            {
+              "text": "give me coronaTerm(corona) news"
+            }
+          ]
+        },
+        {
+          "data": [
+            {
+              "text": "coronaTerm(covid-19) news"
+            }
+          ]
+        },
+        {
+          "data": [
+            {
+              "text": "what's up with the coronaTerm(virus)"
             }
           ]
         }
@@ -801,6 +916,66 @@
         }
       ]
     },
+    "notes": {
+      "utterances": [
+        {
+          "data": [
+            {
+              "text": "check notes"
+            }
+          ]
+        },
+        {
+          "data": [
+            {
+              "text": "my notes"
+            }
+          ]
+        },
+        {
+          "data": [
+            {
+              "text": "get notes"
+            }
+          ]
+        },
+        {
+          "data": [
+            {
+              "text": "view notes"
+            }
+          ]
+        },
+        {
+          "data": [
+            {
+              "text": "notes"
+            }
+          ]
+        },
+        {
+          "data": [
+            {
+              "text": "i want to save a note"
+            }
+          ]
+        },
+        {
+          "data": [
+            {
+              "text": "update a note"
+            }
+          ]
+        },
+        {
+          "data": [
+            {
+              "text": "delete note"
+            }
+          ]
+        }
+      ]
+    },
     "search": {
       "utterances": [
         {
@@ -907,6 +1082,27 @@
           "data": [
             {
               "text": "test unknown"
+            }
+          ]
+        },
+        {
+          "data": [
+            {
+              "text": "unknown"
+            }
+          ]
+        },
+        {
+          "data": [
+            {
+              "text": "do an unknown test"
+            }
+          ]
+        },
+        {
+          "data": [
+            {
+              "text": "test unknown intent"
             }
           ]
         }
