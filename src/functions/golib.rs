@@ -172,6 +172,7 @@ pub fn get_notes(user_id: String) -> Option<Vec<Note>> {
     return None;
 }
 
+#[allow(dead_code, unused_variables)]
 pub fn add_note(user_id: String, note: String) -> Option<Vec<Note>> {
     None
 }

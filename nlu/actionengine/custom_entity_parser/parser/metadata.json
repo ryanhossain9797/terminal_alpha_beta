@@ -1,0 +1,40 @@
+{
+  "parsers_metadata": [
+    {
+      "entity_identifier": "animationWord",
+      "entity_parser": "parser_1"
+    },
+    {
+      "entity_identifier": "chatWord",
+      "entity_parser": "parser_2"
+    },
+    {
+      "entity_identifier": "coronaWord",
+      "entity_parser": "parser_3"
+    },
+    {
+      "entity_identifier": "infoWord",
+      "entity_parser": "parser_4"
+    },
+    {
+      "entity_identifier": "passVar",
+      "entity_parser": "parser_5"
+    },
+    {
+      "entity_identifier": "passWord",
+      "entity_parser": "parser_6"
+    },
+    {
+      "entity_identifier": "personWord",
+      "entity_parser": "parser_7"
+    },
+    {
+      "entity_identifier": "searchWord",
+      "entity_parser": "parser_8"
+    },
+    {
+      "entity_identifier": "titleVar",
+      "entity_parser": "parser_9"
+    }
+  ]
+}

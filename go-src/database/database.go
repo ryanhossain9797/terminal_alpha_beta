@@ -32,7 +32,7 @@ type Person struct {
 }
 
 func loadDB() {
-	client, err := firestore.NewClient(ctx, "terminal-alpha-and-beta", option.WithCredentialsFile("./creds.json"))
+	client, err := firestore.NewClient(ctx, "terminal-alpha-and-beta", option.WithCredentialsFile("./credentials/creds.json"))
 	if err != nil {
 		fmt.Println("error occured")
 		fmt.Println(err)

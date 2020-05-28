@@ -1,4 +1,8 @@
 /target
+
 /.env
+
 /action_log.txt
-/creds.json
+
+/credentials/*
+!/credentials/Readme.md

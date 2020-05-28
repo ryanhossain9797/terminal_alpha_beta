@@ -13,7 +13,7 @@ use snips_nlu_lib::SnipsNluEngine;
 lazy_static! {
     pub static ref CHATENGINE: SnipsNluEngine = {
         println!("\nLoading the nlu engine...");
-        SnipsNluEngine::from_path("chatengine/").unwrap()
+        SnipsNluEngine::from_path("nlu/chatengine/").unwrap()
     };
 }
 
