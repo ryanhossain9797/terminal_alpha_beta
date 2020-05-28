@@ -172,6 +172,10 @@ pub fn get_notes(user_id: String) -> Option<Vec<Note>> {
     return None;
 }
 
+pub fn add_note(user_id: String, note: String) -> Option<Vec<Note>> {
+    None
+}
+
 pub fn get_info(title: String, pass: String) -> Option<String> {
     println!("GO GETTING INFO: {}", title);
     let c_title = CString::new(title).expect("CString::new failed");

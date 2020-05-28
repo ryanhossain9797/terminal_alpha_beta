@@ -11,11 +11,13 @@ pub async fn start_identify(m: Box<dyn BotMessage + Send + Sync>) {
     println!("START_IDENTIFY: identify initiated");
     let mut map = RECORDS.lock().await;
     let id = (*m).get_id();
-    map.entry(format!("{}", id))
+    let entry = map
+        .entry(format!("{}", id))
         .or_insert_with(|| UserStateRecord {
             last: Instant::now(),
             state: UserState::Identify,
         });
+    entry.last = Instant::now();
     drop(map);
     println!("START_IDENTIFY: record added for id {}", id);
     wipe_history(m.clone(), UserState::Identify);

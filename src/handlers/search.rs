@@ -9,11 +9,13 @@ pub async fn start_search(m: Box<dyn BotMessage + Send + Sync>) {
 
     let mut map = RECORDS.lock().await;
     let id = (*m).get_id();
-    map.entry(format!("{}", id))
+    let entry = map
+        .entry(format!("{}", id))
         .or_insert_with(|| UserStateRecord {
             last: Instant::now(),
             state: UserState::Search,
         });
+    entry.last = Instant::now();
     drop(map);
     println!("START_SEARCH: record added for id {}", id);
     wipe_history(m.clone(), UserState::Search);
