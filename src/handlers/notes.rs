@@ -3,7 +3,7 @@ use super::*;
 pub async fn start_notes(m: Box<dyn BotMessage + Send + Sync>) {
     println!("START_NOTES: notes initiated");
     let id = (*m).get_id();
-    match general::get_notes(id.clone()) {
+    match golib::get_notes(id.clone()) {
         Some(notes) => {
             let mut notes_string = "".to_string();
             for note in notes {

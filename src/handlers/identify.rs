@@ -32,7 +32,7 @@ pub async fn start_identify(m: Box<dyn BotMessage + Send + Sync>) {
 pub async fn continue_identify(m: Box<dyn BotMessage + Send + Sync>, name: String) {
     immediate_purge_history(m.clone(), UserState::Identify);
     println!("IDENTIFY: beginning identification");
-    match general::get_person(name.to_string()) {
+    match golib::get_person(name.to_string()) {
         //---Part one
         Some(person) => {
             (*m).send_message(MsgCount::SingleMsg(Msg::Text(person.description)));
@@ -40,7 +40,7 @@ pub async fn continue_identify(m: Box<dyn BotMessage + Send + Sync>, name: Strin
 
         //---Part two
         _ => {
-            let partial_match = match general::get_people() {
+            let partial_match = match golib::get_people() {
                 Some(people) => {
                     let mut names: Vec<String> = vec![];
                     people

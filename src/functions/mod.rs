@@ -1,3 +1,3 @@
 pub mod general;
-mod golib;
+pub mod golib;
 pub mod util;

@@ -29,7 +29,7 @@ pub async fn start_search(m: Box<dyn BotMessage + Send + Sync>) {
 //---fires immediate purge history command for search state
 pub async fn continue_search(m: Box<dyn BotMessage + Send + Sync>, processesed_text: String) {
     immediate_purge_history(m.clone(), UserState::Search);
-    let search_option = general::google_search(processesed_text);
+    let search_option = golib::google_search(processesed_text);
 
     let response = match search_option {
         Some(results) => {
