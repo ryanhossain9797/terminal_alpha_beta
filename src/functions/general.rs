@@ -54,6 +54,7 @@ extern "C" {
     fn GetPerson(name: GoString) -> *const c_char;
     fn GetPeople() -> *const c_char;
     fn GoogleSearch(search: GoString) -> *const c_char;
+    fn GetNotes(id: GoString) -> *const c_char;
 }
 
 #[repr(C)]
@@ -182,6 +183,41 @@ pub fn google_search(search: String) -> Option<Vec<SearchResult>> {
             },
             _ => (),
         }
+    }
+    return None;
+}
+
+pub struct Note {
+    pub position: usize,
+    pub note: String,
+}
+
+//WARNING!! unsafe calls made here
+//Fetches notes using GoLang lib
+//Returns list of Note structs
+pub fn get_notes(user_id: String) -> Option<Vec<Note>> {
+    println!("GO GETTING NOTES: id: {}", user_id);
+    let c_note = CString::new(user_id).expect("CString::new failed");
+    let ptr = c_note.as_ptr();
+    let go_string = GoString {
+        a: ptr,
+        b: c_note.as_bytes().len() as isize,
+    };
+    let result = unsafe { GetNotes(go_string) };
+    let c_str = unsafe { CStr::from_ptr(result) };
+    let string = c_str
+        .to_str()
+        .expect("Error translating notes data from library");
+    if let Some(Value::Array(notes)) = serde_json::from_str(&string.to_string()).ok() {
+        println!("GET_NOTES: notes json fetched successfully {}", string);
+        let mut notes_list: Vec<Note> = vec![];
+        for (position, note_val) in notes.iter().enumerate() {
+            if let Some(Value::String(note_str)) = &note_val.get("note") {
+                let note = note_str.clone();
+                notes_list.push(Note { position, note });
+            }
+        }
+        return Some(notes_list);
     }
     return None;
 }

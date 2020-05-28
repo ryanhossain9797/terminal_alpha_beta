@@ -2,23 +2,42 @@ use super::*;
 
 pub async fn start_notes(m: Box<dyn BotMessage + Send + Sync>) {
     println!("START_NOTES: notes initiated");
-    let mut map = RECORDS.lock().await;
     let id = (*m).get_id();
-    map.entry(format!("{}", id))
-        .or_insert_with(|| UserStateRecord {
-            last: Instant::now(),
-            state: UserState::Notes,
-        });
-    drop(map);
-    println!("START_NOTES: record added for id {}", id);
-    wipe_history(m.clone(), UserState::Notes);
-    (*m).send_message(MsgCount::MultiMsg(vec![
-        Msg::Text(match responses::load_response("notes-start") {
-            Some(response) => response,
-            _ => responses::response_unavailable(),
-        }),
-        Msg::Text("1. Note 1\n2. Note 2\n3. Note 3".to_string()),
-    ]));
+    match general::get_notes(id.clone()) {
+        Some(notes) => {
+            let mut notes_string = "".to_string();
+            for note in notes {
+                notes_string.push_str(&format!("{}. {}\n", note.position, note.note));
+            }
+            {
+                //---Only update state on successful notes retrieval
+                let mut map = RECORDS.lock().await;
+                map.entry(format!("{}", &id))
+                    .or_insert_with(|| UserStateRecord {
+                        last: Instant::now(),
+                        state: UserState::Notes,
+                    });
+                drop(map);
+                println!("START_NOTES: record added for id {}", id);
+                wipe_history(m.clone(), UserState::Notes);
+            }
+            (*m).send_message(MsgCount::MultiMsg(vec![
+                Msg::Text(match responses::load_response("notes-start") {
+                    Some(response) => response,
+                    _ => responses::response_unavailable(),
+                }),
+                Msg::Text(notes_string),
+            ]));
+        }
+        None => {
+            (*m).send_message(MsgCount::SingleMsg(Msg::Text(
+                match responses::load_response("notes-fail") {
+                    Some(response) => response,
+                    _ => responses::response_unavailable(),
+                },
+            )));
+        }
+    }
 }
 
 //---finishes identify

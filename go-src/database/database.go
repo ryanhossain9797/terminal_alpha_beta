@@ -23,6 +23,7 @@ var (
 	ctx      context.Context
 	PeopleDB *firestore.CollectionRef
 	InfoDB   *firestore.CollectionRef
+	NotesDB  *firestore.CollectionRef
 )
 
 type Person struct {
@@ -39,6 +40,7 @@ func loadDB() {
 	}
 	PeopleDB = client.Collection("people")
 	InfoDB = client.Collection("info")
+	NotesDB = client.Collection("notes")
 }
 
 func GetPeopleFromDB() []Person {
@@ -101,4 +103,31 @@ func FindInfoFromDB(title string, pass string) string {
 		return "{}"
 	}
 	return string(jsonData)
+}
+
+type Note struct {
+	Note string `firestore:"note" json:"note"`
+}
+
+func GetNotesFromDB(id string) []Note {
+	fmt.Println("NOTES_FROM_DB: id: " + id)
+	result := NotesDB.Where("id", "==", id).Documents(ctx)
+
+	var notes []Note
+	for {
+		noteSnapshot, err := result.Next()
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			fmt.Println(err)
+			return notes
+		}
+		var note Note
+		noteSnapshot.DataTo(&note)
+		notes = append(notes, note)
+	}
+	fmt.Printf("NOTES_FROM_DB: got %d notes\n", len(notes))
+	return notes
+
 }

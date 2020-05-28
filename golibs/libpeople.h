@@ -77,6 +77,8 @@ extern char* GetInfo(GoString p0, GoString p1);
 
 extern char* GoogleSearch(GoString p0);
 
+extern char* GetNotes(GoString p0);
+
 #ifdef __cplusplus
 }
 #endif

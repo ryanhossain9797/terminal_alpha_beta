@@ -87,6 +87,20 @@ func GoogleSearch(search string) *C.char {
 	return C.CString("{}")
 }
 
+//export GetNotes
+func GetNotes(id string) *C.char {
+	fmt.Println("GET_NOTES_GO: fetching notes for " + id)
+	data := database.GetNotesFromDB(id)
+
+	fmt.Println("GET_NOTES_GO: got data")
+	jsonData, err := json.Marshal(data)
+	if err != nil {
+		fmt.Println(err)
+		return C.CString("[]")
+	}
+	return C.CString(string(jsonData))
+}
+
 func main() {
 
 }
