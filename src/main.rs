@@ -2,8 +2,8 @@
 extern crate lazy_static;
 extern crate snips_nlu_lib;
 // extern crate discord;
-mod handlers;
 mod functions;
+mod handlers;
 
 extern crate openssl_probe;
 use dotenv::dotenv;
@@ -16,7 +16,14 @@ use tokio::prelude::*;
 // use discord::model::Event;
 // use discord::Discord;
 
+use telegram_bot::Message as TMessage;
 use telegram_bot::*;
+
+use serenity::{
+    async_trait,
+    model::{channel::Message as DMessage, gateway::Ready},
+    prelude::*,
+};
 
 const WAITTIME: u64 = 10;
 
@@ -52,17 +59,40 @@ async fn main() {
 //--------DISCORD CODE
 
 async fn run_discord() {
-    for i in 0..3 {
-        println!("discord running {}", i);
-        tokio::time::delay_for(Duration::from_secs(10)).await;
+    discord_main().await;
+}
+
+struct Handler;
+
+#[async_trait]
+impl EventHandler for Handler {
+    // Set a handler for the `message` event - so that whenever a new message
+    // is received - the closure (or function) passed will be called.
+    async fn message(&self, ctx: Context, msg: DMessage) {
+        println!("DISCORD: <{}>: {}", msg.author.name, msg.content);
+        if msg.author.name != "Terminal Alpha & Beta" {
+            if let Err(why) = msg
+                .channel_id
+                .say(
+                    &ctx.http,
+                    &format!("Hey {}, You said {}", msg.author.name, msg.content),
+                )
+                .await
+            {
+                println!("Error sending message: {:?}", why);
+            }
+        }
     }
-    //discord_main();
+
+    // In this case, just print what the current user's username is.
+    async fn ready(&self, _: Context, ready: Ready) {
+        println!("{} is connected!", ready.user.name);
+    }
 }
 #[allow(dead_code)]
-fn discord_main() {
+async fn discord_main() {
     //     let discord = Discord::from_bot_token(&env::var("DISCORD_TOKEN").expect("Expected token"))
     //     .expect("login failed");
-
     //     // Establish and use a websocket connection
     //     let (mut connection, _) = discord.connect().expect("connect failed");
     //     println!("Ready.");
@@ -90,6 +120,23 @@ fn discord_main() {
     //         Err(err) => println!("Receive error: {:?}", err),
     //     }
     // }
+
+    // Configure the client with your Discord bot token in the environment.
+    let token = env::var("DISCORD_TOKEN").expect("Expected a token in the environment");
+
+    // Create a new instance of the Client, logging in as a bot. This will
+    let mut client = Client::new(&token)
+        .event_handler(Handler)
+        .await
+        .expect("Err creating client");
+
+    // Finally, start a single shard, and start listening to events.
+    //
+    // Shards will automatically attempt to reconnect, and will perform
+    // exponential backoff until it reconnects.
+    if let Err(why) = client.start().await {
+        println!("Client error: {:?}", why);
+    }
 }
 
 //--------DISCORD CODE END
@@ -117,7 +164,7 @@ async fn telegram_main() {
                 if let UpdateKind::Message(message) = update.kind {
                     if let MessageKind::Text { ref data, .. } = message.kind {
                         // Print received text message to stdout.
-                        println!("<{}>: {}", &message.from.first_name, data);
+                        println!("TELEGRAM: <{}>: {}", &message.from.first_name, data);
                         // Spawn a handler for the message.
 
                         filter(message).await;
@@ -139,7 +186,7 @@ async fn telegram_main() {
 //--- => removes / from start if it's there ("/hellow    @machinelifeformbot   world" becomes "hellow    @machinelifeformbot   world")
 //--- => removes mentions of the bot from the message ("hellow    @machinelifeformbot   world" becomes "hellow      world")
 //--- => replaces redundant spaces with single spaces using regex ("hellow      world" becomes "hellow world")
-async fn filter(message: telegram_bot::Message) {
+async fn filter(message: TMessage) {
     if let MessageKind::Text { ref data, .. } = message.kind {
         let myname_result = API.send(GetMe).await;
         if let Ok(myname) = myname_result {
@@ -178,7 +225,7 @@ async fn filter(message: telegram_bot::Message) {
 }
 
 //---Sender handles forwarding the message, receiving response and sending it to the user
-async fn sender(message: &telegram_bot::Message, processed_text: String, start_conversation: bool) {
+async fn sender(message: &TMessage, processed_text: String, start_conversation: bool) {
     let tele_msg = Box::new(TelegramMessage {
         message: message.clone(),
         start_conversation: start_conversation,
@@ -190,7 +237,7 @@ async fn sender(message: &telegram_bot::Message, processed_text: String, start_c
 
 #[derive(Clone)]
 struct TelegramMessage {
-    message: telegram_bot::Message,
+    message: TMessage,
     start_conversation: bool,
 }
 
