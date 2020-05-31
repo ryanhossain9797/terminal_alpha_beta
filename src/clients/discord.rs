@@ -1,13 +1,13 @@
 //--------DISCORD CODE
 use super::*;
-use std::env;
-use std::time::Duration;
-
+use regex::Regex;
 use serenity::{
     async_trait,
     model::{channel::Message as DMessage, gateway::Ready},
     prelude::*,
 };
+use std::env;
+use std::time::Duration;
 
 pub async fn run_discord() {
     discord_main().await;
@@ -39,8 +39,8 @@ impl EventHandler for Handler {
     // is received - the closure (or function) passed will be called.
     async fn message(&self, ctx: Context, message: DMessage) {
         println!("DISCORD: <{}>: {}", message.author.name, message.content);
-        if message.author.name != "Terminal Alpha & Beta" {
-            sender(&message, ctx, message.content.clone(), true).await;
+        if !message.author.bot {
+            filter(message, ctx).await;
         }
     }
 
@@ -50,13 +50,49 @@ impl EventHandler for Handler {
     }
 }
 
+//---Filter basically does some spring cleaning
+//--- => checks whether the update is actually a message or some other type
+//--- => trims leading and trailing spaces ("   /hellow    @machinelifeformbot   world  " becomes "/hellow    @machinelifeformbot   world")
+//--- => removes / from start if it's there ("/hellow    @machinelifeformbot   world" becomes "hellow    @machinelifeformbot   world")
+//--- => removes mentions of the bot from the message ("hellow    @machinelifeformbot   world" becomes "hellow      world")
+//--- => replaces redundant spaces with single spaces using regex ("hellow      world" becomes "hellow world")
+async fn filter(message: DMessage, ctx: Context) {
+    if let Ok(info) = ctx.http.get_current_application_info().await {
+        let id: i64 = info.id.into();
+        let handle = format!("<@{}>", &id);
+        //-----------------------remove self mention from message
+        let mut msg = message.content.replace(&handle, "");
+        msg = msg.trim().to_string();
+        msg = msg.trim_start_matches("/").to_string();
+        msg = msg.trim().to_string();
+        msg = msg.to_lowercase();
+        let space_trimmer = Regex::new(r"\s+").unwrap();
+
+        let msg_str: &str = &msg[..];
+        msg = space_trimmer.replace_all(msg_str, " ").to_string();
+        //-----------------------check if message is from a group chat.......
+        if !message.is_private() {
+            //-----------------------......and check if handle is present if message IS from group chat
+            if message.content.contains(&handle) {
+                //---true means message is to be processed even if no conversation is in progress
+                //---if bot is mentioned new convo can start
+                sender(message, ctx, msg, true).await
+            } else {
+                //---false means message won't start a new conversation
+                //---required because ongoing conversation will continue regardless of true or false
+                sender(message, ctx, msg, false).await
+            }
+        } else {
+            //---if not in group chat mentions aren't necessary and any message will be replied by the bot
+            sender(message, ctx, msg, true).await
+        };
+    } else {
+        println!("DISCORD: Error occured while fetching self ID")
+    }
+}
+
 //---Sender handles forwarding the message, receiving response and sending it to the user
-async fn sender(
-    message: &DMessage,
-    ctx: Context,
-    processed_text: String,
-    start_conversation: bool,
-) {
+async fn sender(message: DMessage, ctx: Context, processed_text: String, start_conversation: bool) {
     let disc_msg = Box::new(DiscordMessage {
         message: message.clone(),
         ctx,
