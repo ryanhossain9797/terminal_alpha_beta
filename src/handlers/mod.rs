@@ -18,7 +18,7 @@ const LONGWAIT: u64 = 30;
 const SHORTWAIT: u64 = 10;
 const WAITTIME: u64 = LONGWAIT;
 
-// use async_trait::async_trait;
+use async_trait::async_trait;
 use serde_json;
 use std::collections::HashMap;
 use std::fmt;
@@ -100,13 +100,13 @@ pub struct UserStateRecord {
     last: Instant,
 }
 //---Will be used in the future to generalize bot for other platforms in future versions
-
+#[async_trait]
 pub trait BotMessage {
     // this is used to make cloneable box< send + sync> version of itself
     fn clone_bot_message(&self) -> Box<dyn BotMessage + Send + Sync>;
     fn get_name(&self) -> String;
     fn get_id(&self) -> String;
-    fn send_message(&self, message: MsgCount);
+    async fn send_message(&self, message: MsgCount);
     fn start_conversation(&self) -> bool;
 }
 
@@ -176,7 +176,7 @@ async fn handler(m: Box<dyn BotMessage + Send + Sync>, processesed_text: String)
         else {
             println!("some unknown state");
             drop(map);
-            responses::unknown_state_notice(m);
+            responses::unknown_state_notice(m).await;
         }
     }
     //---if record from user doesn't exist, but is either IN A PRIVATE CHAT or MENTIONED IN A GROUP CHAT
@@ -190,7 +190,8 @@ async fn handler(m: Box<dyn BotMessage + Send + Sync>, processesed_text: String)
                     Some(response) => response,
                     _ => responses::response_unavailable(),
                 },
-            )));
+            )))
+            .await;
         }
         //---hand over to the natural understanding system for advanced matching
         else {
@@ -262,13 +263,13 @@ async fn natural_understanding(m: Box<dyn BotMessage + Send + Sync>, processed_t
                         //---Don't put stuff related to unknown intents here
                         println!("ACTION_PICKER: unimplemented intent");
                         general::log_message(processed_text);
-                        responses::unsupported_notice(m)
+                        responses::unsupported_notice(m).await
                     }
                 }
             } else {
                 println!("ACTION_PICKER: couldn't convert intent to json");
                 general::log_message(processed_text);
-                responses::unsupported_notice(m)
+                responses::unsupported_notice(m).await
             }
         }
         //---unknown intent if cannot match to any intent confidently
@@ -297,7 +298,8 @@ async fn cancel_history(m: Box<dyn BotMessage + Send + Sync>) {
             Some(response) => response,
             _ => responses::response_unavailable(),
         },
-    )));
+    )))
+    .await;
 }
 
 //---removes history after 30 seconds if it's not updated with a new time
@@ -318,7 +320,8 @@ fn wipe_history(m: Box<dyn BotMessage + Send + Sync>, state: UserState) {
                             Some(response) => response,
                             _ => responses::response_unavailable(),
                         },
-                    )));
+                    )))
+                    .await;
                 } else {
                     drop(map);
                     util::log_info("WIPE_HISTORY: aborted record delete due to recency");

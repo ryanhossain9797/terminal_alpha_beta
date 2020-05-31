@@ -25,7 +25,8 @@ pub async fn start_gif(m: Box<dyn BotMessage + Send + Sync>) {
             Some(response) => response,
             _ => responses::response_unavailable(),
         },
-    )));
+    )))
+    .await;
 }
 
 //---finishes animation fetching
@@ -45,7 +46,8 @@ pub async fn continue_gif(m: Box<dyn BotMessage + Send + Sync>, processed_text: 
                     match gif.get("max2mbGif") {
                         Some(Value::String(url)) => {
                             println!("gif url is {}", url);
-                            (*m).send_message(MsgCount::SingleMsg(Msg::File(url.to_string())));
+                            (*m).send_message(MsgCount::SingleMsg(Msg::File(url.to_string())))
+                                .await;
                             return;
                         }
                         _ => {}
@@ -61,5 +63,6 @@ pub async fn continue_gif(m: Box<dyn BotMessage + Send + Sync>, processed_text: 
             Some(response) => response,
             _ => responses::response_unavailable(),
         },
-    )));
+    )))
+    .await;
 }

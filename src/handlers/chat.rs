@@ -40,7 +40,7 @@ pub async fn start_chat(m: Box<dyn BotMessage + Send + Sync>) {
     */
     println!("START_CHAT: responding to chat intent");
 
-    responses::custom_response(m, "chat-start".to_string())
+    responses::custom_response(m, "chat-start".to_string()).await
 }
 
 //---FIX LEVEL: Works with strings
@@ -88,29 +88,29 @@ pub async fn continue_chat(m: Box<dyn BotMessage + Send + Sync>, processed_text:
         if result.intent.confidence_score > 0.5 {
             if intent == "greet" {
                 println!("starting greet");
-                responses::custom_response(m, "chat-greet".to_string())
+                responses::custom_response(m, "chat-greet".to_string()).await
             } else if intent == "about" {
                 println!("starting about");
-                responses::custom_response(m, "chat-about".to_string())
+                responses::custom_response(m, "chat-about".to_string()).await
             } else if intent == "technology" {
                 println!("starting technology");
-                responses::custom_response(m, "chat-technology".to_string())
+                responses::custom_response(m, "chat-technology".to_string()).await
             } else {
-                responses::unsupported_notice(m)
+                responses::unsupported_notice(m).await
             }
         }
         //---unknown intent if cannot match to any intent confidently
         else {
             println!("unsure intent");
             general::log_message(processed_text.clone());
-            responses::unsupported_notice(m)
+            responses::unsupported_notice(m).await
         }
     }
     //---unknown intent if can't match intent at all
     else {
         println!("unknown intent");
         general::log_message(processed_text.clone());
-        responses::unsupported_notice(m)
+        responses::unsupported_notice(m).await
     };
     //------Chat will not be a state any more.
     //------Rather any unknown message will be handled by chat in default

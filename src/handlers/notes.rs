@@ -29,7 +29,8 @@ pub async fn start_notes(m: Box<dyn BotMessage + Send + Sync>) {
                     _ => responses::response_unavailable(),
                 }),
                 Msg::Text(notes_string),
-            ]));
+            ]))
+            .await;
         }
         None => {
             (*m).send_message(MsgCount::SingleMsg(Msg::Text(
@@ -37,7 +38,8 @@ pub async fn start_notes(m: Box<dyn BotMessage + Send + Sync>) {
                     Some(response) => response,
                     _ => responses::response_unavailable(),
                 },
-            )));
+            )))
+            .await;
         }
     }
 }
@@ -64,6 +66,7 @@ pub async fn continue_notes(m: Box<dyn BotMessage + Send + Sync>, command: Strin
             Some(response) => response,
             _ => responses::response_unavailable(),
         },
-    )));
+    )))
+    .await;
     wipe_history(m.clone(), UserState::Notes);
 }

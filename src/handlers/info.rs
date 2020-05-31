@@ -8,8 +8,9 @@ pub async fn start_info(m: Box<dyn BotMessage + Send + Sync>, json: String) {
         title_pass.0, title_pass.1
     );
     if let Some(info) = golib::get_info(title_pass.0, title_pass.1) {
-        (*m).send_message(MsgCount::SingleMsg(Msg::Text(info)));
+        (*m).send_message(MsgCount::SingleMsg(Msg::Text(info)))
+            .await;
     } else {
-        responses::unsupported_notice(m);
+        responses::unsupported_notice(m).await;
     }
 }

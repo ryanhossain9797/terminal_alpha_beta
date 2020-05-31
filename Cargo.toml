@@ -10,7 +10,6 @@ edition = "2018"
 futures = "0.3.5"
 tokio = {version = "0.2.21", features = ["full"]}
 telegram-bot = "0.7"
-# discord = { git = "https://github.com/SpaceManiac/discord-rs" }
 dotenv = "0.15.0"
 lazy_static = "1.4.0"
 colored = "1.9.3"

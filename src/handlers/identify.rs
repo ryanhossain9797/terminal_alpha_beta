@@ -26,7 +26,8 @@ pub async fn start_identify(m: Box<dyn BotMessage + Send + Sync>) {
             Some(response) => response,
             _ => responses::response_unavailable(),
         },
-    )));
+    )))
+    .await;
 }
 
 //---finishes identify
@@ -37,7 +38,8 @@ pub async fn continue_identify(m: Box<dyn BotMessage + Send + Sync>, name: Strin
     match golib::get_person(name.to_string()) {
         //---Part one
         Some(person) => {
-            (*m).send_message(MsgCount::SingleMsg(Msg::Text(person.description)));
+            (*m).send_message(MsgCount::SingleMsg(Msg::Text(person.description)))
+                .await;
         }
 
         //---Part two
@@ -91,7 +93,7 @@ pub async fn continue_identify(m: Box<dyn BotMessage + Send + Sync>, name: Strin
                     },
                 )),
             };
-            (*m).send_message(partial_match);
+            (*m).send_message(partial_match).await;
         }
     }
 }

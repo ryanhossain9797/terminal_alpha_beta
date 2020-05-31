@@ -21,5 +21,6 @@ pub async fn start_unknown(m: Box<dyn BotMessage + Send + Sync>) {
             Some(response) => response,
             _ => responses::response_unavailable(),
         },
-    )));
+    )))
+    .await;
 }

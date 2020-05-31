@@ -25,7 +25,8 @@ pub async fn start_corona(m: Box<dyn BotMessage + Send + Sync>) {
                     Some(response) => response,
                     _ => responses::response_unavailable(),
                 },
-            )));
+            )))
+            .await;
 
             match map.get("Countries") {
                 Some(Value::Array(country_list)) => {
@@ -82,7 +83,8 @@ pub async fn start_corona(m: Box<dyn BotMessage + Send + Sync>) {
                             country.country, country.new_confirmed, country.new_deaths
                         );
                     }
-                    (*m).send_message(MsgCount::SingleMsg(Msg::Text(new_cases_message)));
+                    (*m).send_message(MsgCount::SingleMsg(Msg::Text(new_cases_message)))
+                        .await;
                     countries.sort_unstable_by(|first, second| {
                         first.total_confirmed.cmp(&second.total_confirmed).reverse()
                     });
@@ -93,7 +95,8 @@ pub async fn start_corona(m: Box<dyn BotMessage + Send + Sync>) {
                             country.country, country.total_confirmed, country.total_deaths
                         );
                     }
-                    (*m).send_message(MsgCount::SingleMsg(Msg::Text(total_cases_message)));
+                    (*m).send_message(MsgCount::SingleMsg(Msg::Text(total_cases_message)))
+                        .await;
                 }
                 _ => println!("CORONA:  No Value for 'Countries' key"),
             }
@@ -125,7 +128,8 @@ pub async fn start_corona(m: Box<dyn BotMessage + Send + Sync>) {
                                     Some(response) => response,
                                     _ => responses::response_unavailable(),
                                 }),
-                            ]));
+                            ]))
+                            .await;
                         }
                         _ => println!("CORONA: couldn't get confirmed and deaths"),
                     }
@@ -141,5 +145,6 @@ pub async fn start_corona(m: Box<dyn BotMessage + Send + Sync>) {
             Some(response) => response,
             _ => responses::response_unavailable(),
         },
-    )));
+    )))
+    .await;
 }

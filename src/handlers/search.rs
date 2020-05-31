@@ -24,7 +24,8 @@ pub async fn start_search(m: Box<dyn BotMessage + Send + Sync>) {
             Some(response) => response,
             _ => responses::response_unavailable(),
         },
-    )));
+    )))
+    .await;
 }
 
 //---finishes search
@@ -59,46 +60,5 @@ pub async fn continue_search(m: Box<dyn BotMessage + Send + Sync>, processesed_t
             _ => responses::response_unavailable(),
         })),
     };
-    (*m).send_message(response);
+    (*m).send_message(response).await;
 }
-
-//--------------WEB scraper to search through google
-// pub async fn search_google(query: &str, limit: u32) -> Result<Vec<String>, Error> {
-//     let request_string = format!(
-//         "https://www.google.com/search?q={}&gws_rd=ssl&num={}&hl=en",
-//         query, limit
-//     );
-
-//     let body = Client::new()
-//         .get(&request_string)
-//         .header(
-//             USER_AGENT,
-//             "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.10; rv:34.0) Gecko/20100101 Firefox/34.0",
-//         )
-//         .send()
-//         .await
-//         .unwrap()
-//         .text()
-//         .await
-//         .unwrap();
-
-//     let document = Document::from(body.as_str());
-
-//     let mut sections: Vec<String> = Vec::new();
-
-//     for node in document.find(
-//         Attr("id", "rso")
-//             .descendant(Class("g"))
-//             .descendant(Class("rc"))
-//             .descendant(Class("r"))
-//             .descendant(Name("a")),
-//     ) {
-//         if let Some(link) = node.attr("href") {
-//             sections.push(link.to_string());
-//         }
-//     }
-//     for section in &sections {
-//         println!("{}", section);
-//     }
-//     Ok(sections)
-// }

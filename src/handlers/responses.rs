@@ -1,7 +1,7 @@
 use super::*;
 use serde_json::Value;
 
-pub fn unsupported_notice(m: Box<dyn BotMessage + Send + Sync>) {
+pub async fn unsupported_notice(m: Box<dyn BotMessage + Send + Sync>) {
     (*m).send_message(MsgCount::MultiMsg(vec![
         Msg::Text(match load_response("unsupported-notice-1") {
             Some(response) => response,
@@ -11,23 +11,26 @@ pub fn unsupported_notice(m: Box<dyn BotMessage + Send + Sync>) {
             Some(response) => response,
             None => response_unavailable(),
         }),
-    ]));
+    ]))
+    .await;
 }
 
-pub fn unknown_state_notice(m: Box<dyn BotMessage + Send + Sync>) {
+pub async fn unknown_state_notice(m: Box<dyn BotMessage + Send + Sync>) {
     (*m).send_message(MsgCount::SingleMsg(Msg::Text(
         match load_response("unknown-state") {
             Some(response) => response,
             None => response_unavailable(),
         },
-    )));
+    )))
+    .await;
 }
 
-pub fn custom_response(m: Box<dyn BotMessage + Send + Sync>, key: String) {
+pub async fn custom_response(m: Box<dyn BotMessage + Send + Sync>, key: String) {
     (*m).send_message(MsgCount::SingleMsg(Msg::Text(match load_response(&key) {
         Some(response) => response,
         _ => "we could not understand your question".to_string(),
-    })));
+    })))
+    .await;
 }
 pub fn load_response(key: &str) -> Option<String> {
     if let Some(json) = &*RESPONSES {
