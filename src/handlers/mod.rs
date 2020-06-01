@@ -81,25 +81,32 @@ impl fmt::Display for UserState {
     }
 }
 
+///ENUM, Represents Message count
+///- SingleMsg - Contains a Msg Enum
+///- MultiMsg - Contains a Vector of Msg Enums
+///- NoMsg - Represnts an empty response
 pub enum MsgCount {
     SingleMsg(Msg),
     MultiMsg(Vec<Msg>),
     NoMsg,
 }
 
+///ENUM, Represents Message type
+///- Text - Contains String text
+///- File - Contains String url for file
 pub enum Msg {
     Text(String),
     File(String),
 }
 
-//---A user state record holds an individual user's state
-//---Last holds when it was last updated
-//---History is just a vector of strings to hold misc info (ex: messages in chat state)
+///A user state record holds an individual user's state.
+///Last holds when it was last updated.
+///History is just a vector of strings to hold misc info (ex: messages in chat state).
 pub struct UserStateRecord {
     state: UserState,
     last: Instant,
 }
-//---Will be used in the future to generalize bot for other platforms in future versions
+///Used to generalize Message Updates for various platforms
 #[async_trait]
 pub trait BotMessage {
     // this is used to make cloneable box< send + sync> version of itself
@@ -110,7 +117,7 @@ pub trait BotMessage {
     fn start_conversation(&self) -> bool;
 }
 
-// Implment clone for this trait
+///Implment clone for this trait
 impl Clone for Box<dyn BotMessage + Send + Sync> {
     fn clone(&self) -> Self {
         self.clone_bot_message()
@@ -283,9 +290,9 @@ async fn natural_understanding(m: Box<dyn BotMessage + Send + Sync>, processed_t
     };
 }
 
-//---removes current history with a cancellation message
-//---doesn't care about state
-//---used with the cancel last command
+///Removes current history with a cancellation message.
+///Doesn't care about state.
+///Used with the cancel last command.
 async fn cancel_history(m: Box<dyn BotMessage + Send + Sync>) {
     let mut map = RECORDS.lock().await;
     map.remove({
@@ -301,10 +308,11 @@ async fn cancel_history(m: Box<dyn BotMessage + Send + Sync>) {
     )))
     .await;
 }
-
-//---removes history after 30 seconds if it's not updated with a new time
-//---AND the history state matches the provided state
-//---message is provided to user
+/**
+Removes history after 30 seconds if it's not updated with a new time.
+AND the history state matches the provided state.
+Message is provided to user.
+*/
 fn wipe_history(m: Box<dyn BotMessage + Send + Sync>, state: UserState) {
     tokio::spawn(async move {
         tokio::time::delay_for(Duration::from_secs(WAITTIME)).await;
@@ -343,10 +351,11 @@ fn wipe_history(m: Box<dyn BotMessage + Send + Sync>, state: UserState) {
         }
     });
 }
-
-//---immediately purges history IF provided state matches history state
-//---used to remove history after state action is completed
-//---no notice provided
+/**
+Immediately purges history IF provided state matches history state
+used to remove history after state action is completed
+no notice provided
+*/
 fn immediate_purge_history(m: Box<dyn BotMessage + Send + Sync>, state: UserState) {
     tokio::spawn(async move {
         let mut map = RECORDS.lock().await;
