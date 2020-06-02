@@ -19,6 +19,12 @@ cross-arm-musl:
 arm64:
 	cargo build --target aarch64-unknown-linux-gnu
 train:
+	rm -rf ./nlu/rootengine
+	rm -f trainingdata/actiondata.json
+	rm -f trainingdata/chatdata.json
+	snips-nlu generate-dataset en trainingdata/chatdata.yaml trainingdata/actiondata.yaml > trainingdata/rootdata.json
+	snips-nlu train trainingdata/rootdata.json nlu/rootengine
+train-old:
 	rm -rf ./nlu/actionengine
 	rm -f trainingdata/actiondata.json
 	snips-nlu generate-dataset en trainingdata/actiondata.yaml > trainingdata/actiondata.json

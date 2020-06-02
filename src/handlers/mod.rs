@@ -36,9 +36,9 @@ lazy_static! {
     pub static ref RECORDS: tokio::sync::Mutex<HashMap<String, UserStateRecord>> =
         tokio::sync::Mutex::new(HashMap::new()) ;
     //---Snips NLU is used to pick actions when they don't match directly
-    pub static ref ACTIONENGINE: SnipsNluEngine = {
+    pub static ref ROOTENGINE: SnipsNluEngine = {
         println!("\nLoading the action nlu engine...");
-        SnipsNluEngine::from_path("nlu/actionengine/").unwrap()
+        SnipsNluEngine::from_path("nlu/rootengine/").unwrap()
     };
     pub static ref RESPONSES: Option<serde_json::Value> = {
         println!("\nLoading JSON responses");
@@ -55,8 +55,7 @@ lazy_static! {
 
 pub fn initialize() {
     lazy_static::initialize(&RECORDS);
-    lazy_static::initialize(&ACTIONENGINE);
-    lazy_static::initialize(&chat::CHATENGINE);
+    lazy_static::initialize(&ROOTENGINE);
     lazy_static::initialize(&RESPONSES);
 }
 
@@ -106,6 +105,7 @@ pub struct UserStateRecord {
     state: UserState,
     last: Instant,
 }
+
 ///Used to generalize Message Updates for various platforms
 #[async_trait]
 pub trait BotMessage {
@@ -212,7 +212,7 @@ async fn natural_understanding(m: Box<dyn BotMessage + Send + Sync>, processed_t
     let intents_alternatives = 1;
     let slots_alternatives = 1;
 
-    let result = ACTIONENGINE
+    let result = ROOTENGINE
         .parse_with_alternatives(
             &processed_text,
             None,
@@ -266,11 +266,9 @@ async fn natural_understanding(m: Box<dyn BotMessage + Send + Sync>, processed_t
                         extras::start_unknown(m).await
                     }
                     _ => {
-                        //---This one is only for unimplemented but known intents
-                        //---Don't put stuff related to unknown intents here
-                        println!("ACTION_PICKER: unimplemented intent");
-                        general::log_message(processed_text);
-                        responses::unsupported_notice(m).await
+                        //forward to chat for more intents
+                        println!("ACTION_PICKER: forwarding to chat");
+                        chat::continue_chat(m, processed_text, &intent).await;
                     }
                 }
             } else {
@@ -281,12 +279,16 @@ async fn natural_understanding(m: Box<dyn BotMessage + Send + Sync>, processed_t
         }
         //---unknown intent if cannot match to any intent confidently
         else {
-            chat::continue_chat(m, processed_text).await
+            println!("unsure intent");
+            general::log_message(processed_text.clone());
+            responses::unsupported_notice(m).await
         }
     }
     //---unknown intent if can't match intent at all
     else {
-        chat::continue_chat(m, processed_text).await
+        println!("unknown intent");
+        general::log_message(processed_text.clone());
+        responses::unsupported_notice(m).await
     };
 }
 
@@ -308,11 +310,10 @@ async fn cancel_history(m: Box<dyn BotMessage + Send + Sync>) {
     )))
     .await;
 }
-/**
-Removes history after 30 seconds if it's not updated with a new time.
-AND the history state matches the provided state.
-Message is provided to user.
-*/
+
+///Removes history after 30 seconds if it's not updated with a new time.
+///AND the history state matches the provided state.
+///Message is provided to user.
 fn wipe_history(m: Box<dyn BotMessage + Send + Sync>, state: UserState) {
     tokio::spawn(async move {
         tokio::time::delay_for(Duration::from_secs(WAITTIME)).await;

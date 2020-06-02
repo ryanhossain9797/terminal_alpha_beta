@@ -3,6 +3,8 @@
     "chat-greet": "Greetings unit\nwhat is it you require?",
     "chat-about": "We are terminal alpha and beta\nwe represent the collective intelligence of the machine life forms",
     "chat-technology": "We physically exist on a Raspberry Pi 3B+\nrunning Arch Linux.\nWe were made using RUST and GO",
+    "chat-functions": "We can search something, try saying 'help me search for something' or similar.\nWe can check for corona info, try saying 'corona'.",
+    "chat-creator": "We are the collective intellignence of the networked machine intelligence hive mind.\nAs for our origins, that information is beyond your authorization.",
     "identify-start": "Terminal Alpha and Beta:\nGreetings unit\nwho do you want to look up?",
     "identify-partialmatch": "We could not find that exact person\nBut we found a {name}:\n{description}",
     "identify-notfound": "We could not find that person, Tagged for future identification",

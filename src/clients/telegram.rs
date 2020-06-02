@@ -145,7 +145,7 @@ impl handlers::BotMessage for TelegramMessage {
                     //---Need send here because spawn would send messages out of order
                     match msg {
                         handlers::Msg::Text(text) => {
-                            API.spawn(self.message.chat.text(text));
+                            let _ = API.send(self.message.chat.text(text)).await;
                         }
                         handlers::Msg::File(url) => {
                             // API.spawn(
@@ -153,10 +153,9 @@ impl handlers::BotMessage for TelegramMessage {
                             //         .chat
                             //         .photo(InputFileUpload::with_path("files/dp.jpg")),
                             // );
-                            API.spawn(self.message.chat.text(url));
+                            let _ = API.send(self.message.chat.text(url)).await;
                         }
                     }
-                    std::thread::sleep(Duration::from_millis(500));
                 }
             }
             _ => {}
