@@ -10,16 +10,16 @@ pub async fn start_chat(m: Box<dyn BotMessage + Send + Sync>) {
     //------Rather any unknown message will be handled by chat in default
     /*
     let mut map = RECORDS.lock().await;
-    map.entry(message.from.id)
-        .or_insert_with(|| UserStateRecord {
-            username: message.from.first_name.clone(),
-            chat: message.chat.id(),
+    let id = (*m).get_id();
+    map.insert(
+        format!("{}", id),
+        UserStateRecord {
             last: Instant::now(),
-            state: "chat".to_string(),
-            history: Vec::new(),
-        });
+            state: UserState::Chat,
+        },
+    );
     drop(map);
-    wipe_history(message.clone(), "chat".to_string());
+    wipe_history(message.clone(), UserState::Chat);
     println!("START_CHAT: record added");
     */
     println!("START_CHAT: responding to chat intent");
@@ -38,21 +38,17 @@ pub async fn continue_chat(
 ) {
     //------Chat will not be a state any more.
     //------Rather any unknown message will be handled by chat in default
-    /*
-    let mut map = RECORDS.lock().await;
-    let entry = map
-        .entry(message.from.id)
-        .or_insert_with(|| UserStateRecord {
-            username: message.from.first_name.clone(),
-            chat: message.chat.id(),
-            last: Instant::now(),
-            state: "chat".to_string(),
-            history: Vec::new(),
-        });
-    entry.history.push(processed_text.clone());
-    entry.last = Instant::now();
-    drop(map);
-    */
+
+    // let mut map = RECORDS.lock().await;
+    // let id = (*m).get_id();
+    // map.insert(
+    //     format!("{}", id),
+    //     UserStateRecord {
+    //         last: Instant::now(),
+    //         state: UserState::Chat,
+    //     },
+    // );
+    // drop(map);
 
     if intent == "greet" {
         println!("starting greet");

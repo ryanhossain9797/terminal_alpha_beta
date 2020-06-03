@@ -61,6 +61,7 @@ pub fn initialize() {
 
 #[derive(PartialEq, Eq)]
 enum UserState {
+    // Chat,
     Search,
     Identify,
     Animation,

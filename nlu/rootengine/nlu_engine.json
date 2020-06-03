@@ -216,7 +216,7 @@
         "automatically_extensible": true
       },
       "personWord": {
-        "automatically_extensible": false
+        "automatically_extensible": true
       },
       "searchWord": {
         "automatically_extensible": true

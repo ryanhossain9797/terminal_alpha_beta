@@ -40,9 +40,9 @@ type: intent
 name: functions
 utterances:
   - what can you do
-  - what features do you have
+  - what features do you have?
   - what are your functions
-  - how can you help me
+  - how can you help me?
   - can you help me
 
 # technology intent
@@ -50,8 +50,10 @@ utterances:
 type: intent
 name: creator
 utterances:
+  - who created you?
   - who made you
-  - who is your creator
+  - who is your creator?
+  - who were you made by
   - how were you made
-  - were you made by someone
+  - were you made by someone?
   

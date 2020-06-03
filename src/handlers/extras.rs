@@ -6,13 +6,13 @@ pub async fn start_unknown(m: Box<dyn BotMessage + Send + Sync>) {
 
     let mut map = RECORDS.lock().await;
     let id = (*m).get_id();
-    let entry = map
-        .entry(format!("{}", id))
-        .or_insert_with(|| UserStateRecord {
+    map.insert(
+        format!("{}", id),
+        UserStateRecord {
             last: Instant::now(),
             state: UserState::Unknown,
-        });
-    entry.last = Instant::now();
+        },
+    );
     drop(map);
     println!("START_UNKNOWN: record added for id {}", id);
     wipe_history(m.clone(), UserState::Unknown);

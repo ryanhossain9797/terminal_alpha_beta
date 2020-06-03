@@ -88,7 +88,7 @@
       "use_synonyms": true
     },
     "personWord": {
-      "automatically_extensible": false,
+      "automatically_extensible": true,
       "data": [
         {
           "synonyms": [
@@ -96,7 +96,8 @@
             "a human",
             "a person",
             "a dude",
-            "who"
+            "a guy",
+            "a girl"
           ],
           "value": "person"
         }
@@ -437,6 +438,13 @@
         {
           "data": [
             {
+              "text": "who created you?"
+            }
+          ]
+        },
+        {
+          "data": [
+            {
               "text": "who made you"
             }
           ]
@@ -444,7 +452,14 @@
         {
           "data": [
             {
-              "text": "who is your creator"
+              "text": "who is your creator?"
+            }
+          ]
+        },
+        {
+          "data": [
+            {
+              "text": "who were you made by"
             }
           ]
         },
@@ -458,7 +473,7 @@
         {
           "data": [
             {
-              "text": "were you made by someone"
+              "text": "were you made by someone?"
             }
           ]
         }
@@ -476,7 +491,7 @@
         {
           "data": [
             {
-              "text": "what features do you have"
+              "text": "what features do you have?"
             }
           ]
         },
@@ -490,7 +505,7 @@
         {
           "data": [
             {
-              "text": "how can you help me"
+              "text": "how can you help me?"
             }
           ]
         },
@@ -637,6 +652,26 @@
         {
           "data": [
             {
+              "text": "help me "
+            },
+            {
+              "entity": "searchWord",
+              "slot_name": "searchTerm",
+              "text": "find"
+            },
+            {
+              "text": " "
+            },
+            {
+              "entity": "personWord",
+              "slot_name": "personTerm",
+              "text": "someone"
+            }
+          ]
+        },
+        {
+          "data": [
+            {
               "text": "please "
             },
             {
@@ -751,9 +786,6 @@
         {
           "data": [
             {
-              "text": "maybe "
-            },
-            {
               "entity": "searchWord",
               "slot_name": "searchTerm",
               "text": "look for"
@@ -773,9 +805,6 @@
         },
         {
           "data": [
-            {
-              "text": "please "
-            },
             {
               "entity": "searchWord",
               "slot_name": "searchTerm",
@@ -805,15 +834,15 @@
               "text": "check"
             },
             {
-              "text": " "
+              "text": " who "
             },
             {
               "entity": "personWord",
               "slot_name": "personTerm",
-              "text": "who"
+              "text": "someone"
             },
             {
-              "text": " this is"
+              "text": " is"
             }
           ]
         }

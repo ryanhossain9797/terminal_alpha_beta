@@ -43,14 +43,15 @@ slots:
     entity: infoWord
 utterances:
   - help me [searchTerm](search) for [personTerm](someone)
+  - help me [searchTerm](find) [personTerm](someone)
   - please [searchTerm](search) [personTerm](someone)
   - can you [searchTerm](search) this [personTerm](someone)'s [infoTerm](information)
   - i want to [searchTerm](find) [personTerm](a person)
   - can you [searchTerm](look up) [personTerm](a dude) for me
   - can you [searchTerm](look) [personTerm](a dude) up
-  - maybe [searchTerm](look for) [personTerm](someone) for me
-  - please [searchTerm](check) [personTerm](a human) for me
-  - can you [searchTerm](check) [personTerm](who) this is
+  - "[searchTerm](look for) [personTerm](someone) for me"
+  - "[searchTerm](check) [personTerm](a human) for me"
+  - can you [searchTerm](check) who [personTerm](someone) is
 
 # animation intent
 ---
@@ -154,9 +155,9 @@ values:
 ---
 type: entity
 name: personWord
-automatically_extensible: no
+automatically_extensible: yes
 values:
-- [person, someone, a human, a person, a dude, who]
+- [person, someone, a human, a person, a dude, a guy, a girl]
 
 # infoWord entity
 ---

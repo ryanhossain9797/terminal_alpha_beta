@@ -9,13 +9,13 @@ pub async fn start_gif(m: Box<dyn BotMessage + Send + Sync>) {
 
     let mut map = RECORDS.lock().await;
     let id = (*m).get_id();
-    let entry = map
-        .entry(format!("{}", id))
-        .or_insert_with(|| UserStateRecord {
+    map.insert(
+        format!("{}", id),
+        UserStateRecord {
             last: Instant::now(),
             state: UserState::Animation,
-        });
-    entry.last = Instant::now();
+        },
+    );
     drop(map);
     println!("START_ANIMATION: record added for id {}", id);
     wipe_history(m.clone(), UserState::Animation);

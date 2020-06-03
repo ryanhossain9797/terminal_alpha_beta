@@ -11,13 +11,14 @@ pub async fn start_identify(m: Box<dyn BotMessage + Send + Sync>) {
     println!("START_IDENTIFY: identify initiated");
     let mut map = RECORDS.lock().await;
     let id = (*m).get_id();
-    let entry = map
-        .entry(format!("{}", id))
-        .or_insert_with(|| UserStateRecord {
+    map.insert(
+        format!("{}", id),
+        UserStateRecord {
             last: Instant::now(),
             state: UserState::Identify,
-        });
-    entry.last = Instant::now();
+        },
+    );
+
     drop(map);
     println!("START_IDENTIFY: record added for id {}", id);
     wipe_history(m.clone(), UserState::Identify);
@@ -50,7 +51,7 @@ pub async fn continue_identify(m: Box<dyn BotMessage + Send + Sync>, name: Strin
                     people
                         .iter()
                         .for_each(|person| names.push(person.name.clone()));
-                    let cm = ClosestMatch::new(names, [4, 5, 6].to_vec());
+                    let cm = ClosestMatch::new(names, [4, 6, 8, 10].to_vec());
                     let closest_name = cm.get_closest(name.to_string());
                     match closest_name {
                         Some(name) => {

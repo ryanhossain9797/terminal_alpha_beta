@@ -100,9 +100,7 @@
       },
       {
         "args": {
-          "entities": [
-            "personWord"
-          ],
+          "entities": [],
           "entity_filter": {
             "automatically_extensible": false
           },
@@ -119,8 +117,9 @@
       {
         "args": {
           "entities": [
-            "infoWord",
-            "searchWord"
+            "searchWord",
+            "personWord",
+            "infoWord"
           ],
           "entity_filter": {
             "automatically_extensible": true
