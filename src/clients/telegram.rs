@@ -95,10 +95,10 @@ async fn filter(message: TMessage) {
 
 //---Sender handles forwarding the message, receiving response and sending it to the user
 async fn sender(message: &TMessage, processed_text: String, start_conversation: bool) {
-    let tele_msg = Box::new(TelegramMessage {
+    let tele_msg = TelegramMessage {
         message: message.clone(),
         start_conversation,
-    }) as Box<dyn handlers::BotMessage + Send + Sync>;
+    };
     handlers::distributor(tele_msg, processed_text);
 }
 

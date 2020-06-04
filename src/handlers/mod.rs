@@ -126,8 +126,10 @@ impl Clone for Box<dyn BotMessage + Send + Sync> {
 }
 
 ///Distributes incoming requests to separate threads
-pub fn distributor(m: Box<dyn BotMessage + Send + Sync>, processesed_text: String) {
-    tokio::spawn(async move { handler(m, processesed_text).await });
+pub fn distributor(m: impl BotMessage, processesed_text: String) {
+    //---PICK UP STATIC DISPATCH HERE
+    let n = m.clone_bot_message();
+    tokio::spawn(async move { handler(n, processesed_text).await });
 }
 
 ///First place to handle messages after distribution

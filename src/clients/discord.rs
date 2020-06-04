@@ -93,11 +93,11 @@ async fn filter(message: DMessage, ctx: Context) {
 
 //---Sender handles forwarding the message, receiving response and sending it to the user
 async fn sender(message: DMessage, ctx: Context, processed_text: String, start_conversation: bool) {
-    let disc_msg = Box::new(DiscordMessage {
+    let disc_msg = DiscordMessage {
         message: message.clone(),
         ctx,
         start_conversation,
-    }) as Box<dyn handlers::BotMessage + Send + Sync>;
+    };
     handlers::distributor(disc_msg, processed_text);
 }
 
