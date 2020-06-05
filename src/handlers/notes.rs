@@ -1,6 +1,6 @@
 use super::*;
 
-pub async fn start_notes(m: Box<dyn BotMessage + Send + Sync>) {
+pub async fn start_notes(m: Box<dyn BotMessage>) {
     println!("START_NOTES: notes initiated");
     let id = (*m).get_id();
     match golib::get_notes(id.clone()) {
@@ -46,7 +46,7 @@ pub async fn start_notes(m: Box<dyn BotMessage + Send + Sync>) {
 
 //---finishes identify
 //---fires immediate purge history command for identify state
-pub async fn continue_notes(m: Box<dyn BotMessage + Send + Sync>, command: String) {
+pub async fn continue_notes(m: Box<dyn BotMessage>, command: String) {
     println!("NOTES: continuing with notes '{}'", command);
     let mut map = RECORDS.lock().await;
     let id = (*m).get_id();

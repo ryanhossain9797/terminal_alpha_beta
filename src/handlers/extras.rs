@@ -1,7 +1,7 @@
 use super::*;
 
 //Tests any unknown intent
-pub async fn start_unknown(m: Box<dyn BotMessage + Send + Sync>) {
+pub async fn start_unknown(m: Box<dyn BotMessage>) {
     println!("START_UNKNOWN: unknown state initiated");
 
     let mut map = RECORDS.lock().await;

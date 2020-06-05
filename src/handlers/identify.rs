@@ -7,7 +7,7 @@ use closestmatch::*;
 
 //---adds a userstate record with identify state to userstate records map
 //---fires wipe history command for identify state
-pub async fn start_identify(m: Box<dyn BotMessage + Send + Sync>) {
+pub async fn start_identify(m: Box<dyn BotMessage>) {
     println!("START_IDENTIFY: identify initiated");
     let mut map = RECORDS.lock().await;
     let id = (*m).get_id();
@@ -33,7 +33,7 @@ pub async fn start_identify(m: Box<dyn BotMessage + Send + Sync>) {
 
 //---finishes identify
 //---fires immediate purge history command for identify state
-pub async fn continue_identify(m: Box<dyn BotMessage + Send + Sync>, name: String) {
+pub async fn continue_identify(m: Box<dyn BotMessage>, name: String) {
     immediate_purge_history(m.clone(), UserState::Identify);
     println!("IDENTIFY: beginning identification");
     match golib::get_person(name.to_string()) {

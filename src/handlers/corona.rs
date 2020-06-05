@@ -13,7 +13,7 @@ struct Country {
 #[allow(dead_code)]
 struct Summary {}
 
-pub async fn start_corona(m: Box<dyn BotMessage + Send + Sync>) {
+pub async fn start_corona(m: Box<dyn BotMessage>) {
     let url = "https://api.covid19api.com/summary".to_string();
     // let countries: Vec<Country> = vec![];
 

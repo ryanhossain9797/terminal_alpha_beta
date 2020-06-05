@@ -24,6 +24,7 @@ use std::collections::HashMap;
 use std::fmt;
 use std::fs::*;
 use std::mem::drop;
+use std::sync::Arc;
 use std::time::{Duration, Instant};
 
 //
@@ -109,9 +110,9 @@ pub struct UserStateRecord {
 
 ///Used to generalize Message Updates for various platforms
 #[async_trait]
-pub trait BotMessage {
+pub trait BotMessage: Send + Sync {
     // this is used to make cloneable box< send + sync> version of itself
-    fn clone_bot_message(&self) -> Box<dyn BotMessage + Send + Sync>;
+    fn clone_bot_message(&self) -> Box<dyn BotMessage>;
     fn get_name(&self) -> String;
     fn get_id(&self) -> String;
     async fn send_message(&self, message: MsgCount);
@@ -119,21 +120,23 @@ pub trait BotMessage {
 }
 
 ///Implment clone for this trait
-impl Clone for Box<dyn BotMessage + Send + Sync> {
+impl Clone for Box<dyn BotMessage> {
     fn clone(&self) -> Self {
         self.clone_bot_message()
     }
 }
 
 ///Distributes incoming requests to separate threads
-pub fn distributor(m: impl BotMessage, processesed_text: String) {
+pub fn distributor(m: Arc<impl BotMessage + 'static>, processesed_text: String) {
     //---PICK UP STATIC DISPATCH HERE
-    let n = m.clone_bot_message();
+    // let n = m.clone_bot_message();
+    let n = Arc::clone(&m);
     tokio::spawn(async move { handler(n, processesed_text).await });
 }
 
 ///First place to handle messages after distribution
-async fn handler(m: Box<dyn BotMessage + Send + Sync>, processesed_text: String) {
+async fn handler(n: Arc<impl BotMessage + 'static>, processesed_text: String) {
+    let m = n.clone_bot_message();
     println!("processed text is '{}'", processesed_text);
     let map = RECORDS.lock().await;
     let entry_option = map.get({
@@ -211,7 +214,7 @@ async fn handler(m: Box<dyn BotMessage + Send + Sync>, processesed_text: String)
 }
 
 ///Uses natural understanding to determine intent if no state is found
-async fn natural_understanding(m: Box<dyn BotMessage + Send + Sync>, processed_text: String) {
+async fn natural_understanding(m: Box<dyn BotMessage>, processed_text: String) {
     let intents_alternatives = 1;
     let slots_alternatives = 1;
 
@@ -298,7 +301,7 @@ async fn natural_understanding(m: Box<dyn BotMessage + Send + Sync>, processed_t
 ///Removes current history with a cancellation message.
 ///Doesn't care about state.
 ///Used with the cancel last command.
-async fn cancel_history(m: Box<dyn BotMessage + Send + Sync>) {
+async fn cancel_history(m: Box<dyn BotMessage>) {
     let mut map = RECORDS.lock().await;
     map.remove({
         let id = (*m).get_id();
@@ -317,7 +320,7 @@ async fn cancel_history(m: Box<dyn BotMessage + Send + Sync>) {
 ///Removes history after 30 seconds if it's not updated with a new time.
 ///AND the history state matches the provided state.
 ///Message is provided to user.
-fn wipe_history(m: Box<dyn BotMessage + Send + Sync>, state: UserState) {
+fn wipe_history(m: Box<dyn BotMessage>, state: UserState) {
     tokio::spawn(async move {
         tokio::time::delay_for(Duration::from_secs(WAITTIME)).await;
         let mut map = RECORDS.lock().await;
@@ -360,7 +363,7 @@ Immediately purges history IF provided state matches history state
 used to remove history after state action is completed
 no notice provided
 */
-fn immediate_purge_history(m: Box<dyn BotMessage + Send + Sync>, state: UserState) {
+fn immediate_purge_history(m: Box<dyn BotMessage>, state: UserState) {
     tokio::spawn(async move {
         let mut map = RECORDS.lock().await;
         if let Some(r) = map.get(&format!("{}", (*m).get_id())) {

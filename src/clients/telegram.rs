@@ -6,6 +6,7 @@ use async_trait::async_trait;
 use futures::StreamExt;
 use regex::Regex;
 use std::env;
+use std::sync::Arc;
 use std::time::Duration;
 
 use telegram_bot::Message as TMessage;
@@ -99,7 +100,7 @@ async fn sender(message: &TMessage, processed_text: String, start_conversation: 
         message: message.clone(),
         start_conversation,
     };
-    handlers::distributor(tele_msg, processed_text);
+    handlers::distributor(Arc::new(tele_msg), processed_text);
 }
 
 //---These will be used to generalize telegram messages with other platforms
@@ -112,7 +113,7 @@ struct TelegramMessage {
 
 #[async_trait]
 impl handlers::BotMessage for TelegramMessage {
-    fn clone_bot_message(&self) -> Box<dyn handlers::BotMessage + Send + Sync> {
+    fn clone_bot_message(&self) -> Box<dyn handlers::BotMessage> {
         Box::new(self.clone())
     }
     fn get_name(&self) -> String {

@@ -4,7 +4,7 @@ use std::mem::drop;
 use std::time::Instant;
 //---adds a userstate record with animation state to userstate records map
 //---fires wipe history command for animation state
-pub async fn start_gif(m: Box<dyn BotMessage + Send + Sync>) {
+pub async fn start_gif(m: Box<dyn BotMessage>) {
     println!("START_ANIMATION: aniamtion initiated");
 
     let mut map = RECORDS.lock().await;
@@ -31,7 +31,7 @@ pub async fn start_gif(m: Box<dyn BotMessage + Send + Sync>) {
 
 //---finishes animation fetching
 //---fires immediate purge history command for animation state
-pub async fn continue_gif(m: Box<dyn BotMessage + Send + Sync>, processed_text: String) {
+pub async fn continue_gif(m: Box<dyn BotMessage>, processed_text: String) {
     println!("CONTINUE_ANIMATION: animation response");
     immediate_purge_history(m.clone(), UserState::Animation);
 

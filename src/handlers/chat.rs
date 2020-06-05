@@ -4,7 +4,7 @@ use super::*;
 //use std::mem::drop;
 //use std::time::Instant;
 
-pub async fn start_chat(m: Box<dyn BotMessage + Send + Sync>) {
+pub async fn start_chat(m: Box<dyn BotMessage>) {
     println!("START_CHAT: chat initiated");
     //------Chat will not be a state any more.
     //------Rather any unknown message will be handled by chat in default
@@ -31,11 +31,7 @@ pub async fn start_chat(m: Box<dyn BotMessage + Send + Sync>) {
 ///updated to implement RETURN STRINGS
 ///updates userstate record map with chat messages list and new time
 ///fires wipe history command for chat state
-pub async fn continue_chat(
-    m: Box<dyn BotMessage + Send + Sync>,
-    _processed_text: String,
-    intent: &str,
-) {
+pub async fn continue_chat(m: Box<dyn BotMessage>, _processed_text: String, intent: &str) {
     //------Chat will not be a state any more.
     //------Rather any unknown message will be handled by chat in default
 
