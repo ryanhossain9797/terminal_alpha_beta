@@ -7,7 +7,6 @@ use serenity::{
     prelude::*,
 };
 use std::env;
-use std::sync::Arc;
 use std::time::Duration;
 
 pub async fn run_discord() {
@@ -99,7 +98,7 @@ async fn sender(message: DMessage, ctx: Context, processed_text: String, start_c
         ctx,
         start_conversation,
     };
-    handlers::distributor(Arc::new(disc_msg), processed_text);
+    handlers::distributor(disc_msg, processed_text);
 }
 
 //---These will be used to generalize telegram messages with other platforms
@@ -113,7 +112,7 @@ struct DiscordMessage {
 
 #[async_trait]
 impl handlers::BotMessage for DiscordMessage {
-    fn clone_bot_message(&self) -> Box<dyn handlers::BotMessage> {
+    fn dynamic_clone(&self) -> Box<dyn handlers::BotMessage> {
         Box::new(self.clone())
     }
     fn get_name(&self) -> String {

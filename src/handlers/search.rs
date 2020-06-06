@@ -30,8 +30,8 @@ pub async fn start_search(m: Box<dyn BotMessage>) {
 
 //---finishes search
 //---fires immediate purge history command for search state
-pub async fn continue_search(m: Box<dyn BotMessage>, processesed_text: String) {
-    immediate_purge_history(m.clone(), UserState::Search);
+pub async fn continue_search(m: impl BotMessage + 'static, processesed_text: String) {
+    immediate_purge_history(m.dynamic_clone(), UserState::Search);
     let search_option = golib::google_search(processesed_text);
 
     let response = match search_option {
@@ -60,5 +60,5 @@ pub async fn continue_search(m: Box<dyn BotMessage>, processesed_text: String) {
             _ => responses::response_unavailable(),
         })),
     };
-    (*m).send_message(response).await;
+    m.send_message(response).await;
 }

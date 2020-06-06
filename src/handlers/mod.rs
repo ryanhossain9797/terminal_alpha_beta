@@ -24,7 +24,6 @@ use std::collections::HashMap;
 use std::fmt;
 use std::fs::*;
 use std::mem::drop;
-use std::sync::Arc;
 use std::time::{Duration, Instant};
 
 //
@@ -112,7 +111,7 @@ pub struct UserStateRecord {
 #[async_trait]
 pub trait BotMessage: Send + Sync {
     // this is used to make cloneable box< send + sync> version of itself
-    fn clone_bot_message(&self) -> Box<dyn BotMessage>;
+    fn dynamic_clone(&self) -> Box<dyn BotMessage>;
     fn get_name(&self) -> String;
     fn get_id(&self) -> String;
     async fn send_message(&self, message: MsgCount);
@@ -122,21 +121,19 @@ pub trait BotMessage: Send + Sync {
 ///Implment clone for this trait
 impl Clone for Box<dyn BotMessage> {
     fn clone(&self) -> Self {
-        self.clone_bot_message()
+        self.dynamic_clone()
     }
 }
 
 ///Distributes incoming requests to separate threads
-pub fn distributor(m: Arc<impl BotMessage + 'static>, processesed_text: String) {
-    //---PICK UP STATIC DISPATCH HERE
-    // let n = m.clone_bot_message();
-    let n = Arc::clone(&m);
-    tokio::spawn(async move { handler(n, processesed_text).await });
+pub fn distributor(bot_message: impl BotMessage + 'static, processesed_text: String) {
+    tokio::spawn(async move { handler(bot_message, processesed_text).await });
+    println!("DISTRIBUTOR: Handler Thread Spawned");
 }
 
 ///First place to handle messages after distribution
-async fn handler(n: Arc<impl BotMessage + 'static>, processesed_text: String) {
-    let m = n.clone_bot_message();
+async fn handler(bot_message: impl BotMessage + 'static, processesed_text: String) {
+    let m = bot_message.dynamic_clone();
     println!("processed text is '{}'", processesed_text);
     let map = RECORDS.lock().await;
     let entry_option = map.get({
@@ -165,25 +162,25 @@ async fn handler(n: Arc<impl BotMessage + 'static>, processesed_text: String) {
         else if record.state == UserState::Search {
             drop(map);
             println!("continuing search");
-            search::continue_search(m, processesed_text.clone()).await;
+            search::continue_search(bot_message, processesed_text.clone()).await;
         }
         //---"if state is identify"
         else if record.state == UserState::Identify {
             drop(map);
             println!("continuing identify");
-            identify::continue_identify(m, processesed_text.clone()).await;
+            identify::continue_identify(bot_message, processesed_text.clone()).await;
         }
         //---"if state is animatios"
         else if record.state == UserState::Animation {
             drop(map);
             println!("continuing animation");
-            animation::continue_gif(m, processesed_text.clone()).await;
+            animation::continue_gif(bot_message, processesed_text.clone()).await;
         }
         //---"if state is animatios"
         else if record.state == UserState::Notes {
             drop(map);
             println!("continuing notes");
-            notes::continue_notes(m, processesed_text.clone()).await;
+            notes::continue_notes(bot_message, processesed_text.clone()).await;
         }
         //---"if state is unknown"
         else {
@@ -208,13 +205,14 @@ async fn handler(n: Arc<impl BotMessage + 'static>, processesed_text: String) {
         }
         //---hand over to the natural understanding system for advanced matching
         else {
-            natural_understanding(m, processesed_text).await;
+            natural_understanding(bot_message, processesed_text).await;
         }
     }
 }
 
 ///Uses natural understanding to determine intent if no state is found
-async fn natural_understanding(m: Box<dyn BotMessage>, processed_text: String) {
+async fn natural_understanding(bot_message: impl BotMessage + 'static, processed_text: String) {
+    let m = bot_message.dynamic_clone();
     let intents_alternatives = 1;
     let slots_alternatives = 1;
 

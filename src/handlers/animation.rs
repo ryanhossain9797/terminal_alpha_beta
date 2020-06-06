@@ -31,9 +31,9 @@ pub async fn start_gif(m: Box<dyn BotMessage>) {
 
 //---finishes animation fetching
 //---fires immediate purge history command for animation state
-pub async fn continue_gif(m: Box<dyn BotMessage>, processed_text: String) {
+pub async fn continue_gif(m: impl BotMessage + 'static, processed_text: String) {
     println!("CONTINUE_ANIMATION: animation response");
-    immediate_purge_history(m.clone(), UserState::Animation);
+    immediate_purge_history(m.dynamic_clone(), UserState::Animation);
 
     let url = format!(
         "https://api.gfycat.com/v1/gfycats/search?search_text={}&count=1",
@@ -46,7 +46,7 @@ pub async fn continue_gif(m: Box<dyn BotMessage>, processed_text: String) {
                     match gif.get("max2mbGif") {
                         Some(Value::String(url)) => {
                             println!("gif url is {}", url);
-                            (*m).send_message(MsgCount::SingleMsg(Msg::File(url.to_string())))
+                            m.send_message(MsgCount::SingleMsg(Msg::File(url.to_string())))
                                 .await;
                             return;
                         }
@@ -58,7 +58,7 @@ pub async fn continue_gif(m: Box<dyn BotMessage>, processed_text: String) {
         },
         _ => {}
     }
-    (*m).send_message(MsgCount::SingleMsg(Msg::Text(
+    m.send_message(MsgCount::SingleMsg(Msg::Text(
         match responses::load_response("animation-fail") {
             Some(response) => response,
             _ => responses::response_unavailable(),

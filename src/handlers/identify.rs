@@ -33,13 +33,13 @@ pub async fn start_identify(m: Box<dyn BotMessage>) {
 
 //---finishes identify
 //---fires immediate purge history command for identify state
-pub async fn continue_identify(m: Box<dyn BotMessage>, name: String) {
-    immediate_purge_history(m.clone(), UserState::Identify);
+pub async fn continue_identify(m: impl BotMessage + 'static, name: String) {
+    immediate_purge_history(m.dynamic_clone(), UserState::Identify);
     println!("IDENTIFY: beginning identification");
     match golib::get_person(name.to_string()) {
         //---Part one
         Some(person) => {
-            (*m).send_message(MsgCount::SingleMsg(Msg::Text(person.description)))
+            m.send_message(MsgCount::SingleMsg(Msg::Text(person.description)))
                 .await;
         }
 
@@ -94,7 +94,7 @@ pub async fn continue_identify(m: Box<dyn BotMessage>, name: String) {
                     },
                 )),
             };
-            (*m).send_message(partial_match).await;
+            m.send_message(partial_match).await;
         }
     }
 }

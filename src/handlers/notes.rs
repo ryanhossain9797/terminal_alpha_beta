@@ -46,10 +46,10 @@ pub async fn start_notes(m: Box<dyn BotMessage>) {
 
 //---finishes identify
 //---fires immediate purge history command for identify state
-pub async fn continue_notes(m: Box<dyn BotMessage>, command: String) {
+pub async fn continue_notes(m: impl BotMessage + 'static, command: String) {
     println!("NOTES: continuing with notes '{}'", command);
     let mut map = RECORDS.lock().await;
-    let id = (*m).get_id();
+    let id = m.get_id();
     map.insert(
         format!("{}", &id),
         UserStateRecord {
@@ -62,12 +62,12 @@ pub async fn continue_notes(m: Box<dyn BotMessage>, command: String) {
     if command.starts_with("add ") {
         let _notes = golib::add_note(id, command.trim_start_matches("add ").to_string());
     }
-    (*m).send_message(MsgCount::SingleMsg(Msg::Text(
+    m.send_message(MsgCount::SingleMsg(Msg::Text(
         match responses::load_response("notes-add") {
             Some(response) => response,
             _ => responses::response_unavailable(),
         },
     )))
     .await;
-    wipe_history(m.clone(), UserState::Notes);
+    wipe_history(m.dynamic_clone(), UserState::Notes);
 }
