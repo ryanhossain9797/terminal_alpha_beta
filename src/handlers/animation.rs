@@ -1,14 +1,15 @@
 use super::*;
 use serde_json::Value;
 use std::mem::drop;
+use std::sync::Arc;
 use std::time::Instant;
 //---adds a userstate record with animation state to userstate records map
 //---fires wipe history command for animation state
-pub async fn start_gif(m: Box<dyn BotMessage>) {
+pub async fn start_gif(bot_message: impl BotMessage + 'static) {
     println!("START_ANIMATION: aniamtion initiated");
 
     let mut map = RECORDS.lock().await;
-    let id = (*m).get_id();
+    let id = bot_message.get_id();
     map.insert(
         format!("{}", id),
         UserStateRecord {
@@ -18,23 +19,24 @@ pub async fn start_gif(m: Box<dyn BotMessage>) {
     );
     drop(map);
     println!("START_ANIMATION: record added for id {}", id);
-    wipe_history(m.clone(), UserState::Animation);
-
-    (*m).send_message(MsgCount::SingleMsg(Msg::Text(
-        match responses::load_response("animation-start") {
-            Some(response) => response,
-            _ => responses::response_unavailable(),
-        },
-    )))
-    .await;
+    let arc_message = Arc::new(bot_message);
+    wipe_history(Arc::clone(&arc_message), UserState::Animation);
+    arc_message
+        .send_message(MsgCount::SingleMsg(Msg::Text(
+            match responses::load_response("animation-start") {
+                Some(response) => response,
+                _ => responses::response_unavailable(),
+            },
+        )))
+        .await;
 }
 
 //---finishes animation fetching
 //---fires immediate purge history command for animation state
-pub async fn continue_gif(m: impl BotMessage + 'static, processed_text: String) {
+pub async fn continue_gif(bot_message: impl BotMessage + 'static, processed_text: String) {
     println!("CONTINUE_ANIMATION: animation response");
-    immediate_purge_history(m.dynamic_clone(), UserState::Animation);
-
+    let arc_message = Arc::new(bot_message);
+    immediate_purge_history(Arc::clone(&arc_message), UserState::Animation);
     let url = format!(
         "https://api.gfycat.com/v1/gfycats/search?search_text={}&count=1",
         processed_text
@@ -46,7 +48,8 @@ pub async fn continue_gif(m: impl BotMessage + 'static, processed_text: String) 
                     match gif.get("max2mbGif") {
                         Some(Value::String(url)) => {
                             println!("gif url is {}", url);
-                            m.send_message(MsgCount::SingleMsg(Msg::File(url.to_string())))
+                            arc_message
+                                .send_message(MsgCount::SingleMsg(Msg::File(url.to_string())))
                                 .await;
                             return;
                         }
@@ -58,11 +61,12 @@ pub async fn continue_gif(m: impl BotMessage + 'static, processed_text: String) 
         },
         _ => {}
     }
-    m.send_message(MsgCount::SingleMsg(Msg::Text(
-        match responses::load_response("animation-fail") {
-            Some(response) => response,
-            _ => responses::response_unavailable(),
-        },
-    )))
-    .await;
+    arc_message
+        .send_message(MsgCount::SingleMsg(Msg::Text(
+            match responses::load_response("animation-fail") {
+                Some(response) => response,
+                _ => responses::response_unavailable(),
+            },
+        )))
+        .await;
 }

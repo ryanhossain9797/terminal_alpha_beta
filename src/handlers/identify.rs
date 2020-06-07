@@ -7,10 +7,10 @@ use closestmatch::*;
 
 //---adds a userstate record with identify state to userstate records map
 //---fires wipe history command for identify state
-pub async fn start_identify(m: Box<dyn BotMessage>) {
+pub async fn start_identify(bot_message: impl BotMessage + 'static) {
     println!("START_IDENTIFY: identify initiated");
     let mut map = RECORDS.lock().await;
-    let id = (*m).get_id();
+    let id = bot_message.get_id();
     map.insert(
         format!("{}", id),
         UserStateRecord {
@@ -21,25 +21,29 @@ pub async fn start_identify(m: Box<dyn BotMessage>) {
 
     drop(map);
     println!("START_IDENTIFY: record added for id {}", id);
-    wipe_history(m.clone(), UserState::Identify);
-    (*m).send_message(MsgCount::SingleMsg(Msg::Text(
-        match responses::load_response("identify-start") {
-            Some(response) => response,
-            _ => responses::response_unavailable(),
-        },
-    )))
-    .await;
+    let arc_message = Arc::new(bot_message);
+    wipe_history(Arc::clone(&arc_message), UserState::Identify);
+    arc_message
+        .send_message(MsgCount::SingleMsg(Msg::Text(
+            match responses::load_response("identify-start") {
+                Some(response) => response,
+                _ => responses::response_unavailable(),
+            },
+        )))
+        .await;
 }
 
 //---finishes identify
 //---fires immediate purge history command for identify state
-pub async fn continue_identify(m: impl BotMessage + 'static, name: String) {
-    immediate_purge_history(m.dynamic_clone(), UserState::Identify);
+pub async fn continue_identify(bot_message: impl BotMessage + 'static, name: String) {
+    let arc_message = Arc::new(bot_message);
+    immediate_purge_history(Arc::clone(&arc_message), UserState::Identify);
     println!("IDENTIFY: beginning identification");
     match golib::get_person(name.to_string()) {
         //---Part one
         Some(person) => {
-            m.send_message(MsgCount::SingleMsg(Msg::Text(person.description)))
+            arc_message
+                .send_message(MsgCount::SingleMsg(Msg::Text(person.description)))
                 .await;
         }
 
@@ -94,7 +98,7 @@ pub async fn continue_identify(m: impl BotMessage + 'static, name: String) {
                     },
                 )),
             };
-            m.send_message(partial_match).await;
+            arc_message.send_message(partial_match).await;
         }
     }
 }

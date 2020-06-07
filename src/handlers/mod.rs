@@ -24,6 +24,7 @@ use std::collections::HashMap;
 use std::fmt;
 use std::fs::*;
 use std::mem::drop;
+use std::sync::Arc;
 use std::time::{Duration, Instant};
 
 //
@@ -59,7 +60,7 @@ pub fn initialize() {
     lazy_static::initialize(&RESPONSES);
 }
 
-#[derive(PartialEq, Eq)]
+#[derive(PartialEq, Eq, Copy, Clone)]
 enum UserState {
     // Chat,
     Search,
@@ -102,6 +103,7 @@ pub enum Msg {
 ///A user state record holds an individual user's state.
 ///Last holds when it was last updated.
 ///History is just a vector of strings to hold misc info (ex: messages in chat state).
+#[derive(Copy, Clone)]
 pub struct UserStateRecord {
     state: UserState,
     last: Instant,
@@ -133,20 +135,20 @@ pub fn distributor(bot_message: impl BotMessage + 'static, processesed_text: Str
 
 ///First place to handle messages after distribution
 async fn handler(bot_message: impl BotMessage + 'static, processesed_text: String) {
-    let m = bot_message.dynamic_clone();
     println!("processed text is '{}'", processesed_text);
     let map = RECORDS.lock().await;
     let entry_option = map.get({
-        let id = (*m).get_id();
+        let id = bot_message.get_id();
         &format!("{}", id)
     });
     //---If record from user exists (A Some(record)), some conversation is ongoing
     //---So will be replied regardless of groups or mentions and stuff ('will_respond' is ignored)
-    if let Some(record) = entry_option {
+    if let Some(stored_record) = entry_option {
+        let record = stored_record.clone();
+        drop(map);
         //---"cancel last will shut off the conversation"
         if processesed_text == "cancel last" {
-            drop(map);
-            cancel_history(m).await;
+            cancel_history(bot_message).await;
         }
         //---"if state is chat"
         //------Chat will not be a state any more.
@@ -160,48 +162,45 @@ async fn handler(bot_message: impl BotMessage + 'static, processesed_text: Strin
         */
         //---"if state is search"
         else if record.state == UserState::Search {
-            drop(map);
             println!("continuing search");
             search::continue_search(bot_message, processesed_text.clone()).await;
         }
         //---"if state is identify"
         else if record.state == UserState::Identify {
-            drop(map);
             println!("continuing identify");
             identify::continue_identify(bot_message, processesed_text.clone()).await;
         }
         //---"if state is animatios"
         else if record.state == UserState::Animation {
-            drop(map);
             println!("continuing animation");
             animation::continue_gif(bot_message, processesed_text.clone()).await;
         }
         //---"if state is animatios"
         else if record.state == UserState::Notes {
-            drop(map);
             println!("continuing notes");
             notes::continue_notes(bot_message, processesed_text.clone()).await;
         }
         //---"if state is unknown"
         else {
             println!("some unknown state");
-            drop(map);
-            responses::unknown_state_notice(m).await;
+
+            responses::unknown_state_notice(bot_message).await;
         }
     }
     //---if record from user doesn't exist, but is either IN A PRIVATE CHAT or MENTIONED IN A GROUP CHAT
     //---will start processing new info
-    else if (*m).start_conversation() {
+    else if bot_message.start_conversation() {
         drop(map);
         //---cancel last does nothing as there's nothing to cancel
         if processesed_text == "cancel last" {
-            (*m).send_message(MsgCount::SingleMsg(Msg::Text(
-                match responses::load_response("cancel-nothing") {
-                    Some(response) => response,
-                    _ => responses::response_unavailable(),
-                },
-            )))
-            .await;
+            bot_message
+                .send_message(MsgCount::SingleMsg(Msg::Text(
+                    match responses::load_response("cancel-nothing") {
+                        Some(response) => response,
+                        _ => responses::response_unavailable(),
+                    },
+                )))
+                .await;
         }
         //---hand over to the natural understanding system for advanced matching
         else {
@@ -212,7 +211,6 @@ async fn handler(bot_message: impl BotMessage + 'static, processesed_text: Strin
 
 ///Uses natural understanding to determine intent if no state is found
 async fn natural_understanding(bot_message: impl BotMessage + 'static, processed_text: String) {
-    let m = bot_message.dynamic_clone();
     let intents_alternatives = 1;
     let slots_alternatives = 1;
 
@@ -239,96 +237,97 @@ async fn natural_understanding(bot_message: impl BotMessage + 'static, processed
                 match &*intent {
                     "chat" => {
                         println!("ACTION_PICKER: starting chat");
-                        chat::start_chat(m).await
+                        chat::start_chat(bot_message).await
                     }
                     "search" => {
                         println!("ACTION_PICKER: starting search");
-                        search::start_search(m).await
+                        search::start_search(bot_message).await
                     }
                     "identify" => {
                         println!("ACTION_PICKER: starting identify");
-                        identify::start_identify(m).await
+                        identify::start_identify(bot_message).await
                     }
                     "animation" => {
                         println!("ACTION_PICKER: starting animation");
-                        animation::start_gif(m).await
+                        animation::start_gif(bot_message).await
                     }
                     "info" => {
                         println!("ACTION_PICKER: starting info");
-                        info::start_info(m, json).await
+                        info::start_info(bot_message, json).await
                     }
                     "notes" => {
                         println!("ACTION_PICKER: starting notes");
-                        notes::start_notes(m).await
+                        notes::start_notes(bot_message).await
                     }
                     "corona" => {
                         println!("ACTION_PICKER: starting corona");
-                        corona::start_corona(m).await
+                        corona::start_corona(bot_message).await
                     }
                     "unknown" => {
                         println!("ACTION_PICKER: starting unknown state test");
-                        extras::start_unknown(m).await
+                        extras::start_unknown(bot_message).await
                     }
                     _ => {
                         //forward to chat for more intents
                         println!("ACTION_PICKER: forwarding to chat");
-                        chat::continue_chat(m, processed_text, &intent).await;
+                        chat::continue_chat(bot_message, processed_text, &intent).await;
                     }
                 }
             } else {
                 println!("ACTION_PICKER: couldn't convert intent to json");
                 general::log_message(processed_text);
-                responses::unsupported_notice(m).await
+                responses::unsupported_notice(bot_message).await
             }
         }
         //---unknown intent if cannot match to any intent confidently
         else {
             println!("unsure intent");
             general::log_message(processed_text.clone());
-            responses::unsupported_notice(m).await
+            responses::unsupported_notice(bot_message).await
         }
     }
     //---unknown intent if can't match intent at all
     else {
         println!("unknown intent");
         general::log_message(processed_text.clone());
-        responses::unsupported_notice(m).await
+        responses::unsupported_notice(bot_message).await
     };
 }
 
 ///Removes current history with a cancellation message.
 ///Doesn't care about state.
 ///Used with the cancel last command.
-async fn cancel_history(m: Box<dyn BotMessage>) {
+async fn cancel_history(bot_message: impl BotMessage + 'static) {
     let mut map = RECORDS.lock().await;
     map.remove({
-        let id = (*m).get_id();
+        let id = bot_message.get_id();
         &format!("{}", id)
     });
     drop(map);
-    (*m).send_message(MsgCount::SingleMsg(Msg::Text(
-        match responses::load_response("cancel-state") {
-            Some(response) => response,
-            _ => responses::response_unavailable(),
-        },
-    )))
-    .await;
+    bot_message
+        .send_message(MsgCount::SingleMsg(Msg::Text(
+            match responses::load_response("cancel-state") {
+                Some(response) => response,
+                _ => responses::response_unavailable(),
+            },
+        )))
+        .await;
 }
 
 ///Removes history after 30 seconds if it's not updated with a new time.
 ///AND the history state matches the provided state.
 ///Message is provided to user.
-fn wipe_history(m: Box<dyn BotMessage>, state: UserState) {
+fn wipe_history(m: Arc<impl BotMessage + 'static>, state: UserState) {
     tokio::spawn(async move {
         tokio::time::delay_for(Duration::from_secs(WAITTIME)).await;
         let mut map = RECORDS.lock().await;
-        if let Some(r) = map.get(&format!("{}", (*m).get_id())) {
+        if let Some(r) = map.get(&format!("{}", m.get_id())) {
             if r.state == state {
                 if r.last.elapsed() > Duration::from_secs(WAITTIME) {
-                    map.remove(&format!("{}", (*m).get_id()));
+                    map.remove(&format!("{}", m.get_id()));
                     drop(map);
                     println!("WIPE_HISTORY: deleted state record for {}", state);
-                    (*m).send_message(MsgCount::SingleMsg(Msg::Text(
+                    m.send_message(MsgCount::SingleMsg(Msg::Text(
                         match responses::load_response("delay-notice") {
                             Some(response) => response,
                             _ => responses::response_unavailable(),
@@ -351,7 +350,7 @@ fn wipe_history(m: Box<dyn BotMessage>, state: UserState) {
             util::log_info(&format!(
                 "WIPE_HISTORY: aborted record delete for {}, there is no recorded state for {}",
                 state,
-                (*m).get_id()
+                m.get_id()
             ))
         }
     });
@@ -361,12 +360,12 @@ Immediately purges history IF provided state matches history state
 used to remove history after state action is completed
 no notice provided
 */
-fn immediate_purge_history(m: Box<dyn BotMessage>, state: UserState) {
+fn immediate_purge_history(m: Arc<impl BotMessage + 'static>, state: UserState) {
     tokio::spawn(async move {
         let mut map = RECORDS.lock().await;
-        if let Some(r) = map.get(&format!("{}", (*m).get_id())) {
+        if let Some(r) = map.get(&format!("{}", m.get_id())) {
             if r.state == state {
-                map.remove(&format!("{}", (*m).get_id()));
+                map.remove(&format!("{}", m.get_id()));
                 drop(map);
                 println!("deleted state record for {}", state);
             }
