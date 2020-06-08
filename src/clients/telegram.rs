@@ -31,10 +31,10 @@ pub async fn run_telegram() {
 ///Main Starting point for the telegram api.
 async fn telegram_main() {
     let mut stream = API.stream();
-    // Fetch new updates via long poll method
+    //Fetch new updates via long poll method
     while let Some(update_result) = stream.next().await {
         match update_result {
-            // If the received update contains a new message...
+            //If the received update contains a new message...
             Ok(update) => {
                 if let UpdateKind::Message(message) = update.kind {
                     if let MessageKind::Text { ref data, .. } = message.kind {

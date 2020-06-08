@@ -1,25 +1,14 @@
 use super::*;
-use std::mem::drop;
-use std::time::Instant;
 
 extern crate closestmatch;
 use closestmatch::*;
 
-//---adds a userstate record with identify state to userstate records map
-//---fires wipe history command for identify state
+///Adds a userstate record with identify state to userstate records map.  
+///Fires wipe history command for identify state.
 pub async fn start_identify(bot_message: impl BotMessage + 'static) {
     println!("START_IDENTIFY: identify initiated");
-    let mut map = RECORDS.lock().await;
     let id = bot_message.get_id();
-    map.insert(
-        format!("{}", id),
-        UserStateRecord {
-            last: Instant::now(),
-            state: UserState::Identify,
-        },
-    );
-
-    drop(map);
+    set_state(id.clone(), UserState::Identify).await;
     println!("START_IDENTIFY: record added for id {}", id);
     let arc_message = Arc::new(bot_message);
     wipe_history(Arc::clone(&arc_message), UserState::Identify);
@@ -33,8 +22,8 @@ pub async fn start_identify(bot_message: impl BotMessage + 'static) {
         .await;
 }
 
-//---finishes identify
-//---fires immediate purge history command for identify state
+///Finishes identify.  
+///Fires immediate purge history command for identify state.
 pub async fn continue_identify(bot_message: impl BotMessage + 'static, name: String) {
     let arc_message = Arc::new(bot_message);
     immediate_purge_history(Arc::clone(&arc_message), UserState::Identify);

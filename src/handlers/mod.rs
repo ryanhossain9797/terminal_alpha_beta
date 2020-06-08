@@ -54,10 +54,12 @@ lazy_static! {
     };
 }
 
-pub fn initialize() {
-    lazy_static::initialize(&RECORDS);
-    lazy_static::initialize(&ROOTENGINE);
-    lazy_static::initialize(&RESPONSES);
+///A user state record holds an individual user's state.  
+///Last holds when it was last updated.
+#[derive(Copy, Clone)]
+pub struct UserStateRecord {
+    state: UserState,
+    last: Instant,
 }
 
 #[derive(PartialEq, Eq, Copy, Clone)]
@@ -82,6 +84,34 @@ impl fmt::Display for UserState {
     }
 }
 
+async fn get_state(id: &str) -> Option<UserStateRecord> {
+    let map = RECORDS.lock().await;
+    match map.get(id) {
+        Some(record) => Some(record.clone()),
+        None => None,
+    }
+}
+async fn set_state(id: String, state: UserState) {
+    let mut map = RECORDS.lock().await;
+    map.insert(
+        id,
+        UserStateRecord {
+            last: Instant::now(),
+            state,
+        },
+    );
+}
+async fn remove_state(id: &str) {
+    let mut map = RECORDS.lock().await;
+    map.remove(id);
+}
+
+pub fn initialize() {
+    lazy_static::initialize(&RECORDS);
+    lazy_static::initialize(&ROOTENGINE);
+    lazy_static::initialize(&RESPONSES);
+}
+
 ///ENUM, Represents Message count
 ///- SingleMsg - Contains a Msg Enum
 ///- MultiMsg - Contains a Vector of Msg Enums
@@ -98,14 +128,6 @@ pub enum MsgCount {
 pub enum Msg {
     Text(String),
     File(String),
-}
-
-///A user state record holds an individual user's state.  
-///Last holds when it was last updated.
-#[derive(Copy, Clone)]
-pub struct UserStateRecord {
-    state: UserState,
-    last: Instant,
 }
 
 ///Used to generalize Message Updates for various platforms
@@ -307,12 +329,7 @@ async fn natural_understanding(bot_message: impl BotMessage + 'static, processed
 ///Doesn't care about state.  
 ///Used with the cancel last command.
 async fn cancel_history(bot_message: impl BotMessage + 'static) {
-    let mut map = RECORDS.lock().await;
-    map.remove({
-        let id = bot_message.get_id();
-        &format!("{}", id)
-    });
-    drop(map);
+    remove_state(&bot_message.get_id()).await;
     bot_message
         .send_message(MsgCount::SingleMsg(Msg::Text(
             match responses::load_response("cancel-state") {
@@ -326,25 +343,24 @@ async fn cancel_history(bot_message: impl BotMessage + 'static) {
 ///Removes history after 30 seconds if it's not updated with a new time,  
 ///AND the history state matches the provided state.  
 ///Notice Message is provided to user.
-fn wipe_history(m: Arc<impl BotMessage + 'static>, state: UserState) {
+fn wipe_history(bot_message: Arc<impl BotMessage + 'static>, state: UserState) {
     tokio::spawn(async move {
         tokio::time::delay_for(Duration::from_secs(WAITTIME)).await;
-        let mut map = RECORDS.lock().await;
-        if let Some(r) = map.get(&format!("{}", m.get_id())) {
+        // let map = RECORDS.lock().await;
+        if let Some(r) = get_state(&bot_message.get_id()).await {
             if r.state == state {
                 if r.last.elapsed() > Duration::from_secs(WAITTIME) {
-                    map.remove(&format!("{}", m.get_id()));
-                    drop(map);
+                    remove_state(&bot_message.get_id()).await;
                     println!("WIPE_HISTORY: deleted state record for {}", state);
-                    m.send_message(MsgCount::SingleMsg(Msg::Text(
-                        match responses::load_response("delay-notice") {
-                            Some(response) => response,
-                            _ => responses::response_unavailable(),
-                        },
-                    )))
-                    .await;
+                    bot_message
+                        .send_message(MsgCount::SingleMsg(Msg::Text(
+                            match responses::load_response("delay-notice") {
+                                Some(response) => response,
+                                _ => responses::response_unavailable(),
+                            },
+                        )))
+                        .await;
                 } else {
-                    drop(map);
                     util::log_info("WIPE_HISTORY: aborted record delete due to recency");
                 }
             } else {
@@ -352,14 +368,12 @@ fn wipe_history(m: Arc<impl BotMessage + 'static>, state: UserState) {
                     "WIPE_HISTORY: aborted record delete for {} because current state is {}",
                     state, r.state
                 ));
-                drop(map);
             }
         } else {
-            drop(map);
             util::log_info(&format!(
                 "WIPE_HISTORY: aborted record delete for {}, there is no recorded state for {}",
                 state,
-                m.get_id()
+                bot_message.get_id()
             ))
         }
     });
@@ -368,13 +382,11 @@ fn wipe_history(m: Arc<impl BotMessage + 'static>, state: UserState) {
 ///Immediately purges history IF provided state matches history state.  
 ///Used to remove history after state action is completed.  
 ///No notice provided.
-fn immediate_purge_history(m: Arc<impl BotMessage + 'static>, state: UserState) {
+fn immediate_purge_history(bot_message: Arc<impl BotMessage + 'static>, state: UserState) {
     tokio::spawn(async move {
-        let mut map = RECORDS.lock().await;
-        if let Some(r) = map.get(&format!("{}", m.get_id())) {
+        if let Some(r) = get_state(&bot_message.get_id()).await {
             if r.state == state {
-                map.remove(&format!("{}", m.get_id()));
-                drop(map);
+                remove_state(&bot_message.get_id()).await;
                 println!("deleted state record for {}", state);
             }
         }

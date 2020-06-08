@@ -1,23 +1,13 @@
 use super::*;
-use std::mem::drop;
-use std::time::Instant;
 
 ///Adds a userstate record with search state to userstate records map.  
 ///Fires wipe history command for search state.
 pub async fn start_search(bot_message: impl BotMessage + 'static) {
     println!("START_SEARCH: search initiated");
 
-    //---Insert Search intent
-    let mut map = RECORDS.lock().await;
     let id = bot_message.get_id();
-    map.insert(
-        format!("{}", id),
-        UserStateRecord {
-            last: Instant::now(),
-            state: UserState::Search,
-        },
-    );
-    drop(map);
+    //---Insert Search intent
+    set_state(id.clone(), UserState::Search).await;
 
     println!("START_SEARCH: record added for id {}", id);
     //---Make a cloneable ARC version of the Message

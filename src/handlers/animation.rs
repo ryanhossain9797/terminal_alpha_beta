@@ -1,23 +1,12 @@
 use super::*;
 use serde_json::Value;
-use std::mem::drop;
-use std::sync::Arc;
-use std::time::Instant;
+
 //---adds a userstate record with animation state to userstate records map
 //---fires wipe history command for animation state
 pub async fn start_gif(bot_message: impl BotMessage + 'static) {
     println!("START_ANIMATION: aniamtion initiated");
-
-    let mut map = RECORDS.lock().await;
     let id = bot_message.get_id();
-    map.insert(
-        format!("{}", id),
-        UserStateRecord {
-            last: Instant::now(),
-            state: UserState::Animation,
-        },
-    );
-    drop(map);
+    set_state(id.clone(), UserState::Animation).await;
     println!("START_ANIMATION: record added for id {}", id);
     let arc_message = Arc::new(bot_message);
     wipe_history(Arc::clone(&arc_message), UserState::Animation);
