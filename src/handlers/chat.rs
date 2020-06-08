@@ -4,6 +4,7 @@ use super::*;
 //use std::mem::drop;
 //use std::time::Instant;
 
+///Start chat intent, Only provides a single response without any state
 pub async fn start_chat(bot_message: impl BotMessage) {
     println!("START_CHAT: chat initiated");
     //------Chat will not be a state any more.
@@ -27,10 +28,9 @@ pub async fn start_chat(bot_message: impl BotMessage) {
     responses::custom_response(bot_message, "chat-start".to_string()).await
 }
 
-///FIX LEVEL: Works with strings
-///updated to implement RETURN STRINGS
-///updates userstate record map with chat messages list and new time
-///fires wipe history command for chat state
+///Continues chat.  
+///Updates userstate record map with Chat intent and New time.  
+///Fires wipe history command for Chat state.
 pub async fn continue_chat(bot_message: impl BotMessage, _processed_text: String, intent: &str) {
     //------Chat will not be a state any more.
     //------Rather any unknown message will be handled by chat in default

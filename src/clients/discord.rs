@@ -9,10 +9,12 @@ use serenity::{
 use std::env;
 use std::time::Duration;
 
+///Just an entry point to start the telegram api.
 pub async fn run_discord() {
     discord_main().await;
 }
 
+///Main Starting point for the Discord api.
 async fn discord_main() {
     // Configure the client with your Discord bot token in the environment.
     let token = env::var("DISCORD_TOKEN").expect("Expected a token in the environment");
@@ -50,12 +52,12 @@ impl EventHandler for Handler {
     }
 }
 
-//---Filter basically does some spring cleaning
-//--- => checks whether the update is actually a message or some other type
-//--- => trims leading and trailing spaces ("   /hellow    @machinelifeformbot   world  " becomes "/hellow    @machinelifeformbot   world")
-//--- => removes / from start if it's there ("/hellow    @machinelifeformbot   world" becomes "hellow    @machinelifeformbot   world")
-//--- => removes mentions of the bot from the message ("hellow    @machinelifeformbot   world" becomes "hellow      world")
-//--- => replaces redundant spaces with single spaces using regex ("hellow      world" becomes "hellow world")
+///Filter basically does some spring cleaning.
+/// - checks whether the update is actually a message or some other type.
+/// - trims leading and trailing spaces ("   /hellow    @machinelifeformbot   world  " becomes "/hellow    @machinelifeformbot   world").
+/// - removes / from start if it's there ("/hellow    @machinelifeformbot   world" becomes "hellow    @machinelifeformbot   world").
+/// - removes mentions of the bot from the message ("hellow    @machinelifeformbot   world" becomes "hellow      world").
+/// - replaces redundant spaces with single spaces using regex ("hellow      world" becomes "hellow world").
 async fn filter(message: DMessage, ctx: Context) {
     if let Ok(info) = ctx.http.get_current_application_info().await {
         let id: i64 = info.id.into();
@@ -91,7 +93,7 @@ async fn filter(message: DMessage, ctx: Context) {
     }
 }
 
-//---Sender handles forwarding the message, receiving response and sending it to the user
+///Sender handles forwarding the message.
 async fn sender(message: DMessage, ctx: Context, processed_text: String, start_conversation: bool) {
     let disc_msg = DiscordMessage {
         message: message.clone(),

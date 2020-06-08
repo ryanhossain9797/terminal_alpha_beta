@@ -11,6 +11,9 @@ use std::time::Duration;
 use telegram_bot::Message as TMessage;
 use telegram_bot::*;
 
+//--- Waiting time for failed connections
+const WAITTIME: u64 = 10;
+
 lazy_static! {
     //---General API for telegram
     pub static ref API: Api = {
@@ -20,9 +23,12 @@ lazy_static! {
     };
 }
 
+///Just an entry point to start the telegram api.
 pub async fn run_telegram() {
     telegram_main().await;
 }
+
+///Main Starting point for the telegram api.
 async fn telegram_main() {
     let mut stream = API.stream();
     // Fetch new updates via long poll method
@@ -49,12 +55,12 @@ async fn telegram_main() {
     }
 }
 
-//---Filter basically does some spring cleaning
-//--- => checks whether the update is actually a message or some other type
-//--- => trims leading and trailing spaces ("   /hellow    @machinelifeformbot   world  " becomes "/hellow    @machinelifeformbot   world")
-//--- => removes / from start if it's there ("/hellow    @machinelifeformbot   world" becomes "hellow    @machinelifeformbot   world")
-//--- => removes mentions of the bot from the message ("hellow    @machinelifeformbot   world" becomes "hellow      world")
-//--- => replaces redundant spaces with single spaces using regex ("hellow      world" becomes "hellow world")
+///Filter basically does some spring cleaning.
+/// - checks whether the update is actually a message or some other type.
+/// - trims leading and trailing spaces ("   /hellow    @machinelifeformbot   world  " becomes "/hellow    @machinelifeformbot   world").
+/// - removes / from start if it's there ("/hellow    @machinelifeformbot   world" becomes "hellow    @machinelifeformbot   world").
+/// - removes mentions of the bot from the message ("hellow    @machinelifeformbot   world" becomes "hellow      world").
+/// - replaces redundant spaces with single spaces using regex ("hellow      world" becomes "hellow world").
 async fn filter(message: TMessage) {
     if let MessageKind::Text { ref data, .. } = message.kind {
         let myname_result = API.send(GetMe).await;
@@ -93,16 +99,15 @@ async fn filter(message: TMessage) {
     }
 }
 
-//---Sender handles forwarding the message, receiving response and sending it to the user
+///Sender handles forwarding the message.
 async fn sender(message: &TMessage, processed_text: String, start_conversation: bool) {
+    //---Create a TelegramMessage object, which implements the BotMessage trait.
     let tele_msg = TelegramMessage {
         message: message.clone(),
         start_conversation,
     };
     handlers::distributor(tele_msg, processed_text);
 }
-
-//---These will be used to generalize telegram messages with other platforms
 
 #[derive(Clone)]
 struct TelegramMessage {
@@ -162,10 +167,5 @@ impl handlers::BotMessage for TelegramMessage {
         }
     }
 }
-impl Drop for TelegramMessage {
-    fn drop(&mut self) {
-        println!("dropping for {}", self.message.from.id);
-    }
-}
-//------------------------------------------------------------------
+
 //--------TELGRAM CODE END

@@ -2,11 +2,12 @@ use super::*;
 use std::mem::drop;
 use std::time::Instant;
 
-//---adds a userstate record with search state to userstate records map
-//---fires wipe history command for search state
+///Adds a userstate record with search state to userstate records map.  
+///Fires wipe history command for search state.
 pub async fn start_search(bot_message: impl BotMessage + 'static) {
     println!("START_SEARCH: search initiated");
 
+    //---Insert Search intent
     let mut map = RECORDS.lock().await;
     let id = bot_message.get_id();
     map.insert(
@@ -17,9 +18,13 @@ pub async fn start_search(bot_message: impl BotMessage + 'static) {
         },
     );
     drop(map);
+
     println!("START_SEARCH: record added for id {}", id);
+    //---Make a cloneable ARC version of the Message
     let arc_message = Arc::new(bot_message);
+    //---Fire off wipe
     wipe_history(Arc::clone(&arc_message), UserState::Search);
+
     arc_message
         .send_message(MsgCount::SingleMsg(Msg::Text(
             match responses::load_response("search-start") {
@@ -30,11 +35,11 @@ pub async fn start_search(bot_message: impl BotMessage + 'static) {
         .await;
 }
 
-//---finishes search
-//---fires immediate purge history command for search state
+///Finishes search
+///Fires immediate purge history command for search state
 pub async fn continue_search(bot_message: impl BotMessage + 'static, processesed_text: String) {
     let arc_message = Arc::new(bot_message);
-
+    //---Delete the UserState Record
     immediate_purge_history(Arc::clone(&arc_message), UserState::Search);
     let search_option = golib::google_search(processesed_text);
 

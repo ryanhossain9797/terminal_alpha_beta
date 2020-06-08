@@ -12,10 +12,9 @@ use tokio::prelude::*;
 use clients::discord::*;
 use clients::telegram::*;
 
-const WAITTIME: u64 = 10;
-
 #[tokio::main]
 async fn main() {
+    //---Load up all the ENV variables from .env file
     dotenv().ok();
     println!("Starting up Terminal Alpha Beta, compiled at");
     println!("-----Starting TELEGRAM and DISCORD-----\n");
@@ -24,20 +23,25 @@ async fn main() {
         println!("Compile date {}", date);
     }
     println!("Initializing everything");
-    lazy_static::initialize(&API);
+    clients::initialize();
     handlers::initialize();
     println!("\nInitialized Everything\n");
+    //---New tokio LocalSet
     let local = tokio::task::LocalSet::new();
     local
         .run_until(async move {
             let tasks = vec![
+                //---A task for telegram
                 tokio::task::spawn_local(async move {
                     run_telegram().await;
                 }),
+                //---A task for discord
                 tokio::task::spawn_local(async move {
                     run_discord().await;
                 }),
             ];
+            //---And run them, wait for them to finish,
+            //---Which is hoepfully never, because that would mean it crashed.
             futures::future::join_all(tasks).await;
         })
         .await;

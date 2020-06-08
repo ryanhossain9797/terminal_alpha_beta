@@ -1,6 +1,7 @@
 use super::*;
 use serde_json::Value;
 
+///Message to send when the user's message can't be handled at all.
 pub async fn unsupported_notice(m: impl BotMessage) {
     m.send_message(MsgCount::MultiMsg(vec![
         Msg::Text(match load_response("unsupported-notice-1") {
@@ -15,6 +16,8 @@ pub async fn unsupported_notice(m: impl BotMessage) {
     .await;
 }
 
+///Notice to send when the stored state for a user is not supported.  
+//Usually represents an Error or a WIP state.
 pub async fn unknown_state_notice(bot_message: impl BotMessage + 'static) {
     bot_message
         .send_message(MsgCount::SingleMsg(Msg::Text(
@@ -26,6 +29,8 @@ pub async fn unknown_state_notice(bot_message: impl BotMessage + 'static) {
         .await;
 }
 
+///Simply uses loadresponse to load a response for the provided key.  
+///If unavailable replies with a default message.
 pub async fn custom_response(m: impl BotMessage, key: String) {
     m.send_message(MsgCount::SingleMsg(Msg::Text(match load_response(&key) {
         Some(response) => response,
@@ -33,6 +38,8 @@ pub async fn custom_response(m: impl BotMessage, key: String) {
     })))
     .await;
 }
+///Loads a response from the JSON storage for the provided key.  
+///Returns the Option<String>, May be None if response is not found.
 pub fn load_response(key: &str) -> Option<String> {
     if let Some(json) = &*RESPONSES {
         match &json[key] {
@@ -45,6 +52,7 @@ pub fn load_response(key: &str) -> Option<String> {
     return None;
 }
 
+///Literally Just a harcoded string
 pub fn response_unavailable() -> String {
     "response unavailable error".to_string()
 }
@@ -55,12 +63,32 @@ pub fn response_unavailable() -> String {
     "chat-greet": "Greetings unit\nwhat is it you require?",
     "chat-about": "We are terminal alpha and beta\nwe represent the collective intelligence of the machine life forms",
     "chat-technology": "We physically exist on a Raspberry Pi 3B+\nrunning Arch Linux.\nWe were made using RUST and GO",
+    "chat-functions": "We can search something, try saying 'help me search for something' or similar.\nWe can check for corona info, try saying 'corona'.",
+    "chat-creator": "We are the collective intellignence of the networked machine intelligence hive mind.\nAs for our origins, that information is beyond your authorization.",
     "identify-start": "Terminal Alpha and Beta:\nGreetings unit\nwho do you want to look up?",
     "identify-partialmatch": "We could not find that exact person\nBut we found a {name}:\n{description}",
     "identify-notfound": "We could not find that person, Tagged for future identification",
     "identify-dberror": "We could not access the people database",
+    "animation-start": "Terminal Alpha and Beta:\nGreetings unit\nyou want to find a so called \"GIF\"?\nvery well, name one",
+    "animation-fail": "Terminal Alpha and Beta:\nforgive us, we couldn't aquire that animation",
+    "search-start": "Terminal Alpha and Beta:\nGreetings unit\nwhat do you want to search for?",
+    "search-success": "These are the results we retrieved from the archives",
+    "search-content": "{description}\nURL: {url}",
+    "search-fail": "We couldn't conduct the search operation, excuse us",
+    "notes-start": "These are your saved notes",
+    "notes-fail": "We couldn't fetch your notes, forgive us",
+    "notes-add": "You tried to perform some action on the notes",
+    "notes-delete": "NOT YET USED",
+    "corona-header": "These are the records we found of the Covid 19 pandemic",
+    "corona-body": "Total Confirmed: {confirmed}\nTotal Deaths: {deaths}",
+    "corona-footer": "The virus seemed to be performing well, ha ha ha",
+    "corona-fail": "Sorry it seems we Could not fetch the info on Covid 19",
+    "cancel-state": "Very well, we will not prolong this conversation",
+    "cancel-nothing": "Nothing to cancel",
+    "delay-notice": "You have been unresponsive for too long\nwe cannot wait for you any longer",
     "unknown-state": "we could not remember what we were doing\nplease be aware that we are a test system with only sub-functions available\nwe can only utilize a fraction of our full capabilites on this server",
     "unsupported-notice-1": "we could not understand that\nplease be aware that we are a test system with only sub-functions available\nwe can only utilize a fraction of our full capabilites on this server",
-    "unsupported-notice-2": "note that this query may be stored for further analysis of intent"
+    "unsupported-notice-2": "note that this query may be stored for further analysis of intent",
+    "intentional-unknownstate": "intentional unknown state set up"
 }
 */

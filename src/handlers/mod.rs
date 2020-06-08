@@ -100,9 +100,8 @@ pub enum Msg {
     File(String),
 }
 
-///A user state record holds an individual user's state.
+///A user state record holds an individual user's state.  
 ///Last holds when it was last updated.
-///History is just a vector of strings to hold misc info (ex: messages in chat state).
 #[derive(Copy, Clone)]
 pub struct UserStateRecord {
     state: UserState,
@@ -112,15 +111,22 @@ pub struct UserStateRecord {
 ///Used to generalize Message Updates for various platforms
 #[async_trait]
 pub trait BotMessage: Send + Sync {
-    // this is used to make cloneable box< send + sync> version of itself
+    ///This is used to make cloneable box<T> version of itself.
     fn dynamic_clone(&self) -> Box<dyn BotMessage>;
+    ///Returns the user's user readable name. Not the same as id.
     fn get_name(&self) -> String;
+    ///Returns the user's unique id. This is needed to uniquely identify users.
     fn get_id(&self) -> String;
+    ///Used to send messages to the sender (user) of this message.
     async fn send_message(&self, message: MsgCount);
+    ///Used to check whether a new conversation should be started.  
+    ///Sometimes if the user is in a state, Bot will always respond.  
+    ///However if not in a state, bot needs to know when it should or should not respond.  
+    ///Ex. Won't respond if message is in a group and bot wasn't mentioned.
     fn start_conversation(&self) -> bool;
 }
 
-///Implment clone for this trait
+//---Implement clone for this trait
 impl Clone for Box<dyn BotMessage> {
     fn clone(&self) -> Self {
         self.dynamic_clone()
@@ -211,9 +217,9 @@ async fn handler(bot_message: impl BotMessage + 'static, processesed_text: Strin
 
 ///Uses natural understanding to determine intent if no state is found
 async fn natural_understanding(bot_message: impl BotMessage + 'static, processed_text: String) {
+    //---Stuff required to run the NLU engine to get an intent
     let intents_alternatives = 1;
     let slots_alternatives = 1;
-
     let result = ROOTENGINE
         .parse_with_alternatives(
             &processed_text,
@@ -223,6 +229,7 @@ async fn natural_understanding(bot_message: impl BotMessage + 'static, processed
             slots_alternatives,
         )
         .unwrap();
+
     if let Some(intent) = result.intent.intent_name.clone() {
         println!(
             "{} with confidence {}",
@@ -268,25 +275,27 @@ async fn natural_understanding(bot_message: impl BotMessage + 'static, processed
                         extras::start_unknown(bot_message).await
                     }
                     _ => {
-                        //forward to chat for more intents
+                        //---Forward to chat for more intents
                         println!("ACTION_PICKER: forwarding to chat");
                         chat::continue_chat(bot_message, processed_text, &intent).await;
                     }
                 }
-            } else {
+            }
+            //---If failed to parse the intent result as json
+            else {
                 println!("ACTION_PICKER: couldn't convert intent to json");
                 general::log_message(processed_text);
                 responses::unsupported_notice(bot_message).await
             }
         }
-        //---unknown intent if cannot match to any intent confidently
+        //---Unsure intent if cannot match to any intent confidently
         else {
             println!("unsure intent");
             general::log_message(processed_text.clone());
             responses::unsupported_notice(bot_message).await
         }
     }
-    //---unknown intent if can't match intent at all
+    //---Unknown intent if can't match intent at all
     else {
         println!("unknown intent");
         general::log_message(processed_text.clone());
@@ -294,8 +303,8 @@ async fn natural_understanding(bot_message: impl BotMessage + 'static, processed
     };
 }
 
-///Removes current history with a cancellation message.
-///Doesn't care about state.
+///Removes current history with a cancellation message.  
+///Doesn't care about state.  
 ///Used with the cancel last command.
 async fn cancel_history(bot_message: impl BotMessage + 'static) {
     let mut map = RECORDS.lock().await;
@@ -314,9 +323,9 @@ async fn cancel_history(bot_message: impl BotMessage + 'static) {
         .await;
 }
 
-///Removes history after 30 seconds if it's not updated with a new time.
-///AND the history state matches the provided state.
-///Message is provided to user.
+///Removes history after 30 seconds if it's not updated with a new time,  
+///AND the history state matches the provided state.  
+///Notice Message is provided to user.
 fn wipe_history(m: Arc<impl BotMessage + 'static>, state: UserState) {
     tokio::spawn(async move {
         tokio::time::delay_for(Duration::from_secs(WAITTIME)).await;
@@ -355,11 +364,10 @@ fn wipe_history(m: Arc<impl BotMessage + 'static>, state: UserState) {
         }
     });
 }
-/**
-Immediately purges history IF provided state matches history state
-used to remove history after state action is completed
-no notice provided
-*/
+
+///Immediately purges history IF provided state matches history state.  
+///Used to remove history after state action is completed.  
+///No notice provided.
 fn immediate_purge_history(m: Arc<impl BotMessage + 'static>, state: UserState) {
     tokio::spawn(async move {
         let mut map = RECORDS.lock().await;
