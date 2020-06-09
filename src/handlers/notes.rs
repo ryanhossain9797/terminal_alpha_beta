@@ -10,20 +10,12 @@ pub async fn start_notes(bot_message: impl BotMessage + 'static) {
             for note in notes {
                 notes_string.push_str(&format!("{}. {}\n", note.position, note.note));
             }
-            {
-                //---Only update state on successful notes retrieval
-                let mut map = RECORDS.lock().await;
-                map.insert(
-                    format!("{}", &id),
-                    UserStateRecord {
-                        last: Instant::now(),
-                        state: UserState::Notes,
-                    },
-                );
-                drop(map);
-                println!("START_NOTES: record added for id {}", id);
-                wipe_history(Arc::clone(&arc_message), UserState::Notes);
-            }
+
+            //---Only update state on successful notes retrieval
+            set_state(id.clone(), UserState::Notes).await;
+            println!("START_NOTES: record added for id {}", id);
+            wipe_history(Arc::clone(&arc_message), UserState::Notes);
+
             arc_message
                 .send_message(MsgCount::MultiMsg(vec![
                     Msg::Text(match responses::load_response("notes-start") {
@@ -51,17 +43,8 @@ pub async fn start_notes(bot_message: impl BotMessage + 'static) {
 //---fires immediate purge history command for identify state
 pub async fn continue_notes(bot_message: impl BotMessage + 'static, command: String) {
     println!("NOTES: continuing with notes '{}'", command);
-    let mut map = RECORDS.lock().await;
     let id = bot_message.get_id();
-    map.insert(
-        format!("{}", &id),
-        UserStateRecord {
-            last: Instant::now(),
-            state: UserState::Notes,
-        },
-    );
-
-    drop(map);
+    set_state(id.clone(), UserState::Notes).await;
     if command.starts_with("add ") {
         let _notes = golib::add_note(id, command.trim_start_matches("add ").to_string());
     }

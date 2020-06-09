@@ -24,14 +24,5 @@ train:
 	rm -f trainingdata/chatdata.json
 	snips-nlu generate-dataset en trainingdata/chatdata.yaml trainingdata/actiondata.yaml > trainingdata/rootdata.json
 	snips-nlu train trainingdata/rootdata.json nlu/rootengine
-train-old:
-	rm -rf ./nlu/actionengine
-	rm -f trainingdata/actiondata.json
-	snips-nlu generate-dataset en trainingdata/actiondata.yaml > trainingdata/actiondata.json
-	snips-nlu train trainingdata/actiondata.json nlu/actionengine
-	rm -rf ./nlu/chatengine
-	rm -f trainingdata/chatdata.json
-	snips-nlu generate-dataset en trainingdata/chatdata.yaml > trainingdata/chatdata.json
-	snips-nlu train trainingdata/chatdata.json nlu/chatengine
 go-lib:
 	env GOOS=linux GOARCH=arm CGO_ENABLED=1 CC=arm-linux-gnueabihf-gcc go build -buildmode=c-archive -o libpeople.a main.go

@@ -9,8 +9,10 @@ mod info;
 mod notes;
 mod responses;
 mod search;
+mod state;
 
 use crate::functions::*;
+use state::userstate::*;
 
 const LONGWAIT: u64 = 30;
 
@@ -20,12 +22,10 @@ const WAITTIME: u64 = LONGWAIT;
 
 use async_trait::async_trait;
 use serde_json;
-use std::collections::HashMap;
-use std::fmt;
+
 use std::fs::*;
-use std::mem::drop;
 use std::sync::Arc;
-use std::time::{Duration, Instant};
+use std::time::Duration;
 
 //
 extern crate snips_nlu_lib;
@@ -33,9 +33,6 @@ use snips_nlu_lib::SnipsNluEngine;
 //
 
 lazy_static! {
-    //---Record is a map holding all users state record info
-    pub static ref RECORDS: tokio::sync::Mutex<HashMap<String, UserStateRecord>> =
-        tokio::sync::Mutex::new(HashMap::new()) ;
     //---Snips NLU is used to pick actions when they don't match directly
     pub static ref ROOTENGINE: SnipsNluEngine = {
         println!("\nLoading the action nlu engine...");
@@ -54,60 +51,8 @@ lazy_static! {
     };
 }
 
-///A user state record holds an individual user's state.  
-///Last holds when it was last updated.
-#[derive(Copy, Clone)]
-pub struct UserStateRecord {
-    state: UserState,
-    last: Instant,
-}
-
-#[derive(PartialEq, Eq, Copy, Clone)]
-enum UserState {
-    // Chat,
-    Search,
-    Identify,
-    Animation,
-    Notes,
-    Unknown,
-}
-
-impl fmt::Display for UserState {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match *self {
-            UserState::Search => write!(f, "Search"),
-            UserState::Identify => write!(f, "Identify"),
-            UserState::Animation => write!(f, "Animation"),
-            UserState::Notes => write!(f, "Notes"),
-            UserState::Unknown => write!(f, "Unknown"),
-        }
-    }
-}
-
-async fn get_state(id: &str) -> Option<UserStateRecord> {
-    let map = RECORDS.lock().await;
-    match map.get(id) {
-        Some(record) => Some(record.clone()),
-        None => None,
-    }
-}
-async fn set_state(id: String, state: UserState) {
-    let mut map = RECORDS.lock().await;
-    map.insert(
-        id,
-        UserStateRecord {
-            last: Instant::now(),
-            state,
-        },
-    );
-}
-async fn remove_state(id: &str) {
-    let mut map = RECORDS.lock().await;
-    map.remove(id);
-}
-
 pub fn initialize() {
-    lazy_static::initialize(&RECORDS);
+    initialize_state();
     lazy_static::initialize(&ROOTENGINE);
     lazy_static::initialize(&RESPONSES);
 }
@@ -164,16 +109,12 @@ pub fn distributor(bot_message: impl BotMessage + 'static, processesed_text: Str
 ///First place to handle messages after distribution
 async fn handler(bot_message: impl BotMessage + 'static, processesed_text: String) {
     println!("processed text is '{}'", processesed_text);
-    let map = RECORDS.lock().await;
-    let entry_option = map.get({
-        let id = bot_message.get_id();
-        &format!("{}", id)
-    });
+
     //---If record from user exists (A Some(record)), some conversation is ongoing
     //---So will be replied regardless of groups or mentions and stuff ('will_respond' is ignored)
-    if let Some(stored_record) = entry_option {
+    if let Some(stored_record) = get_state(&bot_message.get_id()).await {
         let record = stored_record.clone();
-        drop(map);
+
         //---"cancel last will shut off the conversation"
         if processesed_text == "cancel last" {
             cancel_history(bot_message).await;
@@ -183,7 +124,6 @@ async fn handler(bot_message: impl BotMessage + 'static, processesed_text: Strin
         //------Rather any unknown message will be handled by chat in default
         /*
         else if record.state == "chat".to_string() {
-            drop(map);
             println!("continuing chat");
             chat::continue_chat(message.clone(), processesed_text.clone()).await
         }
@@ -218,7 +158,6 @@ async fn handler(bot_message: impl BotMessage + 'static, processesed_text: Strin
     //---if record from user doesn't exist, but is either IN A PRIVATE CHAT or MENTIONED IN A GROUP CHAT
     //---will start processing new info
     else if bot_message.start_conversation() {
-        drop(map);
         //---cancel last does nothing as there's nothing to cancel
         if processesed_text == "cancel last" {
             bot_message
