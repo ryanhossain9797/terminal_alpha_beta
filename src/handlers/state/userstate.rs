@@ -7,7 +7,7 @@ pub fn initialize_state() {
 }
 
 lazy_static! {
-    //---Record is a map holding all users state record info
+    ///Records is a map holding all users state record info
     static ref RECORDS: tokio::sync::Mutex<HashMap<String, UserStateRecord>> =
     tokio::sync::Mutex::new(HashMap::new());
 }
