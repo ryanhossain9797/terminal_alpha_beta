@@ -92,3 +92,25 @@ pub fn response_unavailable() -> String {
     "intentional-unknownstate": "intentional unknown state set up"
 }
 */
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn test_response_pass() {
+        let response = load_response("chat-start");
+        assert!(match response {
+            Some(response_text) => response_text.contains("free to ask any"),
+            None => false,
+        });
+    }
+
+    #[test]
+    fn test_response_fail() {
+        let response = load_response("chat-what");
+        assert!(match response {
+            Some(_) => false,
+            None => true,
+        });
+    }
+}
