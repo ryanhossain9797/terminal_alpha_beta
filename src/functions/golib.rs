@@ -1,19 +1,40 @@
+use futures::stream::StreamExt;
+use mongodb::{
+    bson::{doc, Bson},
+    options::ClientOptions,
+    // options::FindOptions,
+    Client,
+};
+// use once_cell::sync::Lazy;
 use serde_json::Value;
+use std::env;
 //---For CGO
 use std::ffi::{CStr, CString};
 use std::os::raw::c_char;
 
-//--------------THE FOLLOWING IS USED TO INTERACT WITH THE 'golibs' STUFF
-//--------------DEPENDENT ON GOLANG LIBS
-//--------------RECOMMENDED MOVE TO SEPARATE CRATE
+// static MONGO: Lazy<Option<Client>> = Lazy::new(|| {
+//     if let Ok(token) = env::var("MONGO_AUTH") {
+//         if let Ok(client_options) = ClientOptions::parse(&token).await {
+//             if let Ok(client) = Client::with_options(client_options) {
+//                 return Some(client);
+//             }
+//         }
+//     }
+//     return None;
+// });
+
+///THE FOLLOWING IS USED TO INTERACT WITH THE 'golibs' STUFF
+///DEPENDENT ON GOLANG LIBS
+///RECOMMENDED MOVE TO SEPARATE CRATE
 extern "C" {
     fn GetPerson(name: GoString) -> *const c_char;
     fn GetPeople() -> *const c_char;
     fn GetInfo(title: GoString, pass: GoString) -> *const c_char;
     fn GoogleSearch(search: GoString) -> *const c_char;
-    fn GetNotes(id: GoString) -> *const c_char;
+// fn GetNotes(id: GoString) -> *const c_char;
 }
 
+///Representation of GO String in C Format
 #[repr(C)]
 #[derive(Clone, Copy)]
 struct GoString {
@@ -93,9 +114,9 @@ pub struct SearchResult {
     pub link: String,
 }
 
-//WARNING!! unsafe calls made here
-//Google searches using GoLang lib
-//Returns list of SearchResult structs
+///WARNING!! unsafe calls made here
+///Google searches using GoLang lib
+///Returns list of SearchResult structs
 pub fn google_search(search: String) -> Option<Vec<SearchResult>> {
     println!("GO GETTING SEARCH RESULTS: {}", search);
     let c_search = CString::new(search).expect("CString::new failed");
@@ -142,32 +163,41 @@ pub struct Note {
     pub note: String,
 }
 
-//WARNING!! unsafe calls made here
-//Fetches notes using GoLang lib
-//Returns list of Note structs
-pub fn get_notes(user_id: String) -> Option<Vec<Note>> {
-    println!("GO GETTING NOTES: id: {}", user_id);
-    let c_note = CString::new(user_id).expect("CString::new failed");
-    let ptr = c_note.as_ptr();
-    let go_string = GoString {
-        a: ptr,
-        b: c_note.as_bytes().len() as isize,
-    };
-    let result = unsafe { GetNotes(go_string) };
-    let c_str = unsafe { CStr::from_ptr(result) };
-    let string = c_str
-        .to_str()
-        .expect("Error translating notes data from library");
-    if let Some(Value::Array(notes)) = serde_json::from_str(&string.to_string()).ok() {
-        println!("GET_NOTES: notes json fetched successfully {}", string);
-        let mut notes_list: Vec<Note> = vec![];
-        for (position, note_val) in notes.iter().enumerate() {
-            if let Some(Value::String(note_str)) = &note_val.get("note") {
-                let note = note_str.clone();
-                notes_list.push(Note { position, note });
+pub async fn get_notes(user_id: String) -> Option<Vec<Note>> {
+    if let Ok(token) = env::var("MONGO_AUTH") {
+        if let Ok(client_options) = ClientOptions::parse(&token).await {
+            if let Ok(client) = Client::with_options(client_options) {
+                let db = client.database("terminal");
+                let notes = db.collection("notes");
+                let my_notes_result = notes
+                    .find(
+                        doc! {
+                            "id": &user_id
+                        },
+                        None,
+                    )
+                    .await;
+                if let Ok(mut my_notes) = my_notes_result {
+                    let mut notes_list: Vec<Note> = vec![];
+                    let mut position = 1;
+                    while let Some(result) = my_notes.next().await {
+                        match result {
+                            Ok(document) => {
+                                if let Some(note) = document.get("note").and_then(Bson::as_str) {
+                                    notes_list.push(Note {
+                                        position,
+                                        note: note.to_string(),
+                                    });
+                                    position += 1;
+                                }
+                            }
+                            _ => {}
+                        }
+                    }
+                    return Some(notes_list);
+                }
             }
         }
-        return Some(notes_list);
     }
     return None;
 }

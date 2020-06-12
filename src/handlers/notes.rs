@@ -1,10 +1,11 @@
 use super::*;
 
 pub async fn start_notes(bot_message: impl BotMessage + 'static) {
-    println!("START_NOTES: notes initiated");
+    let source = "START_NOTES";
+    util::log_info(source, "notes initiated");
     let id = bot_message.get_id();
     let arc_message = Arc::new(bot_message);
-    match golib::get_notes(id.clone()) {
+    match golib::get_notes(id.clone()).await {
         Some(notes) => {
             let mut notes_string = "".to_string();
             for note in notes {
@@ -13,7 +14,7 @@ pub async fn start_notes(bot_message: impl BotMessage + 'static) {
 
             //---Only update state on successful notes retrieval
             set_state(id.clone(), UserState::Notes).await;
-            println!("START_NOTES: record added for id {}", id);
+            util::log_info(source, &format!("record added for id {}", id));
             wipe_history(Arc::clone(&arc_message), UserState::Notes);
 
             arc_message
@@ -42,7 +43,8 @@ pub async fn start_notes(bot_message: impl BotMessage + 'static) {
 //---finishes identify
 //---fires immediate purge history command for identify state
 pub async fn continue_notes(bot_message: impl BotMessage + 'static, command: String) {
-    println!("NOTES: continuing with notes '{}'", command);
+    let source = "CONTINUE_NOTES";
+    util::log_info(source, &format!("continuing with notes '{}'", command));
     let id = bot_message.get_id();
     set_state(id.clone(), UserState::Notes).await;
     if command.starts_with("add ") {

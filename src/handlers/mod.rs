@@ -102,13 +102,15 @@ impl Clone for Box<dyn BotMessage> {
 
 ///Distributes incoming requests to separate threads
 pub fn distributor(bot_message: impl BotMessage + 'static, processesed_text: String) {
+    let source = "DISTRIBUTOR";
     tokio::spawn(async move { handler(bot_message, processesed_text).await });
-    println!("DISTRIBUTOR: Handler Thread Spawned");
+    util::log_info(source, "Handler Thread Spawned");
 }
 
 ///First place to handle messages after distribution
 async fn handler(bot_message: impl BotMessage + 'static, processesed_text: String) {
-    println!("processed text is '{}'", processesed_text);
+    let source = "HANDLER";
+    util::log_info(source, &format!("Processed text is {}", processesed_text));
 
     //---If record from user exists (A Some(record)), some conversation is ongoing
     //---So will be replied regardless of groups or mentions and stuff ('will_respond' is ignored)
@@ -130,28 +132,27 @@ async fn handler(bot_message: impl BotMessage + 'static, processesed_text: Strin
         */
         //---"if state is search"
         else if record.state == UserState::Search {
-            println!("continuing search");
+            util::log_info(source, "continuing search");
             search::continue_search(bot_message, processesed_text.clone()).await;
         }
         //---"if state is identify"
         else if record.state == UserState::Identify {
-            println!("continuing identify");
+            util::log_info(source, "continuing identify");
             identify::continue_identify(bot_message, processesed_text.clone()).await;
         }
         //---"if state is animatios"
         else if record.state == UserState::Animation {
-            println!("continuing animation");
+            util::log_info(source, "continuing animation");
             animation::continue_gif(bot_message, processesed_text.clone()).await;
         }
         //---"if state is animatios"
         else if record.state == UserState::Notes {
-            println!("continuing notes");
+            util::log_info(source, "continuing notes");
             notes::continue_notes(bot_message, processesed_text.clone()).await;
         }
         //---"if state is unknown"
         else {
-            println!("some unknown state");
-
+            util::log_info(source, "some unknown state");
             responses::unknown_state_notice(bot_message).await;
         }
     }
@@ -205,43 +206,43 @@ async fn natural_understanding(bot_message: impl BotMessage + 'static, processed
         if result.intent.confidence_score > 0.5 {
             //---Convert result to json string
             if let Ok(json) = serde_json::to_string(&result) {
-                println!("ACTION_PICKER: intent json is valid" /*, &json*/);
+                util::log_info(source, "ACTION_PICKER: intent json is valid");
                 match &*intent {
                     "chat" => {
-                        println!("ACTION_PICKER: starting chat");
+                        util::log_info(source, "starting chat");
                         chat::start_chat(bot_message).await
                     }
                     "search" => {
-                        println!("ACTION_PICKER: starting search");
+                        util::log_info(source, "starting search");
                         search::start_search(bot_message).await
                     }
                     "identify" => {
-                        println!("ACTION_PICKER: starting identify");
+                        util::log_info(source, "starting identify");
                         identify::start_identify(bot_message).await
                     }
                     "animation" => {
-                        println!("ACTION_PICKER: starting animation");
+                        util::log_info(source, "starting animation");
                         animation::start_gif(bot_message).await
                     }
                     "info" => {
-                        println!("ACTION_PICKER: starting info");
+                        util::log_info(source, "starting info");
                         info::start_info(bot_message, json).await
                     }
                     "notes" => {
-                        println!("ACTION_PICKER: starting notes");
+                        util::log_info(source, "starting notes");
                         notes::start_notes(bot_message).await
                     }
                     "corona" => {
-                        println!("ACTION_PICKER: starting corona");
+                        util::log_info(source, "starting corona");
                         corona::start_corona(bot_message).await
                     }
                     "unknown" => {
-                        println!("ACTION_PICKER: starting unknown state test");
+                        util::log_info(source, "starting unknown state test");
                         extras::start_unknown(bot_message).await
                     }
                     _ => {
                         //---Forward to chat for more intents
-                        println!("ACTION_PICKER: forwarding to chat");
+                        util::log_info(source, "forwarding to chat");
                         chat::continue_chat(bot_message, processed_text, &intent).await;
                     }
                 }
