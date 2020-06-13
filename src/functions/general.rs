@@ -1,6 +1,9 @@
+use crate::*;
 use std::fs::OpenOptions;
 use std::io::prelude::*;
 
+use futures::stream::StreamExt;
+use mongodb::bson::{doc, Bson};
 use serde_json::Value;
 
 pub fn log_message(processed_text: String) {
@@ -61,5 +64,113 @@ pub async fn get_request_json(url: &str) -> Option<serde_json::Value> {
             println!("{}", error);
         }
     }
+    return None;
+}
+
+pub struct Note {
+    pub position: usize,
+    pub note: String,
+}
+
+pub async fn get_notes(user_id: String) -> Option<Vec<Note>> {
+    if let Some(client) = database::get_mongo().await {
+        let db = client.database("terminal");
+        let notes = db.collection("notes");
+        let my_notes_result = notes
+            .find(
+                doc! {
+                    "id": &user_id
+                },
+                None,
+            )
+            .await;
+        if let Ok(mut my_notes) = my_notes_result {
+            let mut notes_list: Vec<Note> = vec![];
+            let mut position = 1;
+            while let Some(result) = my_notes.next().await {
+                match result {
+                    Ok(document) => {
+                        if let Some(note) = document.get("note").and_then(Bson::as_str) {
+                            notes_list.push(Note {
+                                position,
+                                note: note.to_string(),
+                            });
+                            position += 1;
+                        }
+                    }
+                    _ => {}
+                }
+            }
+            return Some(notes_list);
+        }
+    }
+
+    return None;
+}
+#[allow(dead_code, unused_variables)]
+pub fn add_note(user_id: String, note: String) -> Option<Vec<Note>> {
+    None
+}
+
+pub struct Person {
+    pub name: String,
+    pub description: String,
+}
+
+pub async fn get_person(name: String) -> Option<Person> {
+    println!("GO GETTING PERSON: {}", name);
+    if let Some(client) = database::get_mongo().await {
+        let db = client.database("terminal");
+        let notes = db.collection("people");
+        let my_notes_result = notes
+            .find(
+                doc! {
+                    "name": &name
+                },
+                None,
+            )
+            .await;
+        if let Ok(mut my_notes) = my_notes_result {
+            if let Some(result) = my_notes.next().await {
+                if let Ok(document) = result {
+                    if let Some(description) = document.get("description").and_then(Bson::as_str) {
+                        return Some(Person {
+                            name,
+                            description: description.to_string(),
+                        });
+                    }
+                }
+            }
+        }
+    }
+
+    return None;
+}
+
+pub async fn get_people() -> Option<Vec<Person>> {
+    if let Some(client) = database::get_mongo().await {
+        let db = client.database("terminal");
+        let people = db.collection("people");
+        let people_result = people.find(None, None).await;
+        if let Ok(mut my_notes) = people_result {
+            let mut people_list: Vec<Person> = vec![];
+
+            while let Some(result) = my_notes.next().await {
+                if let Ok(document) = result {
+                    if let (Some(name), Some(description)) = (
+                        document.get("name").and_then(Bson::as_str),
+                        document.get("description").and_then(Bson::as_str),
+                    ) {
+                        people_list.push(Person {
+                            name: name.to_string(),
+                            description: description.to_string(),
+                        });
+                    }
+                }
+            }
+            return Some(people_list);
+        }
+    }
+
     return None;
 }

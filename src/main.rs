@@ -3,6 +3,7 @@ extern crate lazy_static;
 extern crate snips_nlu_lib;
 // extern crate discord;
 mod clients;
+mod database;
 mod functions;
 mod handlers;
 
@@ -25,6 +26,7 @@ async fn main() {
     println!("Initializing everything");
     clients::initialize();
     handlers::initialize();
+    database::initialize().await;
     println!("\nInitialized Everything\n");
     //---New tokio LocalSet
     let local = tokio::task::LocalSet::new();

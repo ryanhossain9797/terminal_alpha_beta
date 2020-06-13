@@ -28,7 +28,7 @@ pub async fn continue_identify(bot_message: impl BotMessage + 'static, name: Str
     let arc_message = Arc::new(bot_message);
     immediate_purge_history(Arc::clone(&arc_message), UserState::Identify);
     println!("IDENTIFY: beginning identification");
-    match golib::get_person(name.to_string()) {
+    match general::get_person(name.to_string()).await {
         //---Part one
         Some(person) => {
             arc_message
@@ -38,7 +38,7 @@ pub async fn continue_identify(bot_message: impl BotMessage + 'static, name: Str
 
         //---Part two
         _ => {
-            let partial_match = match golib::get_people() {
+            let partial_match = match general::get_people().await {
                 Some(people) => {
                     let mut names: Vec<String> = vec![];
                     people
