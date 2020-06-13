@@ -8,4 +8,4 @@
 | Animation | Fetch a gif by searching on Giphy |
 | Info | Get info on a specific topic stored in db |
 | Notes | Get notes for yourself |
-| Corona | Get COvid 19 info |
+| Corona | Get Covid 19 info |
