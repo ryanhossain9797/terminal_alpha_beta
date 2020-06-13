@@ -1,3 +1,4 @@
+use super::util;
 use futures::stream::StreamExt;
 use mongodb::{
     bson::{doc, Bson},
@@ -5,23 +6,45 @@ use mongodb::{
     // options::FindOptions,
     Client,
 };
-// use once_cell::sync::Lazy;
+use once_cell::sync::OnceCell;
 use serde_json::Value;
 use std::env;
 //---For CGO
 use std::ffi::{CStr, CString};
 use std::os::raw::c_char;
 
-// static MONGO: Lazy<Option<Client>> = Lazy::new(|| {
-//     if let Ok(token) = env::var("MONGO_AUTH") {
-//         if let Ok(client_options) = ClientOptions::parse(&token).await {
-//             if let Ok(client) = Client::with_options(client_options) {
-//                 return Some(client);
-//             }
-//         }
-//     }
-//     return None;
-// });
+static MONGO: OnceCell<Client> = OnceCell::new();
+static MONGO_INITIALIZED: OnceCell<tokio::sync::Mutex<bool>> = OnceCell::new();
+
+pub async fn get_mongo() -> Option<&'static Client> {
+    let source = "MONGO_INIT";
+    // this is racy, but that's OK: it's just a fast case
+    let client_option = MONGO.get();
+    if let Some(_) = client_option {
+        util::log_info(source, "Already initialized");
+        return client_option;
+    }
+    // it hasn't been initialized yet, so let's grab the lock & try to
+    // initialize it
+    let initializing_mutex = MONGO_INITIALIZED.get_or_init(|| tokio::sync::Mutex::new(false));
+    // if initialized is true, then someone else initialized it already.
+    let mut initialized = initializing_mutex.lock().await;
+    if !*initialized {
+        util::log_warning(source, "Not yet initialized");
+        // no one else has initialized it yet, so
+        if let Ok(token) = env::var("MONGO_AUTH") {
+            if let Ok(client_options) = ClientOptions::parse(&token).await {
+                if let Ok(client) = Client::with_options(client_options) {
+                    if let Ok(_) = MONGO.set(client) {
+                        *initialized = true;
+                    }
+                }
+            }
+        }
+    }
+    drop(initialized);
+    MONGO.get()
+}
 
 ///THE FOLLOWING IS USED TO INTERACT WITH THE 'golibs' STUFF
 ///DEPENDENT ON GOLANG LIBS
@@ -164,41 +187,38 @@ pub struct Note {
 }
 
 pub async fn get_notes(user_id: String) -> Option<Vec<Note>> {
-    if let Ok(token) = env::var("MONGO_AUTH") {
-        if let Ok(client_options) = ClientOptions::parse(&token).await {
-            if let Ok(client) = Client::with_options(client_options) {
-                let db = client.database("terminal");
-                let notes = db.collection("notes");
-                let my_notes_result = notes
-                    .find(
-                        doc! {
-                            "id": &user_id
-                        },
-                        None,
-                    )
-                    .await;
-                if let Ok(mut my_notes) = my_notes_result {
-                    let mut notes_list: Vec<Note> = vec![];
-                    let mut position = 1;
-                    while let Some(result) = my_notes.next().await {
-                        match result {
-                            Ok(document) => {
-                                if let Some(note) = document.get("note").and_then(Bson::as_str) {
-                                    notes_list.push(Note {
-                                        position,
-                                        note: note.to_string(),
-                                    });
-                                    position += 1;
-                                }
-                            }
-                            _ => {}
+    if let Some(client) = get_mongo().await {
+        let db = client.database("terminal");
+        let notes = db.collection("notes");
+        let my_notes_result = notes
+            .find(
+                doc! {
+                    "id": &user_id
+                },
+                None,
+            )
+            .await;
+        if let Ok(mut my_notes) = my_notes_result {
+            let mut notes_list: Vec<Note> = vec![];
+            let mut position = 1;
+            while let Some(result) = my_notes.next().await {
+                match result {
+                    Ok(document) => {
+                        if let Some(note) = document.get("note").and_then(Bson::as_str) {
+                            notes_list.push(Note {
+                                position,
+                                note: note.to_string(),
+                            });
+                            position += 1;
                         }
                     }
-                    return Some(notes_list);
+                    _ => {}
                 }
             }
+            return Some(notes_list);
         }
     }
+
     return None;
 }
 
