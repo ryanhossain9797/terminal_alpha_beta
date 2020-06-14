@@ -55,6 +55,7 @@ pub async fn continue_notes(
     command: String,
     data: Vec<String>,
 ) {
+    // THIS ONE NEEDS MAJOR COMMENTING
     let source = "CONTINUE_NOTES";
     util::log_info(source, &format!("continuing with notes '{}'", command));
     let id = bot_message.get_id();
