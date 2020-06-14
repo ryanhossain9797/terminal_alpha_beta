@@ -111,7 +111,10 @@ pub async fn get_notes(user_id: String) -> Option<Vec<Note>> {
 pub fn add_note(user_id: String, note: String) -> Option<Vec<Note>> {
     None
 }
-
+#[allow(dead_code, unused_variables)]
+pub fn delete_note(user_id: String, number: u32) -> Option<Vec<Note>> {
+    None
+}
 pub struct Person {
     pub name: String,
     pub description: String,
