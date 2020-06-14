@@ -56,7 +56,8 @@ pub async fn continue_notes(bot_message: impl BotMessage + 'static, command: Str
     let arc_message = Arc::new(bot_message);
     wipe_history(Arc::clone(&arc_message), UserState::Notes);
     if command.starts_with("add ") {
-        let _notes = general::add_note(id, command.trim_start_matches("add ").to_string());
+        let notes_option =
+            general::add_note(id, command.trim_start_matches("add ").to_string()).await;
         arc_message
             .send_message(MsgCount::SingleMsg(Msg::Text(
                 match responses::load_response("notes-add") {
@@ -65,6 +66,22 @@ pub async fn continue_notes(bot_message: impl BotMessage + 'static, command: Str
                 },
             )))
             .await;
+        if let Some(notes) = notes_option {
+            let mut notes_string = "".to_string();
+            for note in notes {
+                notes_string.push_str(&format!("{}. {}\n", note.position, note.note));
+            }
+            //---Only update state on successful notes retrieval
+            arc_message
+                .send_message(MsgCount::MultiMsg(vec![
+                    Msg::Text(match responses::load_response("notes-start") {
+                        Some(response) => response,
+                        _ => responses::response_unavailable(),
+                    }),
+                    Msg::Text(notes_string),
+                ]))
+                .await;
+        }
     } else if command.starts_with("delete ") {
         if let Ok(number) = command
             .trim_start_matches("delete ")

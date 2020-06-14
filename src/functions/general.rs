@@ -104,13 +104,27 @@ pub async fn get_notes(user_id: String) -> Option<Vec<Note>> {
             return Some(notes_list);
         }
     }
-
     return None;
 }
-#[allow(dead_code, unused_variables)]
-pub fn add_note(user_id: String, note: String) -> Option<Vec<Note>> {
-    None
+
+pub async fn add_note(user_id: String, note: String) -> Option<Vec<Note>> {
+    let source = "NOTE_ADD";
+    if let Some(client) = database::get_mongo().await {
+        let db = client.database("terminal");
+        let notes = db.collection("notes");
+        match notes
+            .insert_one(doc! {"id":&user_id, "note": &note}, None)
+            .await
+        {
+            Ok(insertion) => functions::util::log_info(source, "successful insertion"),
+            Err(error) => {
+                functions::util::log_error(source, &format!("{}", error));
+            }
+        }
+    }
+    return get_notes(user_id).await;
 }
+
 #[allow(dead_code, unused_variables)]
 pub fn delete_note(user_id: String, number: u32) -> Option<Vec<Note>> {
     None
