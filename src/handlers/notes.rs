@@ -61,7 +61,7 @@ pub async fn continue_notes(
     let id = bot_message.get_id();
 
     let arc_message = Arc::new(bot_message);
-    wipe_history(Arc::clone(&arc_message), UserState::Notes(vec![]));
+    let mut note_ids = data.clone();
     if command.starts_with("add ") {
         let notes_option =
             general::add_note(&id, command.trim_start_matches("add ").to_string()).await;
@@ -75,7 +75,7 @@ pub async fn continue_notes(
             .await;
         if let Some(notes) = notes_option {
             let mut notes_string = "".to_string();
-            let mut note_ids: Vec<String> = vec![];
+            note_ids = vec![];
             for note in notes {
                 note_ids.push(note.id);
                 notes_string.push_str(&format!("{}. {}\n", note.position, note.note));
@@ -90,8 +90,6 @@ pub async fn continue_notes(
                     Msg::Text(notes_string),
                 ]))
                 .await;
-            set_state(id.clone(), UserState::Notes(note_ids)).await;
-            return;
         }
     } else if command.starts_with("delete ") {
         if let Ok(number) = command
@@ -111,7 +109,7 @@ pub async fn continue_notes(
                     .await;
                 if let Some(notes) = notes_option {
                     let mut notes_string = "".to_string();
-                    let mut note_ids: Vec<String> = vec![];
+                    note_ids = vec![];
                     for note in notes {
                         note_ids.push(note.id);
                         notes_string.push_str(&format!("{}. {}\n", note.position, note.note));
@@ -126,8 +124,6 @@ pub async fn continue_notes(
                             Msg::Text(notes_string),
                         ]))
                         .await;
-                    set_state(id.clone(), UserState::Notes(note_ids)).await;
-                    return;
                 }
             }
         } else {
@@ -150,5 +146,6 @@ pub async fn continue_notes(
             )))
             .await;
     }
-    set_state(id.clone(), UserState::Notes(data.clone())).await;
+    set_state(id.clone(), UserState::Notes(note_ids)).await;
+    wipe_history(Arc::clone(&arc_message), UserState::Notes(vec![]));
 }
