@@ -131,24 +131,24 @@ async fn handler(bot_message: impl BotMessage + 'static, processesed_text: Strin
         }
         */
         //---"if state is search"
-        else if record.state == UserState::Search {
+        else if let UserState::Search = record.state {
             util::log_info(source, "continuing search");
             search::continue_search(bot_message, processesed_text.clone()).await;
         }
         //---"if state is identify"
-        else if record.state == UserState::Identify {
+        else if let UserState::Identify = record.state {
             util::log_info(source, "continuing identify");
             identify::continue_identify(bot_message, processesed_text.clone()).await;
         }
         //---"if state is animatios"
-        else if record.state == UserState::Animation {
+        else if let UserState::Animation = record.state {
             util::log_info(source, "continuing animation");
             animation::continue_gif(bot_message, processesed_text.clone()).await;
         }
         //---"if state is animatios"
-        else if record.state == UserState::Notes {
+        else if let UserState::Notes(data) = record.state {
             util::log_info(source, "continuing notes");
-            notes::continue_notes(bot_message, processesed_text.clone()).await;
+            notes::continue_notes(bot_message, processesed_text.clone(), data).await;
         }
         //---"if state is unknown"
         else {
@@ -294,7 +294,7 @@ fn wipe_history(bot_message: Arc<impl BotMessage + 'static>, state: UserState) {
         tokio::time::delay_for(Duration::from_secs(WAITTIME)).await;
         if let Some(r) = get_state(&bot_message.get_id()).await {
             //If the current state matches pending deletion state
-            if r.state == state {
+            if format!("{}", r.state) == format!("{}", state) {
                 //If the current state is older than threshold wait time
                 if r.last.elapsed() > Duration::from_secs(WAITTIME) {
                     remove_state(&bot_message.get_id()).await;

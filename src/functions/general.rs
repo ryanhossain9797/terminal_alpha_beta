@@ -3,7 +3,7 @@ use std::fs::OpenOptions;
 use std::io::prelude::*;
 
 use futures::stream::StreamExt;
-use mongodb::bson::{doc, Bson};
+use mongodb::bson::{doc, oid, Bson};
 use serde_json::Value;
 
 pub fn log_message(processed_text: String) {
@@ -68,6 +68,7 @@ pub async fn get_request_json(url: &str) -> Option<serde_json::Value> {
 }
 
 pub struct Note {
+    pub id: String,
     pub position: usize,
     pub note: String,
 }
@@ -90,8 +91,12 @@ pub async fn get_notes(user_id: String) -> Option<Vec<Note>> {
             while let Some(result) = my_notes.next().await {
                 match result {
                     Ok(document) => {
-                        if let Some(note) = document.get("note").and_then(Bson::as_str) {
+                        if let (Some(id), Some(note)) = (
+                            document.get("_id").and_then(Bson::as_object_id),
+                            document.get("note").and_then(Bson::as_str),
+                        ) {
                             notes_list.push(Note {
+                                id: id.to_hex(),
                                 position,
                                 note: note.to_string(),
                             });
@@ -107,7 +112,7 @@ pub async fn get_notes(user_id: String) -> Option<Vec<Note>> {
     return None;
 }
 
-pub async fn add_note(user_id: String, note: String) -> Option<Vec<Note>> {
+pub async fn add_note(user_id: &str, note: String) -> Option<Vec<Note>> {
     let source = "NOTE_ADD";
     if let Some(client) = database::get_mongo().await {
         let db = client.database("terminal");
@@ -116,18 +121,32 @@ pub async fn add_note(user_id: String, note: String) -> Option<Vec<Note>> {
             .insert_one(doc! {"id":&user_id, "note": &note}, None)
             .await
         {
-            Ok(insertion) => functions::util::log_info(source, "successful insertion"),
+            Ok(_) => functions::util::log_info(source, "successful insertion"),
             Err(error) => {
                 functions::util::log_error(source, &format!("{}", error));
             }
         }
     }
-    return get_notes(user_id).await;
+    return get_notes(user_id.to_string()).await;
 }
 
-#[allow(dead_code, unused_variables)]
-pub fn delete_note(user_id: String, number: u32) -> Option<Vec<Note>> {
-    None
+pub async fn delete_note(user_id: &str, note_id: &str) -> Option<Vec<Note>> {
+    let source = "NOTE_DELETE";
+    if let Some(client) = database::get_mongo().await {
+        let db = client.database("terminal");
+        let notes = db.collection("notes");
+        if let Ok(object_id) = oid::ObjectId::with_string(note_id) {
+            match notes.delete_one(doc! {"_id": object_id}, None).await {
+                Ok(_) => functions::util::log_info(source, "successful delete"),
+                Err(error) => {
+                    functions::util::log_error(source, &format!("{}", error));
+                }
+            }
+        } else {
+            functions::util::log_error(source, &format!("{}", "invalid note id"));
+        }
+    }
+    return get_notes(user_id.to_string()).await;
 }
 pub struct Person {
     pub name: String,

@@ -14,19 +14,19 @@ lazy_static! {
 
 ///A user state record holds an individual user's state.  
 ///Last holds when it was last updated.
-#[derive(Copy, Clone)]
+#[derive(Clone)]
 pub struct UserStateRecord {
     pub state: UserState,
     pub last: Instant,
 }
 
-#[derive(PartialEq, Eq, Copy, Clone)]
+#[derive(PartialEq, Eq, Clone)]
 pub enum UserState {
     // Chat,
     Search,
     Identify,
     Animation,
-    Notes,
+    Notes(Vec<String>),
     Unknown,
 }
 
@@ -36,7 +36,7 @@ impl fmt::Display for UserState {
             UserState::Search => write!(f, "Search"),
             UserState::Identify => write!(f, "Identify"),
             UserState::Animation => write!(f, "Animation"),
-            UserState::Notes => write!(f, "Notes"),
+            UserState::Notes(_) => write!(f, "Notes"),
             UserState::Unknown => write!(f, "Unknown"),
         }
     }
