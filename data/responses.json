@@ -18,7 +18,7 @@
     "notes-start": "These are your saved notes",
     "notes-fail": "We couldn't fetch your notes, forgive us",
     "notes-add": "Note added",
-    "notes-delete": "You tried to delete a note",
+    "notes-delete": "Note deleted",
     "notes-invalid": "You tried to perform an invalid action",
     "corona-header": "These are the records we found of the Covid 19 pandemic",
     "corona-body": "Total Confirmed: {confirmed}\nTotal Deaths: {deaths}",

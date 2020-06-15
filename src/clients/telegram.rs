@@ -117,9 +117,9 @@ struct TelegramMessage {
 
 #[async_trait]
 impl handlers::BotMessage for TelegramMessage {
-    fn dynamic_clone(&self) -> Box<dyn handlers::BotMessage> {
-        Box::new(self.clone())
-    }
+    // fn dynamic_clone(&self) -> Box<dyn handlers::BotMessage> {
+    //     Box::new(self.clone())
+    // }
     fn get_name(&self) -> String {
         self.message.from.first_name.clone()
     }

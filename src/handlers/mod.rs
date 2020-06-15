@@ -79,7 +79,7 @@ pub enum Msg {
 #[async_trait]
 pub trait BotMessage: Send + Sync {
     ///This is used to make cloneable box<T> version of itself.
-    fn dynamic_clone(&self) -> Box<dyn BotMessage>;
+    // fn dynamic_clone(&self) -> Box<dyn BotMessage>;
     ///Returns the user's user readable name. Not the same as id.
     fn get_name(&self) -> String;
     ///Returns the user's unique id. This is needed to uniquely identify users.
@@ -94,11 +94,11 @@ pub trait BotMessage: Send + Sync {
 }
 
 //---Implement clone for this trait
-impl Clone for Box<dyn BotMessage> {
-    fn clone(&self) -> Self {
-        self.dynamic_clone()
-    }
-}
+// impl Clone for Box<dyn BotMessage> {
+//     fn clone(&self) -> Self {
+//         self.dynamic_clone()
+//     }
+// }
 
 ///Distributes incoming requests to separate threads
 pub fn distributor(bot_message: impl BotMessage + 'static, processesed_text: String) {
@@ -292,11 +292,11 @@ fn wipe_history(bot_message: Arc<impl BotMessage + 'static>, state: UserState) {
     tokio::spawn(async move {
         //Wait a specified amount of time before deleting user state
         tokio::time::delay_for(Duration::from_secs(WAITTIME)).await;
-        if let Some(r) = get_state(&bot_message.get_id()).await {
+        if let Some(record) = get_state(&bot_message.get_id()).await {
             //If the current state matches pending deletion state
-            if format!("{}", r.state) == format!("{}", state) {
+            if format!("{}", record.state) == format!("{}", state) {
                 //If the current state is older than threshold wait time
-                if r.last.elapsed() > Duration::from_secs(WAITTIME) {
+                if record.last.elapsed() > Duration::from_secs(WAITTIME) {
                     remove_state(&bot_message.get_id()).await;
                     util::log_info(source, &format!("deleted state record '{}'", state));
                     bot_message
@@ -317,7 +317,7 @@ fn wipe_history(bot_message: Arc<impl BotMessage + 'static>, state: UserState) {
                     source,
                     &format!(
                         "aborted record delete for '{}' because current state is '{}'",
-                        state, r.state
+                        state, record.state
                     ),
                 );
             }
