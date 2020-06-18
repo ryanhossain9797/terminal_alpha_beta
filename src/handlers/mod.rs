@@ -34,7 +34,7 @@ lazy_static! {
     //---Snips NLU is used to pick actions when they don't match directly
     pub static ref ROOTENGINE: SnipsNluEngine = {
         println!("\nLoading the action nlu engine...");
-        SnipsNluEngine::from_path("nlu/rootengine/").unwrap()
+        SnipsNluEngine::from_path("data/rootengine/").unwrap()
     };
     pub static ref RESPONSES: Option<serde_json::Value> = {
         println!("\nLoading JSON responses");

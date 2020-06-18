@@ -2,7 +2,7 @@ use std::process::Command;
 use std::str;
 static CARGOENV: &str = "cargo:rustc-env=";
 fn main() {
-    let path = "./golibs";
+    let path = "./lib";
     let lib = "people";
 
     println!("cargo:rustc-link-search=native={}", path);

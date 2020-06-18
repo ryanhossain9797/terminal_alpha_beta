@@ -117,10 +117,10 @@
       {
         "args": {
           "entities": [
-            "titleVar",
             "passVar",
-            "passWord",
-            "infoWord"
+            "infoWord",
+            "titleVar",
+            "passWord"
           ],
           "entity_filter": {
             "automatically_extensible": true
