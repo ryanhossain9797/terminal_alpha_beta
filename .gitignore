@@ -1,7 +1,7 @@
 /target
 
 /.env
-/golibs
+/lib
 /action_log.txt
 
 /credentials/*
