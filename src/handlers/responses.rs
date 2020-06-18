@@ -4,13 +4,13 @@ use serde_json::Value;
 ///Message to send when the user's message can't be handled at all.
 pub async fn unsupported_notice(m: impl BotMessage) {
     m.send_message(MsgCount::MultiMsg(vec![
-        Msg::Text(match load_response("unsupported-notice-1") {
+        Msg::Text(match load("unsupported-notice-1") {
             Some(response) => response,
-            None => response_unavailable(),
+            None => unavailable(),
         }),
-        Msg::Text(match load_response("unsupported-notice-2") {
+        Msg::Text(match load("unsupported-notice-2") {
             Some(response) => response,
-            None => response_unavailable(),
+            None => unavailable(),
         }),
     ]))
     .await;
@@ -21,9 +21,9 @@ pub async fn unsupported_notice(m: impl BotMessage) {
 pub async fn unknown_state_notice(bot_message: impl BotMessage + 'static) {
     bot_message
         .send_message(MsgCount::SingleMsg(Msg::Text(
-            match load_response("unknown-state") {
+            match load("unknown-state") {
                 Some(response) => response,
-                None => response_unavailable(),
+                None => unavailable(),
             },
         )))
         .await;
@@ -32,7 +32,7 @@ pub async fn unknown_state_notice(bot_message: impl BotMessage + 'static) {
 ///Simply uses loadresponse to load a response for the provided key.  
 ///If unavailable replies with a default message.
 pub async fn custom_response(m: impl BotMessage, key: String) {
-    m.send_message(MsgCount::SingleMsg(Msg::Text(match load_response(&key) {
+    m.send_message(MsgCount::SingleMsg(Msg::Text(match load(&key) {
         Some(response) => response,
         _ => "we could not understand your question".to_string(),
     })))
@@ -40,7 +40,7 @@ pub async fn custom_response(m: impl BotMessage, key: String) {
 }
 ///Loads a response from the JSON storage for the provided key.  
 ///Returns the Option<String>, May be None if response is not found.
-pub fn load_response(key: &str) -> Option<String> {
+pub fn load(key: &str) -> Option<String> {
     if let Some(json) = &*RESPONSES {
         match &json[key] {
             Value::String(response) => {
@@ -53,7 +53,13 @@ pub fn load_response(key: &str) -> Option<String> {
 }
 
 ///Literally Just a harcoded string
-pub fn response_unavailable() -> String {
+///```
+///# fn main() {
+///let a = response_unavailable();
+///assert_eq!("response unavailable error".to_string(), a);
+///# }
+///```
+pub fn unavailable() -> String {
     "response unavailable error".to_string()
 }
 
@@ -98,7 +104,7 @@ mod tests {
     use super::*;
     #[test]
     fn test_response_pass() {
-        let response = load_response("chat-start");
+        let response = load("chat-start");
         assert!(match response {
             Some(response_text) => response_text.contains("free to ask any"),
             None => false,
@@ -107,7 +113,7 @@ mod tests {
 
     #[test]
     fn test_response_fail() {
-        let response = load_response("chat-what");
+        let response = load("chat-what");
         assert!(match response {
             Some(_) => false,
             None => true,

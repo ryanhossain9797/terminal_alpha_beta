@@ -17,9 +17,9 @@ pub async fn start_search(bot_message: impl BotMessage + 'static) {
 
     arc_message
         .send_message(MsgCount::SingleMsg(Msg::Text(
-            match responses::load_response("search-start") {
+            match responses::load("search-start") {
                 Some(response) => response,
-                _ => responses::response_unavailable(),
+                _ => responses::unavailable(),
             },
         )))
         .await;
@@ -35,15 +35,13 @@ pub async fn continue_search(bot_message: impl BotMessage + 'static, processesed
 
     let response = match search_option {
         Some(results) => {
-            let mut msgs: Vec<Msg> = vec![Msg::Text(
-                match responses::load_response("search-success") {
-                    Some(response) => response,
-                    _ => responses::response_unavailable(),
-                },
-            )];
-            let search_template = match responses::load_response("search-content") {
+            let mut msgs: Vec<Msg> = vec![Msg::Text(match responses::load("search-success") {
                 Some(response) => response,
-                _ => responses::response_unavailable(),
+                _ => responses::unavailable(),
+            })];
+            let search_template = match responses::load("search-content") {
+                Some(response) => response,
+                _ => responses::unavailable(),
             };
             for result in results {
                 msgs.push(Msg::Text(
@@ -54,9 +52,9 @@ pub async fn continue_search(bot_message: impl BotMessage + 'static, processesed
             }
             MsgCount::MultiMsg(msgs)
         }
-        _ => MsgCount::SingleMsg(Msg::Text(match responses::load_response("search-fail") {
+        _ => MsgCount::SingleMsg(Msg::Text(match responses::load("search-fail") {
             Some(response) => response,
-            _ => responses::response_unavailable(),
+            _ => responses::unavailable(),
         })),
     };
     arc_message.send_message(response).await;

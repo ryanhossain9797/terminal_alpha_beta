@@ -21,9 +21,9 @@ pub async fn start_corona(m: impl BotMessage) {
     match general::get_request_json(&url).await {
         Some(Value::Object(map)) => {
             m.send_message(MsgCount::SingleMsg(Msg::Text(
-                match responses::load_response("corona-header") {
+                match responses::load("corona-header") {
                     Some(response) => response,
-                    _ => responses::response_unavailable(),
+                    _ => responses::unavailable(),
                 },
             )))
             .await;
@@ -118,15 +118,15 @@ pub async fn start_corona(m: impl BotMessage) {
                     match (total_confirmed, total_deaths) {
                         (Some(confirmed), Some(deaths)) => {
                             m.send_message(MsgCount::MultiMsg(vec![
-                                Msg::Text(match responses::load_response("corona-body") {
+                                Msg::Text(match responses::load("corona-body") {
                                     Some(response) => response
                                         .replace("{confirmed}", &format!("{}", confirmed))
                                         .replace("{deaths}", &format!("{}", deaths)),
-                                    _ => responses::response_unavailable(),
+                                    _ => responses::unavailable(),
                                 }),
-                                Msg::Text(match responses::load_response("corona-footer") {
+                                Msg::Text(match responses::load("corona-footer") {
                                     Some(response) => response,
-                                    _ => responses::response_unavailable(),
+                                    _ => responses::unavailable(),
                                 }),
                             ]))
                             .await;
@@ -141,9 +141,9 @@ pub async fn start_corona(m: impl BotMessage) {
         _ => println!("CORONA: json initial body doesn't match structure"),
     }
     m.send_message(MsgCount::SingleMsg(Msg::Text(
-        match responses::load_response("corona-fail") {
+        match responses::load("corona-fail") {
             Some(response) => response,
-            _ => responses::response_unavailable(),
+            _ => responses::unavailable(),
         },
     )))
     .await;

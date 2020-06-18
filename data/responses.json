@@ -16,6 +16,7 @@
     "search-content": "{description}\nURL: {url}",
     "search-fail": "We couldn't conduct the search operation, excuse us",
     "notes-start": "These are your saved notes",
+    "notes-template": "|{num}|\n{note}\n\n",
     "notes-fail": "We couldn't fetch your notes, forgive us",
     "notes-add": "Note added",
     "notes-delete": "Note deleted",

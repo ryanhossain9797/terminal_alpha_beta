@@ -14,12 +14,6 @@ mod state;
 use crate::functions::*;
 use state::userstate::*;
 
-const LONGWAIT: u64 = 30;
-
-#[allow(dead_code)]
-const SHORTWAIT: u64 = 10;
-const WAITTIME: u64 = LONGWAIT;
-
 use async_trait::async_trait;
 use serde_json;
 
@@ -27,10 +21,14 @@ use std::fs::*;
 use std::sync::Arc;
 use std::time::Duration;
 
-//
 extern crate snips_nlu_lib;
 use snips_nlu_lib::SnipsNluEngine;
-//
+
+const LONGWAIT: u64 = 30;
+
+#[allow(dead_code)]
+const SHORTWAIT: u64 = 10;
+const WAITTIME: u64 = LONGWAIT;
 
 lazy_static! {
     //---Snips NLU is used to pick actions when they don't match directly
@@ -64,7 +62,7 @@ pub fn initialize() {
 pub enum MsgCount {
     SingleMsg(Msg),
     MultiMsg(Vec<Msg>),
-    NoMsg,
+    // NoMsg,
 }
 
 ///ENUM, Represents Message type
@@ -163,9 +161,9 @@ async fn handler(bot_message: impl BotMessage + 'static, processesed_text: Strin
         if processesed_text == "cancel last" {
             bot_message
                 .send_message(MsgCount::SingleMsg(Msg::Text(
-                    match responses::load_response("cancel-nothing") {
+                    match responses::load("cancel-nothing") {
                         Some(response) => response,
-                        _ => responses::response_unavailable(),
+                        _ => responses::unavailable(),
                     },
                 )))
                 .await;
@@ -276,9 +274,9 @@ async fn cancel_history(bot_message: impl BotMessage + 'static) {
     remove_state(&bot_message.get_id()).await;
     bot_message
         .send_message(MsgCount::SingleMsg(Msg::Text(
-            match responses::load_response("cancel-state") {
+            match responses::load("cancel-state") {
                 Some(response) => response,
-                _ => responses::response_unavailable(),
+                _ => responses::unavailable(),
             },
         )))
         .await;
@@ -301,9 +299,9 @@ fn wipe_history(bot_message: Arc<impl BotMessage + 'static>, state: UserState) {
                     util::log_info(source, &format!("deleted state record '{}'", state));
                     bot_message
                         .send_message(MsgCount::SingleMsg(Msg::Text(
-                            match responses::load_response("delay-notice") {
+                            match responses::load("delay-notice") {
                                 Some(response) => response,
-                                _ => responses::response_unavailable(),
+                                _ => responses::unavailable(),
                             },
                         )))
                         .await;

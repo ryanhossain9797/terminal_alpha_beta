@@ -162,8 +162,7 @@ impl handlers::BotMessage for TelegramMessage {
                         }
                     }
                 }
-            }
-            _ => {}
+            } // _ => {}
         }
     }
 }

@@ -14,9 +14,9 @@ pub async fn start_identify(bot_message: impl BotMessage + 'static) {
     wipe_history(Arc::clone(&arc_message), UserState::Identify);
     arc_message
         .send_message(MsgCount::SingleMsg(Msg::Text(
-            match responses::load_response("identify-start") {
+            match responses::load("identify-start") {
                 Some(response) => response,
-                _ => responses::response_unavailable(),
+                _ => responses::unavailable(),
             },
         )))
         .await;
@@ -44,7 +44,7 @@ pub async fn continue_identify(bot_message: impl BotMessage + 'static, name: Str
                     people
                         .iter()
                         .for_each(|person| names.push(person.name.clone()));
-                    let cm = ClosestMatch::new(names, [4, 6, 8, 10].to_vec());
+                    let cm = ClosestMatch::new(names, [name.len() / 2, name.len()].to_vec());
                     let closest_name = cm.get_closest(name.to_string());
                     match closest_name {
                         Some(name) => {
@@ -52,40 +52,37 @@ pub async fn continue_identify(bot_message: impl BotMessage + 'static, name: Str
                             let mut matched_option: Option<String> = None;
                             for person in people {
                                 if person.name == name {
-                                    matched_option = Some(
-                                        match responses::load_response("identify-partialmatch") {
+                                    matched_option =
+                                        Some(match responses::load("identify-partialmatch") {
                                             Some(response) => response
                                                 .replace("{name}", &person.name)
                                                 .replace("{description}", &person.description),
-                                            _ => responses::response_unavailable(),
-                                        },
-                                    )
+                                            _ => responses::unavailable(),
+                                        })
                                 }
                             }
                             match matched_option {
                                 Some(person) => MsgCount::SingleMsg(Msg::Text(person)),
                                 None => MsgCount::SingleMsg(Msg::Text(
-                                    match responses::load_response("identify-notfound") {
+                                    match responses::load("identify-notfound") {
                                         Some(response) => response,
-                                        _ => responses::response_unavailable(),
+                                        _ => responses::unavailable(),
                                     },
                                 )),
                             }
                         }
                         _ => MsgCount::SingleMsg(Msg::Text(
-                            match responses::load_response("identify-notfound") {
+                            match responses::load("identify-notfound") {
                                 Some(response) => response,
-                                _ => responses::response_unavailable(),
+                                _ => responses::unavailable(),
                             },
                         )),
                     }
                 }
-                _ => MsgCount::SingleMsg(Msg::Text(
-                    match responses::load_response("identify-dberror") {
-                        Some(response) => response,
-                        _ => responses::response_unavailable(),
-                    },
-                )),
+                _ => MsgCount::SingleMsg(Msg::Text(match responses::load("identify-dberror") {
+                    Some(response) => response,
+                    _ => responses::unavailable(),
+                })),
             };
             arc_message.send_message(partial_match).await;
         }

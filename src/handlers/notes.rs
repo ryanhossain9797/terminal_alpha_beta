@@ -10,35 +10,50 @@ pub async fn start_notes(bot_message: impl BotMessage + 'static) {
     let source = "START_NOTES";
     util::log_info(source, "notes initiated");
     let id = bot_message.get_id();
+    // New Arc cloneable version of message
     let arc_message = Arc::new(bot_message);
+
+    // Fetch the notes
     match general::get_notes(id.clone()).await {
+        // If successful in fetching notes
         Some(notes) => {
+            // Load the notes template from responses json, or use default if failed
+            let note_template =
+                responses::load("notes-template").unwrap_or("{num}. {note}".to_string());
             let mut notes_string = "".to_string();
             let mut note_ids: Vec<String> = vec![];
+            // Iterate over notes
             for note in notes {
+                // Construct the notes string
+                // Also push ids to note_ids simultaneously
                 note_ids.push(note.id);
-                notes_string.push_str(&format!("|{}|\n - {}\n\n", note.position, note.note));
+                notes_string.push_str(
+                    &(note_template
+                        .replace("{num}", &format!("{}", note.position))
+                        .replace("{note}", &format!("{}", note.note))),
+                );
             }
 
-            //---Only update state on successful notes retrieval
+            // Only update state on successful notes retrieval
             set_state(id.clone(), UserState::Notes(note_ids)).await;
-            util::log_info(source, &format!("record added for id {}", id));
+            // And of course the history cleaner
             wipe_history(Arc::clone(&arc_message), UserState::Notes(vec![]));
+            util::log_info(source, &format!("record added for id {}", id));
+
             arc_message
                 .send_message(MsgCount::MultiMsg(vec![
                     Msg::Text(
-                        responses::load_response("notes-start")
-                            .unwrap_or_else(responses::response_unavailable),
+                        responses::load("notes-start").unwrap_or_else(responses::unavailable),
                     ),
                     Msg::Text(notes_string),
                 ]))
                 .await;
         }
+        // If not successful in fetching notes
         None => {
             arc_message
                 .send_message(MsgCount::SingleMsg(Msg::Text(
-                    responses::load_response("notes-fail")
-                        .unwrap_or_else(responses::response_unavailable),
+                    responses::load("notes-fail").unwrap_or_else(responses::unavailable),
                 )))
                 .await;
         }
@@ -65,6 +80,9 @@ pub async fn continue_notes(
     // The previous IDs will be used again
     // If user modifies the notes, this note_ids will be replaced by the updated note ids
     let mut new_note_ids = note_ids.clone();
+
+    // Load the dynamic template for notes
+    let note_template = responses::load("notes-template").unwrap_or("{num}. {note}".to_string());
     //---------------------------------------------------------ADD NOTE ACTION
     if command.starts_with("add ") {
         // add he new note (trim add keyword from the front)
@@ -73,8 +91,7 @@ pub async fn continue_notes(
         // Notify user of Add action
         arc_message
             .send_message(MsgCount::SingleMsg(Msg::Text(
-                responses::load_response("notes-add")
-                    .unwrap_or_else(responses::response_unavailable),
+                responses::load("notes-add").unwrap_or_else(responses::unavailable),
             )))
             .await;
         // If it succeeds we'll get an updated list of the current notes
@@ -86,7 +103,11 @@ pub async fn continue_notes(
             // Also push ids to note_ids simultaneously
             for note in notes {
                 new_note_ids.push(note.id);
-                notes_string.push_str(&format!("|{}|\n - {}\n\n", note.position, note.note));
+                notes_string.push_str(
+                    &(note_template
+                        .replace("{num}", &format!("{}", note.position))
+                        .replace("{note}", &format!("{}", note.note))),
+                );
             }
 
             arc_message
@@ -109,8 +130,7 @@ pub async fn continue_notes(
                 // Notify of note deletion
                 arc_message
                     .send_message(MsgCount::SingleMsg(Msg::Text(
-                        responses::load_response("notes-delete")
-                            .unwrap_or_else(responses::response_unavailable),
+                        responses::load("notes-delete").unwrap_or_else(responses::unavailable),
                     )))
                     .await;
                 // If updated list is avaialable
@@ -122,15 +142,18 @@ pub async fn continue_notes(
                     // Also push ids to note_ids simultaneously
                     for note in notes {
                         new_note_ids.push(note.id);
-                        notes_string
-                            .push_str(&format!("|{}|\n - {}\n\n", note.position, note.note));
+                        notes_string.push_str(
+                            &(note_template
+                                .replace("{num}", &format!("{}", note.position))
+                                .replace("{note}", &format!("{}", note.note))),
+                        );
                     }
                     // Send new notes
                     arc_message
                         .send_message(MsgCount::MultiMsg(vec![
                             Msg::Text(
-                                responses::load_response("notes-start")
-                                    .unwrap_or_else(responses::response_unavailable),
+                                responses::load("notes-start")
+                                    .unwrap_or_else(responses::unavailable),
                             ),
                             Msg::Text(notes_string),
                         ]))
@@ -141,8 +164,7 @@ pub async fn continue_notes(
         } else {
             arc_message
                 .send_message(MsgCount::SingleMsg(Msg::Text(
-                    responses::load_response("notes-invalid")
-                        .unwrap_or_else(responses::response_unavailable),
+                    responses::load("notes-invalid").unwrap_or_else(responses::unavailable),
                 )))
                 .await;
         }
@@ -150,8 +172,7 @@ pub async fn continue_notes(
     } else {
         arc_message
             .send_message(MsgCount::SingleMsg(Msg::Text(
-                responses::load_response("notes-invalid")
-                    .unwrap_or_else(responses::response_unavailable),
+                responses::load("notes-invalid").unwrap_or_else(responses::unavailable),
             )))
             .await;
     }

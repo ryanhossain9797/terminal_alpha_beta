@@ -162,8 +162,7 @@ impl handlers::BotMessage for DiscordMessage {
                     }
                     std::thread::sleep(Duration::from_millis(500));
                 }
-            }
-            _ => {}
+            } // _ => {}
         }
     }
 }
