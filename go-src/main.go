@@ -4,7 +4,6 @@ import (
 	"C"
 
 	"fmt"
-	"main/database"
 )
 import (
 	"context"
@@ -19,56 +18,12 @@ func init() {
 	ctx = context.Background()
 }
 
-//export GetPerson
-func GetPerson(name string) *C.char {
-	fmt.Println(name + " HELLO FROM GO")
-
-	fmt.Println("identifying '" + name + "'")
-	person, err := database.FindPersonFromDB(name)
-	if err != nil {
-		fmt.Println(err)
-		return C.CString("{}")
-	}
-	personString, err := json.Marshal(person)
-	if err != nil {
-		fmt.Println(err)
-		return C.CString("{}")
-	}
-	return C.CString("{\"person\":" + string(personString) + "}")
-}
-
-//export GetPeople
-func GetPeople() *C.char {
-	fmt.Println("HELLO FROM GO")
-
-	fmt.Println("fetching all people")
-	people := database.GetPeopleFromDB()
-
-	personString, err := json.Marshal(people)
-	if err != nil {
-		fmt.Println(err)
-		return C.CString("{}")
-	}
-	return C.CString("{\"people\":" + string(personString) + "}")
-}
-
-//export GetInfo
-func GetInfo(title string, pass string) *C.char {
-	fmt.Println("GET_INFO_GO: Getting info for " + title)
-
-	data := database.FindInfoFromDB(title, pass)
-
-	fmt.Println("GET_INFO_GO: got data")
-
-	return C.CString(data)
-
-}
-
 type SearchResult struct {
 	Description string `json:"description"`
 	Link        string `json:"link"`
 }
 
+//GoogleSearch ...
 //export GoogleSearch
 func GoogleSearch(search string) *C.char {
 	fmt.Println("GOOGLE_SEARCH_GO: fetching results for " + search)
@@ -86,21 +41,4 @@ func GoogleSearch(search string) *C.char {
 	}
 	return C.CString("{}")
 }
-
-//export GetNotes
-func GetNotes(id string) *C.char {
-	fmt.Println("GET_NOTES_GO: fetching notes for " + id)
-	data := database.GetNotesFromDB(id)
-
-	fmt.Println("GET_NOTES_GO: got data")
-	jsonData, err := json.Marshal(data)
-	if err != nil {
-		fmt.Println(err)
-		return C.CString("[]")
-	}
-	return C.CString(string(jsonData))
-}
-
-func main() {
-
-}
+func main() {}

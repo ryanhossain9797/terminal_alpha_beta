@@ -3,10 +3,11 @@ use mongodb::{
     options::ClientOptions,
     // options::FindOptions,
     Client,
+    Database,
 };
 use once_cell::sync::OnceCell;
 use std::env;
-static MONGO: OnceCell<Client> = OnceCell::new();
+static MONGO: OnceCell<Database> = OnceCell::new();
 static MONGO_INITIALIZED: OnceCell<tokio::sync::Mutex<bool>> = OnceCell::new();
 
 pub async fn initialize() {
@@ -26,7 +27,7 @@ async fn initialize_mongo() {
         if let Ok(token) = env::var("MONGO_AUTH") {
             if let Ok(client_options) = ClientOptions::parse(&token).await {
                 if let Ok(client) = Client::with_options(client_options) {
-                    if let Ok(_) = MONGO.set(client) {
+                    if let Ok(_) = MONGO.set(client.database("terminal")) {
                         *initialized = true;
                         util::log_info(source, "Initialized successfully");
                     }
@@ -39,7 +40,7 @@ async fn initialize_mongo() {
     }
 }
 
-pub async fn get_mongo() -> Option<&'static Client> {
+pub async fn get_mongo() -> Option<&'static Database> {
     let source = "MONGO_GET";
     // this is racy, but that's OK: it's just a fast case
     let client_option = MONGO.get();

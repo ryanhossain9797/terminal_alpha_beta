@@ -74,8 +74,7 @@ pub struct Note {
 }
 
 pub async fn get_notes(user_id: String) -> Option<Vec<Note>> {
-    if let Some(client) = database::get_mongo().await {
-        let db = client.database("terminal");
+    if let Some(db) = database::get_mongo().await {
         let notes = db.collection("notes");
         let my_notes_result = notes
             .find(
@@ -114,8 +113,7 @@ pub async fn get_notes(user_id: String) -> Option<Vec<Note>> {
 
 pub async fn add_note(user_id: &str, note: String) -> Option<Vec<Note>> {
     let source = "NOTE_ADD";
-    if let Some(client) = database::get_mongo().await {
-        let db = client.database("terminal");
+    if let Some(db) = database::get_mongo().await {
         let notes = db.collection("notes");
         match notes
             .insert_one(doc! {"id":&user_id, "note": &note}, None)
@@ -132,8 +130,7 @@ pub async fn add_note(user_id: &str, note: String) -> Option<Vec<Note>> {
 
 pub async fn delete_note(user_id: &str, note_id: &str) -> Option<Vec<Note>> {
     let source = "NOTE_DELETE";
-    if let Some(client) = database::get_mongo().await {
-        let db = client.database("terminal");
+    if let Some(db) = database::get_mongo().await {
         let notes = db.collection("notes");
         if let Ok(object_id) = oid::ObjectId::with_string(note_id) {
             match notes.delete_one(doc! {"_id": object_id}, None).await {
@@ -155,26 +152,23 @@ pub struct Person {
 
 pub async fn get_person(name: String) -> Option<Person> {
     println!("GO GETTING PERSON: {}", name);
-    if let Some(client) = database::get_mongo().await {
-        let db = client.database("terminal");
+    if let Some(db) = database::get_mongo().await {
         let notes = db.collection("people");
-        let my_notes_result = notes
-            .find(
+        let person_result = notes
+            .find_one(
                 doc! {
                     "name": &name
                 },
                 None,
             )
             .await;
-        if let Ok(mut my_notes) = my_notes_result {
-            if let Some(result) = my_notes.next().await {
-                if let Ok(document) = result {
-                    if let Some(description) = document.get("description").and_then(Bson::as_str) {
-                        return Some(Person {
-                            name,
-                            description: description.to_string(),
-                        });
-                    }
+        if let Ok(person) = person_result {
+            if let Some(document) = person {
+                if let Some(description) = document.get("description").and_then(Bson::as_str) {
+                    return Some(Person {
+                        name,
+                        description: description.to_string(),
+                    });
                 }
             }
         }
@@ -184,8 +178,7 @@ pub async fn get_person(name: String) -> Option<Person> {
 }
 
 pub async fn get_people() -> Option<Vec<Person>> {
-    if let Some(client) = database::get_mongo().await {
-        let db = client.database("terminal");
+    if let Some(db) = database::get_mongo().await {
         let people = db.collection("people");
         let people_result = people.find(None, None).await;
         if let Ok(mut my_notes) = people_result {
@@ -208,5 +201,29 @@ pub async fn get_people() -> Option<Vec<Person>> {
         }
     }
 
+    return None;
+}
+
+pub async fn get_info(title: String, pass: String) -> Option<String> {
+    println!("GO GETTING INFO: {}", title);
+    if let Some(db) = database::get_mongo().await {
+        let info = db.collection("info");
+        let info_result = info
+            .find_one(
+                doc! {
+                    "title": &title,
+                    "pass": &pass,
+                },
+                None,
+            )
+            .await;
+        if let Ok(info) = info_result {
+            if let Some(document) = info {
+                if let Some(info) = document.get("info").and_then(Bson::as_str) {
+                    return Some(info.to_string().replace("\\n", "\n"));
+                }
+            }
+        }
+    }
     return None;
 }
