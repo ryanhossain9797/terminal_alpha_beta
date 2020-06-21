@@ -134,7 +134,7 @@ impl handlers::BotMessage for TelegramMessage {
         match msg {
             handlers::MsgCount::SingleMsg(msg) => match msg {
                 handlers::Msg::Text(text) => {
-                    API.spawn(self.message.chat.text(text));
+                    let _ = API.send(self.message.chat.text(text)).await;
                 }
                 handlers::Msg::File(url) => {
                     // API.spawn(
@@ -142,7 +142,7 @@ impl handlers::BotMessage for TelegramMessage {
                     //         .chat
                     //         .photo(InputFileUpload::with_path("files/dp.jpg")),
                     // );
-                    API.spawn(self.message.chat.text(url));
+                    let _ = API.send(self.message.chat.text(url)).await;
                 }
             },
             handlers::MsgCount::MultiMsg(msg_list) => {
@@ -162,7 +162,7 @@ impl handlers::BotMessage for TelegramMessage {
                         }
                     }
                 }
-            } // _ => {}
+            }
         }
     }
 }

@@ -6,23 +6,30 @@ use futures::stream::StreamExt;
 use mongodb::bson::{doc, oid, Bson};
 use serde_json::Value;
 
+///Logs the provided text to the action_log.txt file.  
+///Used for when a message is unknown.
 pub fn log_message(processed_text: String) {
+    //Open/Create the action_log.txt file with read, append, create options
     if let Ok(mut file) = OpenOptions::new()
         .read(true)
         .append(true)
         .create(true)
         .open("action_log.txt")
     {
+        //Attempt to write to file
         if let Ok(_) = file.write((&(format!("{}{}", processed_text, "\n"))).as_bytes()) {
             println!("MESSAGE_LOGGER: successfully logged unknown action")
         } else {
             println!("MESSAGE_LOGGER: failed to log unknown action")
         }
     } else {
+        //If file opening fails
         println!("MESSAGE_LOGGER: failed to open file for logging unknown action")
     }
 }
 
+///Retrieves the title and pass for the info intent.  
+///Parses the intent JSON.
 pub fn title_pass_retriever(json_string: String) -> (String, String) {
     let json_result: Result<Value, _> = serde_json::from_str(&json_string);
     let mut title: String = String::new();
@@ -33,9 +40,13 @@ pub fn title_pass_retriever(json_string: String) -> (String, String) {
             for slot in list {
                 if let Value::String(entity) = &slot["slotName"] {
                     if let Value::String(value) = &slot["rawValue"] {
+                        //If slotName is title
                         if entity == &String::from("title") {
+                            //Then use rawValue as title
                             title = (*value).clone();
+                        //If slotName is pass
                         } else if entity == &String::from("pass") {
+                            //Then use rawValue as pass
                             pass = (*value).clone();
                         }
                     }
@@ -46,20 +57,24 @@ pub fn title_pass_retriever(json_string: String) -> (String, String) {
     (title, pass)
 }
 
-//Makes a simple get request to the provided url
-//Return an Option<serde_json::Value>
+///Makes a simple get request to the provided url.  
+///Return an Option<serde_json::Value>
 pub async fn get_request_json(url: &str) -> Option<serde_json::Value> {
     let req_result = reqwest::get(url).await;
     match req_result {
+        //If Request succesful
         Ok(result) => match result.text().await {
+            //If body text is available
             Ok(body) => {
                 println!("Fetched JSON successfully");
                 return serde_json::from_str(&body).ok();
             }
+            //If request body fails
             Err(error) => {
                 println!("{}", error);
             }
         },
+        //If request fails
         Err(error) => {
             println!("{}", error);
         }
@@ -151,7 +166,7 @@ pub struct Person {
 }
 
 pub async fn get_person(name: String) -> Option<Person> {
-    println!("GO GETTING PERSON: {}", name);
+    println!("GETTING PERSON: {}", name);
     if let Some(db) = database::get_mongo().await {
         let notes = db.collection("people");
         let person_result = notes
@@ -205,7 +220,7 @@ pub async fn get_people() -> Option<Vec<Person>> {
 }
 
 pub async fn get_info(title: String, pass: String) -> Option<String> {
-    println!("GO GETTING INFO: {}", title);
+    println!("GETTING INFO: {}", title);
     if let Some(db) = database::get_mongo().await {
         let info = db.collection("info");
         let info_result = info

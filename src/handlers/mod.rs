@@ -24,10 +24,13 @@ use std::time::Duration;
 extern crate snips_nlu_lib;
 use snips_nlu_lib::SnipsNluEngine;
 
+///Long wait time, Used in runing system
 const LONGWAIT: u64 = 30;
-
 #[allow(dead_code)]
+///Short wait time, Used usually for testing
 const SHORTWAIT: u64 = 10;
+
+///Currently set waitime
 const WAITTIME: u64 = LONGWAIT;
 
 lazy_static! {
@@ -49,6 +52,10 @@ lazy_static! {
     };
 }
 
+///Initializes a variety of things
+///- State management system
+///- NLU engine
+///- Responses JSON
 pub fn initialize() {
     initialize_state();
     lazy_static::initialize(&ROOTENGINE);

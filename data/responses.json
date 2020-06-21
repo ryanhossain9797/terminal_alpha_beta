@@ -22,6 +22,8 @@
     "notes-delete": "Note deleted",
     "notes-invalid": "You tried to perform an invalid action",
     "corona-header": "These are the records we found of the Covid 19 pandemic",
+    "corona-new": "\nname: {}\nnew confirmed: {}\nnew deaths: {}\n",
+    "corona-total": "\nname: {}\ntotal confirmed: {}\ntotal deaths: {}\n",
     "corona-body": "Total Confirmed: {confirmed}\nTotal Deaths: {deaths}",
     "corona-footer": "The virus seemed to be performing well, ha ha ha",
     "corona-fail": "Sorry it seems we Could not fetch the info on Covid 19",

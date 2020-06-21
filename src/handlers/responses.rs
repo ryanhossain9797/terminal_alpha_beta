@@ -29,7 +29,7 @@ pub async fn unknown_state_notice(bot_message: impl BotMessage + 'static) {
         .await;
 }
 
-///Simply uses loadresponse to load a response for the provided key.  
+///Simply uses load_response to load a response for the provided key.  
 ///If unavailable replies with a default message.
 pub async fn custom_response(m: impl BotMessage, key: String) {
     m.send_message(MsgCount::SingleMsg(Msg::Text(match load(&key) {

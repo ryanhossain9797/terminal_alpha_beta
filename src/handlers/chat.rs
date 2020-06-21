@@ -7,22 +7,7 @@ use super::*;
 ///Start chat intent, Only provides a single response without any state
 pub async fn start_chat(bot_message: impl BotMessage) {
     println!("START_CHAT: chat initiated");
-    //------Chat will not be a state any more.
-    //------Rather any unknown message will be handled by chat in default
-    /*
-    let mut map = RECORDS.lock().await;
-    let id = m.get_id();
-    map.insert(
-        format!("{}", id),
-        UserStateRecord {
-            last: Instant::now(),
-            state: UserState::Chat,
-        },
-    );
-    drop(map);
-    wipe_history(message.clone(), UserState::Chat);
-    println!("START_CHAT: record added");
-    */
+
     println!("START_CHAT: responding to chat intent");
 
     responses::custom_response(bot_message, "chat-start".to_string()).await
@@ -33,19 +18,6 @@ pub async fn start_chat(bot_message: impl BotMessage) {
 ///Fires wipe history command for Chat state.
 pub async fn continue_chat(bot_message: impl BotMessage, _processed_text: String, intent: &str) {
     let source = "CONTINUE_CHAT";
-    //------Chat will not be a state any more.
-    //------Rather any unknown message will be handled by chat in default
-
-    // let mut map = RECORDS.lock().await;
-    // let id = m.get_id();
-    // map.insert(
-    //     format!("{}", id),
-    //     UserStateRecord {
-    //         last: Instant::now(),
-    //         state: UserState::Chat,
-    //     },
-    // );
-    // drop(map);
 
     if intent == "greet" {
         util::log_info(source, "starting greet");
@@ -66,9 +38,4 @@ pub async fn continue_chat(bot_message: impl BotMessage, _processed_text: String
         util::log_info(source, "unsupported");
         responses::unsupported_notice(bot_message).await
     }
-    //------Chat will not be a state any more.
-    //------Rather any unknown message will be handled by chat in default
-    /*
-    wipe_history(message.clone(), "chat".to_string());
-    */
 }
