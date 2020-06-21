@@ -256,14 +256,14 @@ async fn natural_understanding(bot_message: impl BotMessage + 'static, processed
                 responses::unsupported_notice(bot_message).await
             }
         }
-        //---Unsure intent if cannot match to any intent confidently
+        //Unsure intent if cannot match to any intent confidently
         else {
             util::log_warning(source, "couldn't match an intent confidently");
             general::log_message(processed_text.clone());
             responses::unsupported_notice(bot_message).await
         }
     }
-    //---Unknown intent if can't match intent at all
+    //Unknown intent if can't match intent at all
     else {
         util::log_warning(source, "unknown intent");
         general::log_message(processed_text.clone());
