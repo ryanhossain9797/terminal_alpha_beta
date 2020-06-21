@@ -1,42 +1,46 @@
 #[macro_use]
 extern crate lazy_static;
 extern crate snips_nlu_lib;
-// extern crate discord;
 mod clients;
 mod database;
 mod functions;
 mod handlers;
-
+use clients::discord::*;
+use clients::telegram::*;
 use dotenv::dotenv;
 use tokio::prelude::*;
 
-use clients::discord::*;
-use clients::telegram::*;
-
 #[tokio::main]
 async fn main() {
-    //---Load up all the ENV variables from .env file
-    dotenv().ok();
-    println!("Starting up Terminal Alpha Beta, compiled at");
-    println!("-----Starting TELEGRAM and DISCORD-----\n");
-    //---Prints the Date of compilation, added at compile time
-    if let Some(date) = option_env!("COMPILED_AT") {
-        println!("Compile date {}", date);
+    {
+        //---Load up all the ENV variables from .env file
+        dotenv().ok();
+        println!("Starting up Terminal Alpha Beta, compiled at");
+        println!("-----Starting TELEGRAM and DISCORD-----\n");
+        //---Prints the Date of compilation, added at compile time
+        if let Some(date) = option_env!("COMPILED_AT") {
+            println!("Compile date {}", date);
+        }
+        println!("Initializing everything");
+        clients::initialize();
+        handlers::initialize();
+        database::initialize().await;
+        println!("\nInitialized Everything\n");
     }
-    println!("Initializing everything");
-    clients::initialize();
-    handlers::initialize();
-    database::initialize().await;
-    println!("\nInitialized Everything\n");
-
-    let telegram_task = tokio::spawn(async move {
-        run_telegram().await;
-    });
-    let discord_task = tokio::spawn(async move {
-        run_discord().await;
-    });
-    futures::future::join_all(vec![telegram_task, discord_task]).await;
-    //---New tokio LocalSet
+    //Wait tasks to finish,
+    //Which is hoepfully never, because that would mean it crashed.
+    futures::future::join_all(vec![
+        //Spawn a task for telegram
+        tokio::spawn(async move {
+            run_telegram().await;
+        }),
+        //Spawn a task for discord
+        tokio::spawn(async move {
+            run_discord().await;
+        }),
+    ])
+    .await;
+    //tokio LocalSet based approach for older non-send telegram
     // let local = tokio::task::LocalSet::new();
     // local
     //     .run_until(async move {

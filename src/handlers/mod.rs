@@ -80,7 +80,13 @@ pub enum Msg {
     File(String),
 }
 
-///Used to generalize Message Updates for various platforms
+///# Used to generalize Message Updates for various platforms
+///All clients sending message updates must implement this
+///## functions
+///- `fn get_name() -> String` Return user readable name
+///- `fn get_id() -> String` Return unique id for user
+///- `async fn send_message(message: MsgCount)` Sends message to user
+///- `fn start_conversation() -> bool` Returns bool indicating whether to start a new conversation
 #[async_trait]
 pub trait BotMessage: Send + Sync {
     ///This is used to make cloneable box<T> version of itself.
@@ -98,16 +104,10 @@ pub trait BotMessage: Send + Sync {
     fn start_conversation(&self) -> bool;
 }
 
-//---Implement clone for this trait
-// impl Clone for Box<dyn BotMessage> {
-//     fn clone(&self) -> Self {
-//         self.dynamic_clone()
-//     }
-// }
-
 ///Distributes incoming requests to separate threads
 pub fn distributor(bot_message: impl BotMessage + 'static, processesed_text: String) {
     let source = "DISTRIBUTOR";
+    //Spawn a new task to handle the message
     tokio::spawn(async move { handler(bot_message, processesed_text).await });
     util::log_info(source, "Handler Thread Spawned");
 }
@@ -168,10 +168,7 @@ async fn handler(bot_message: impl BotMessage + 'static, processesed_text: Strin
         if processesed_text == "cancel last" {
             bot_message
                 .send_message(MsgCount::SingleMsg(Msg::Text(
-                    match responses::load("cancel-nothing") {
-                        Some(response) => response,
-                        _ => responses::unavailable(),
-                    },
+                    responses::load("cancel-nothing").unwrap_or_else(responses::unavailable),
                 )))
                 .await;
         }
@@ -206,8 +203,8 @@ async fn natural_understanding(bot_message: impl BotMessage + 'static, processed
                 intent, result.intent.confidence_score
             ),
         );
-        //---tries to match against existing intents like chat, search etc
-        //---only valid if confidence greater than 0.5
+        //Tries to match against existing intents like chat, search etc
+        //Only valid if confidence greater than 0.5
         if result.intent.confidence_score > 0.5 {
             //---Convert result to json string
             if let Ok(json) = serde_json::to_string(&result) {
@@ -246,13 +243,13 @@ async fn natural_understanding(bot_message: impl BotMessage + 'static, processed
                         extras::start_unknown(bot_message).await
                     }
                     _ => {
-                        //---Forward to chat for more intents
+                        //Forward to chat for more intents
                         util::log_info(source, "forwarding to chat");
                         chat::continue_chat(bot_message, processed_text, &intent).await;
                     }
                 }
             }
-            //---If failed to parse the intent result as json
+            //If failed to parse the intent result as json
             else {
                 util::log_error(source, "coldn't convert intent data to JSON");
                 general::log_message(processed_text);
@@ -281,10 +278,7 @@ async fn cancel_history(bot_message: impl BotMessage + 'static) {
     remove_state(&bot_message.get_id()).await;
     bot_message
         .send_message(MsgCount::SingleMsg(Msg::Text(
-            match responses::load("cancel-state") {
-                Some(response) => response,
-                _ => responses::unavailable(),
-            },
+            responses::load("cancel-state").unwrap_or_else(responses::unavailable),
         )))
         .await;
 }
@@ -306,10 +300,7 @@ fn wipe_history(bot_message: Arc<impl BotMessage + 'static>, state: UserState) {
                     util::log_info(source, &format!("deleted state record '{}'", state));
                     bot_message
                         .send_message(MsgCount::SingleMsg(Msg::Text(
-                            match responses::load("delay-notice") {
-                                Some(response) => response,
-                                _ => responses::unavailable(),
-                            },
+                            responses::load("delay-notice").unwrap_or_else(responses::unavailable),
                         )))
                         .await;
                 //If the current state is not older than threshold wait time
