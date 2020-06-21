@@ -28,25 +28,33 @@ async fn main() {
     handlers::initialize();
     database::initialize().await;
     println!("\nInitialized Everything\n");
+
+    let telegram_task = tokio::spawn(async move {
+        run_telegram().await;
+    });
+    let discord_task = tokio::spawn(async move {
+        run_discord().await;
+    });
+    futures::future::join_all(vec![telegram_task, discord_task]).await;
     //---New tokio LocalSet
-    let local = tokio::task::LocalSet::new();
-    local
-        .run_until(async move {
-            let tasks = vec![
-                //---A task for telegram
-                tokio::task::spawn_local(async move {
-                    run_telegram().await;
-                }),
-                //---A task for discord
-                tokio::task::spawn_local(async move {
-                    run_discord().await;
-                }),
-            ];
-            //---And run them, wait for them to finish,
-            //---Which is hoepfully never, because that would mean it crashed.
-            futures::future::join_all(tasks).await;
-        })
-        .await;
+    // let local = tokio::task::LocalSet::new();
+    // local
+    //     .run_until(async move {
+    //         let tasks = vec![
+    //             //---A task for telegram
+    //             tokio::task::spawn_local(async move {
+    //                 run_telegram().await;
+    //             }),
+    //             //---A task for discord
+    //             tokio::task::spawn_local(async move {
+    //                 run_discord().await;
+    //             }),
+    //         ];
+    //         //---And run them, wait for them to finish,
+    //         //---Which is hoepfully never, because that would mean it crashed.
+    //         futures::future::join_all(tasks).await;
+    //     })
+    //     .await;
 }
 
 #[allow(dead_code)]
