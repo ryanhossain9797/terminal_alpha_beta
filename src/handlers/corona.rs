@@ -18,7 +18,10 @@ pub async fn start_corona(m: impl BotMessage) {
     // let countries: Vec<Country> = vec![];
 
     // println!("CORONA: json string is {}", json_string);
+
+    //Fetch countery data from API
     match general::get_request_json(&url).await {
+        //If Successful
         Some(Value::Object(map)) => {
             m.send_message(MsgCount::SingleMsg(Msg::Text(
                 match responses::load("corona-header") {
@@ -28,6 +31,7 @@ pub async fn start_corona(m: impl BotMessage) {
             )))
             .await;
 
+            //Work through the json to get the country specific data
             match map.get("Countries") {
                 Some(Value::Array(country_list)) => {
                     println!("CORONA: Got country list");
@@ -76,30 +80,41 @@ pub async fn start_corona(m: impl BotMessage) {
                     countries.sort_unstable_by(|first, second| {
                         first.new_confirmed.cmp(&second.new_confirmed).reverse()
                     });
-                    let mut new_cases_message = "Top new cases:\n".to_string();
+                    let mut new_cases_message = responses::load("corona-new-header")
+                        .unwrap_or("(Fallback) Top new cases:\n".to_string());
+                    let new_template = responses::load("corona-new").unwrap_or(
+                        "(Fallback)\nname: {1}\nnew confirmed: {2}\nnew deaths: {3}\n".to_string(),
+                    );
                     for country in &countries[..10] {
-                        new_cases_message += &format!(
-                            "\nname: {}\nnew confirmed: {}\nnew deaths: {}\n",
-                            country.country, country.new_confirmed, country.new_deaths
-                        );
+                        new_cases_message += &new_template
+                            .replace("{1}", &country.country)
+                            .replace("{2}", &format!("{}", country.new_confirmed))
+                            .replace("{3}", &format!("{}", country.new_deaths));
                     }
                     m.send_message(MsgCount::SingleMsg(Msg::Text(new_cases_message)))
                         .await;
                     countries.sort_unstable_by(|first, second| {
                         first.total_confirmed.cmp(&second.total_confirmed).reverse()
                     });
-                    let mut total_cases_message = "Top total cases:\n".to_string();
+                    let mut total_cases_message = responses::load("corona-total-header")
+                        .unwrap_or("(Fallback) Top total cases:\n".to_string());
+                    let total_template = responses::load("corona-total").unwrap_or(
+                        "(Fallback)\nname: {1}\ntotal confirmed: {2}\ntotal deaths: {3}\n"
+                            .to_string(),
+                    );
                     for country in &countries[..10] {
-                        total_cases_message += &format!(
-                            "\nname: {}\ntotal confirmed: {}\ntotal deaths: {}\n",
-                            country.country, country.total_confirmed, country.total_deaths
-                        );
+                        total_cases_message += &total_template
+                            .replace("{1}", &country.country)
+                            .replace("{2}", &format!("{}", country.total_confirmed))
+                            .replace("{3}", &format!("{}", country.total_deaths));
                     }
                     m.send_message(MsgCount::SingleMsg(Msg::Text(total_cases_message)))
                         .await;
                 }
                 _ => println!("CORONA:  No Value for 'Countries' key"),
             }
+
+            //Work through the json to get global data
             match map.get("Global") {
                 Some(Value::Object(summary)) => {
                     println!("CORONA: value for key 'Global' found");
@@ -124,10 +139,10 @@ pub async fn start_corona(m: impl BotMessage) {
                                         .replace("{deaths}", &format!("{}", deaths)),
                                     _ => responses::unavailable(),
                                 }),
-                                Msg::Text(match responses::load("corona-footer") {
-                                    Some(response) => response,
-                                    _ => responses::unavailable(),
-                                }),
+                                Msg::Text(
+                                    responses::load("corona-footer")
+                                        .unwrap_or_else(responses::unavailable),
+                                ),
                             ]))
                             .await;
                         }
@@ -140,6 +155,7 @@ pub async fn start_corona(m: impl BotMessage) {
         }
         _ => println!("CORONA: json initial body doesn't match structure"),
     }
+    //If the whole shebang fails
     m.send_message(MsgCount::SingleMsg(Msg::Text(
         match responses::load("corona-fail") {
             Some(response) => response,
