@@ -1,5 +1,8 @@
 use super::*;
+use rand::seq::SliceRandom;
 use serde_json::Value;
+
+const NAMES: [&'static str; 2] = ["Terminal Alpha", "Terminal Beta"];
 
 ///Message to send when the user's message can't be handled at all.
 pub async fn unsupported_notice(m: impl BotMessage) {
@@ -32,12 +35,26 @@ pub async fn unknown_state_notice(bot_message: impl BotMessage + 'static) {
 ///Simply uses load_response to load a response for the provided key.  
 ///If unavailable replies with a default message.
 pub async fn custom_response(m: impl BotMessage, key: String) {
-    m.send_message(MsgCount::SingleMsg(Msg::Text(match load(&key) {
-        Some(response) => response,
-        _ => "we could not understand your question".to_string(),
-    })))
+    m.send_message(MsgCount::SingleMsg(Msg::Text(load_named(&key).unwrap_or(
+        load("unknown-question").unwrap_or_else(responses::unavailable),
+    ))))
     .await;
 }
+
+///Uses load() to load a response,  
+///then prepends  
+///#### `Terminal Alpha:`  
+///or
+///#### `Terminal Beta:`
+pub fn load_named(key: &str) -> Option<String> {
+    if let Some(name) = NAMES.choose(&mut rand::thread_rng()) {
+        if let Some(response) = load(key) {
+            return Some(format!("{}:\n{}", name, response));
+        }
+    }
+    return None;
+}
+
 ///Loads a response from the JSON storage for the provided key.  
 ///Returns the Option<String>, May be None if response is not found.
 pub fn load(key: &str) -> Option<String> {
@@ -46,6 +63,10 @@ pub fn load(key: &str) -> Option<String> {
             Value::String(response) => {
                 return Some(response.to_string());
             }
+            Value::Array(responses) => match responses.choose(&mut rand::thread_rng()) {
+                Some(Value::String(response)) => return Some(response.to_string()),
+                _ => {}
+            },
             _ => {}
         }
     }

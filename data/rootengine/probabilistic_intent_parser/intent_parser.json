@@ -230,8 +230,12 @@
       "slot_filler_name": "slot_filler_10"
     },
     {
-      "intent": "unknown",
+      "intent": "technology",
       "slot_filler_name": "slot_filler_11"
+    },
+    {
+      "intent": "unknown",
+      "slot_filler_name": "slot_filler_12"
     }
   ]
 }

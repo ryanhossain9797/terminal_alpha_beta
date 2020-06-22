@@ -23,13 +23,8 @@ lazy_static! {
     };
 }
 
-///Just an entry point to start the telegram api.
-pub async fn run_telegram() {
-    telegram_main().await;
-}
-
 ///Main Starting point for the telegram api.
-async fn telegram_main() {
+pub(crate) async fn telegram_main() {
     let mut stream = API.stream();
     //Fetch new updates via long poll method
     while let Some(update_result) = stream.next().await {

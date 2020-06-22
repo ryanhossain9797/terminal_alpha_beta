@@ -45,7 +45,7 @@ utterances:
   - how can you help me?
   - can you help me
 
-# technology intent
+# creator intent
 ---
 type: intent
 name: creator
@@ -56,4 +56,16 @@ utterances:
   - who were you made by
   - how were you made
   - were you made by someone?
+
+# technology intent
+---
+type: intent
+name: technology
+utterances:
+  - what system do you run on?
+  - which os do you use
+  - what is your hardware like?
+  - what os were you made with
+  - what technology do you run on?
+  - what's your system architecture
   

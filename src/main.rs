@@ -5,8 +5,7 @@ mod clients;
 mod database;
 mod functions;
 mod handlers;
-use clients::discord::*;
-use clients::telegram::*;
+use clients::*;
 use dotenv::dotenv;
 use tokio::prelude::*;
 

@@ -9,13 +9,8 @@ use serenity::{
 use std::env;
 use std::time::Duration;
 
-///Just an entry point to start the telegram api.
-pub async fn run_discord() {
-    discord_main().await;
-}
-
 ///Main Starting point for the Discord api.
-async fn discord_main() {
+pub(crate) async fn discord_main() {
     // Configure the client with your Discord bot token in the environment.
     let token = env::var("DISCORD_TOKEN").expect("Expected a token in the environment");
 

@@ -23,12 +23,12 @@ pub async fn start_corona(m: impl BotMessage) {
     match general::get_request_json(&url).await {
         //If Successful
         Some(Value::Object(map)) => {
-            m.send_message(MsgCount::SingleMsg(Msg::Text(
-                match responses::load("corona-header") {
-                    Some(response) => response,
-                    _ => responses::unavailable(),
-                },
-            )))
+            m.send_message(MsgCount::SingleMsg(Msg::Text(match responses::load_named(
+                "corona-header",
+            ) {
+                Some(response) => response,
+                _ => responses::unavailable(),
+            })))
             .await;
 
             //Work through the json to get the country specific data
@@ -80,7 +80,7 @@ pub async fn start_corona(m: impl BotMessage) {
                     countries.sort_unstable_by(|first, second| {
                         first.new_confirmed.cmp(&second.new_confirmed).reverse()
                     });
-                    let mut new_cases_message = responses::load("corona-new-header")
+                    let mut new_cases_message = responses::load_named("corona-new-header")
                         .unwrap_or("(Fallback) Top new cases:\n".to_string());
                     let new_template = responses::load("corona-new").unwrap_or(
                         "(Fallback)\nname: {1}\nnew confirmed: {2}\nnew deaths: {3}\n".to_string(),
@@ -96,7 +96,7 @@ pub async fn start_corona(m: impl BotMessage) {
                     countries.sort_unstable_by(|first, second| {
                         first.total_confirmed.cmp(&second.total_confirmed).reverse()
                     });
-                    let mut total_cases_message = responses::load("corona-total-header")
+                    let mut total_cases_message = responses::load_named("corona-total-header")
                         .unwrap_or("(Fallback) Top total cases:\n".to_string());
                     let total_template = responses::load("corona-total").unwrap_or(
                         "(Fallback)\nname: {1}\ntotal confirmed: {2}\ntotal deaths: {3}\n"
@@ -133,14 +133,14 @@ pub async fn start_corona(m: impl BotMessage) {
                     match (total_confirmed, total_deaths) {
                         (Some(confirmed), Some(deaths)) => {
                             m.send_message(MsgCount::MultiMsg(vec![
-                                Msg::Text(match responses::load("corona-body") {
+                                Msg::Text(match responses::load_named("corona-body") {
                                     Some(response) => response
                                         .replace("{confirmed}", &format!("{}", confirmed))
                                         .replace("{deaths}", &format!("{}", deaths)),
                                     _ => responses::unavailable(),
                                 }),
                                 Msg::Text(
-                                    responses::load("corona-footer")
+                                    responses::load_named("corona-footer")
                                         .unwrap_or_else(responses::unavailable),
                                 ),
                             ]))

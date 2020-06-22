@@ -1352,6 +1352,52 @@
         }
       ]
     },
+    "technology": {
+      "utterances": [
+        {
+          "data": [
+            {
+              "text": "what system do you run on?"
+            }
+          ]
+        },
+        {
+          "data": [
+            {
+              "text": "which os do you use"
+            }
+          ]
+        },
+        {
+          "data": [
+            {
+              "text": "what is your hardware like?"
+            }
+          ]
+        },
+        {
+          "data": [
+            {
+              "text": "what os were you made with"
+            }
+          ]
+        },
+        {
+          "data": [
+            {
+              "text": "what technology do you run on?"
+            }
+          ]
+        },
+        {
+          "data": [
+            {
+              "text": "what's your system architecture"
+            }
+          ]
+        }
+      ]
+    },
     "unknown": {
       "utterances": [
         {
