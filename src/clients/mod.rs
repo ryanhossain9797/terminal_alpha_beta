@@ -2,9 +2,8 @@ use super::*;
 pub mod discord;
 pub mod telegram;
 use discord::*;
+use once_cell::sync::Lazy;
 use telegram::*;
-
-extern crate lazy_static;
 
 use telegram::API;
 
@@ -20,5 +19,5 @@ pub async fn run_discord() {
 ///Any initialization required for setting up the Clients should go here
 pub fn initialize() {
     //---Start the telegram API
-    lazy_static::initialize(&API);
+    Lazy::force(&API);
 }

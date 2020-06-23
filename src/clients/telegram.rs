@@ -4,24 +4,21 @@ use super::*;
 
 use async_trait::async_trait;
 use futures::StreamExt;
+use once_cell::sync::Lazy;
 use regex::Regex;
 use std::env;
 use std::time::Duration;
-
 use telegram_bot::Message as TMessage;
 use telegram_bot::*;
 
 //--- Waiting time for failed connections
 const WAITTIME: u64 = 10;
 
-lazy_static! {
-    //---General API for telegram
-    pub static ref API: Api = {
-        let token = env::var("TELEGRAM_TOKEN").expect("TELEGRAM_TOKEN not set");
-        let api = Api::new(token);
-        api
-    };
-}
+pub static API: Lazy<Api> = Lazy::new(|| {
+    let token = env::var("TELEGRAM_TOKEN").expect("TELEGRAM_TOKEN not set");
+    let api = Api::new(token);
+    api
+});
 
 ///Main Starting point for the telegram api.
 pub(crate) async fn telegram_main() {

@@ -1,16 +1,14 @@
+use once_cell::sync::Lazy;
 use std::collections::HashMap;
 use std::fmt;
 use std::time::Instant;
 
 pub fn initialize_state() {
-    lazy_static::initialize(&RECORDS);
+    Lazy::force(&RECORDS);
 }
 
-lazy_static! {
-    ///Records is a map holding all users state record info
-    static ref RECORDS: tokio::sync::Mutex<HashMap<String, UserStateRecord>> =
-    tokio::sync::Mutex::new(HashMap::new());
-}
+static RECORDS: Lazy<tokio::sync::Mutex<HashMap<String, UserStateRecord>>> =
+    Lazy::new(|| tokio::sync::Mutex::new(HashMap::new()));
 
 ///A user state record holds an individual user's state.  
 ///Last holds when it was last updated.

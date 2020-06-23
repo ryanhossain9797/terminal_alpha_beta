@@ -10,19 +10,18 @@ mod notes;
 mod responses;
 mod search;
 mod state;
+extern crate snips_nlu_lib;
 
 use crate::functions::*;
 use state::userstate::*;
 
 use async_trait::async_trait;
+use once_cell::sync::Lazy;
 use serde_json;
-
+use snips_nlu_lib::SnipsNluEngine;
 use std::fs::*;
 use std::sync::Arc;
 use std::time::Duration;
-
-extern crate snips_nlu_lib;
-use snips_nlu_lib::SnipsNluEngine;
 
 ///Long wait time, Used in runing system
 const LONGWAIT: u64 = 30;
@@ -33,24 +32,28 @@ const SHORTWAIT: u64 = 10;
 ///Currently set waitime
 const WAITTIME: u64 = LONGWAIT;
 
-lazy_static! {
-    //---Snips NLU is used to pick actions when they don't match directly
-    pub static ref ROOTENGINE: SnipsNluEngine = {
-        println!("\nLoading the action nlu engine...");
-        SnipsNluEngine::from_path("data/rootengine/").unwrap()
-    };
-    pub static ref RESPONSES: Option<serde_json::Value> = {
-        println!("\nLoading JSON responses");
-        match read_to_string("data/responses.json"){
-            Ok(json) => serde_json::from_str(&json).ok(),
-            Err(_) => None,
-        }
-    };
-    pub static ref CLIENT: reqwest::Client = {
-        println!("\nLoading Api Client");
-        reqwest::Client::new()
-    };
-}
+///NLUENGINE: Snips NLU is used to pick actions when they don't match directly
+static NLUENGINE: Lazy<Option<SnipsNluEngine>> = Lazy::new(|| {
+    println!("\nLoading the nlu engine...");
+    SnipsNluEngine::from_path("data/rootengine/").ok()
+});
+
+///RESPONSES: Response json holding all the responses.  
+///Put in a json so they can be modified without recompiling the bot.  
+///Loaded at startup, Restart Bot to reload.
+static RESPONSES: Lazy<Option<serde_json::Value>> = Lazy::new(|| {
+    println!("\nLoading JSON responses");
+    match read_to_string("data/responses.json") {
+        Ok(json) => serde_json::from_str(&json).ok(),
+        Err(_) => None,
+    }
+});
+
+///HTTP client for..... HTTP things
+static CLIENT: Lazy<reqwest::Client> = Lazy::new(|| {
+    println!("\nLoading Api Client");
+    reqwest::Client::new()
+});
 
 ///Initializes a variety of things
 ///- State management system
@@ -58,8 +61,9 @@ lazy_static! {
 ///- Responses JSON
 pub fn initialize() {
     initialize_state();
-    lazy_static::initialize(&ROOTENGINE);
-    lazy_static::initialize(&RESPONSES);
+    Lazy::force(&NLUENGINE);
+    Lazy::force(&RESPONSES);
+    Lazy::force(&CLIENT);
 }
 
 ///ENUM, Represents Message count
@@ -183,92 +187,97 @@ async fn handler(bot_message: impl BotMessage + 'static, processesed_text: Strin
 async fn natural_understanding(bot_message: impl BotMessage + 'static, processed_text: String) {
     let source = "NATURAL_ACTION_PICKER";
     //---Stuff required to run the NLU engine to get an intent
-    let intents_alternatives = 1;
-    let slots_alternatives = 1;
-    let result = ROOTENGINE
-        .parse_with_alternatives(
-            &processed_text,
-            None,
-            None,
-            intents_alternatives,
-            slots_alternatives,
-        )
-        .unwrap();
+    if let Some(engine) = &*NLUENGINE {
+        let intents_alternatives = 1;
+        let slots_alternatives = 1;
+        let result = engine
+            .parse_with_alternatives(
+                &processed_text,
+                None,
+                None,
+                intents_alternatives,
+                slots_alternatives,
+            )
+            .unwrap();
 
-    if let Some(intent) = result.intent.intent_name.clone() {
-        util::log_info(
-            source,
-            &format!(
-                "{} with confidence {}",
-                intent, result.intent.confidence_score
-            ),
-        );
-        //Tries to match against existing intents like chat, search etc
-        //Only valid if confidence greater than 0.5
-        if result.intent.confidence_score > 0.5 {
-            //---Convert result to json string
-            if let Ok(json) = serde_json::to_string(&result) {
-                util::log_info(source, "ACTION_PICKER: intent json is valid");
-                match &*intent {
-                    "chat" => {
-                        util::log_info(source, "starting chat");
-                        chat::start_chat(bot_message).await
-                    }
-                    "search" => {
-                        util::log_info(source, "starting search");
-                        search::start_search(bot_message).await
-                    }
-                    "identify" => {
-                        util::log_info(source, "starting identify");
-                        identify::start_identify(bot_message).await
-                    }
-                    "animation" => {
-                        util::log_info(source, "starting animation");
-                        animation::start_gif(bot_message).await
-                    }
-                    "info" => {
-                        util::log_info(source, "starting info");
-                        info::start_info(bot_message, json).await
-                    }
-                    "notes" => {
-                        util::log_info(source, "starting notes");
-                        notes::start_notes(bot_message).await
-                    }
-                    "corona" => {
-                        util::log_info(source, "starting corona");
-                        corona::start_corona(bot_message).await
-                    }
-                    "unknown" => {
-                        util::log_info(source, "starting unknown state test");
-                        extras::start_unknown(bot_message).await
-                    }
-                    _ => {
-                        //Forward to chat for more intents
-                        util::log_info(source, "forwarding to chat");
-                        chat::continue_chat(bot_message, processed_text, &intent).await;
+        if let Some(intent) = result.intent.intent_name.clone() {
+            util::log_info(
+                source,
+                &format!(
+                    "{} with confidence {}",
+                    intent, result.intent.confidence_score
+                ),
+            );
+            //Tries to match against existing intents like chat, search etc
+            //Only valid if confidence greater than 0.5
+            if result.intent.confidence_score > 0.5 {
+                //---Convert result to json string
+                if let Ok(json) = serde_json::to_string(&result) {
+                    util::log_info(source, "ACTION_PICKER: intent json is valid");
+                    match &*intent {
+                        "chat" => {
+                            util::log_info(source, "starting chat");
+                            chat::start_chat(bot_message).await
+                        }
+                        "search" => {
+                            util::log_info(source, "starting search");
+                            search::start_search(bot_message).await
+                        }
+                        "identify" => {
+                            util::log_info(source, "starting identify");
+                            identify::start_identify(bot_message).await
+                        }
+                        "animation" => {
+                            util::log_info(source, "starting animation");
+                            animation::start_gif(bot_message).await
+                        }
+                        "info" => {
+                            util::log_info(source, "starting info");
+                            info::start_info(bot_message, json).await
+                        }
+                        "notes" => {
+                            util::log_info(source, "starting notes");
+                            notes::start_notes(bot_message).await
+                        }
+                        "corona" => {
+                            util::log_info(source, "starting corona");
+                            corona::start_corona(bot_message).await
+                        }
+                        "unknown" => {
+                            util::log_info(source, "starting unknown state test");
+                            extras::start_unknown(bot_message).await
+                        }
+                        _ => {
+                            //Forward to chat for more intents
+                            util::log_info(source, "forwarding to chat");
+                            chat::continue_chat(bot_message, processed_text, &intent).await;
+                        }
                     }
                 }
+                //If failed to parse the intent result as json
+                else {
+                    util::log_error(source, "coldn't convert intent data to JSON");
+                    general::log_message(processed_text);
+                    responses::unsupported_notice(bot_message).await
+                }
             }
-            //If failed to parse the intent result as json
+            //Unsure intent if cannot match to any intent confidently
             else {
-                util::log_error(source, "coldn't convert intent data to JSON");
-                general::log_message(processed_text);
+                util::log_warning(source, "couldn't match an intent confidently");
+                general::log_message(processed_text.clone());
                 responses::unsupported_notice(bot_message).await
             }
         }
-        //Unsure intent if cannot match to any intent confidently
+        //Unknown intent if can't match intent at all
         else {
-            util::log_warning(source, "couldn't match an intent confidently");
+            util::log_warning(source, "unknown intent");
             general::log_message(processed_text.clone());
             responses::unsupported_notice(bot_message).await
-        }
-    }
-    //Unknown intent if can't match intent at all
-    else {
-        util::log_warning(source, "unknown intent");
-        general::log_message(processed_text.clone());
+        };
+    } else {
+        util::log_error(source, "NLU engine load failed");
         responses::unsupported_notice(bot_message).await
-    };
+    }
 }
 
 ///Removes current history with a cancellation message.  
