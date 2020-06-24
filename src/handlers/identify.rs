@@ -14,10 +14,7 @@ pub async fn start_identify(bot_message: impl BotMessage + 'static) {
     wipe_history(Arc::clone(&arc_message), UserState::Identify);
     arc_message
         .send_message(MsgCount::SingleMsg(Msg::Text(
-            match responses::load("identify-start") {
-                Some(response) => response,
-                _ => responses::unavailable(),
-            },
+            responses::load_named("identify-start").unwrap_or_else(responses::unavailable),
         )))
         .await;
 }
@@ -53,7 +50,7 @@ pub async fn continue_identify(bot_message: impl BotMessage + 'static, name: Str
                             for person in people {
                                 if person.name == name {
                                     matched_option =
-                                        Some(match responses::load("identify-partialmatch") {
+                                        Some(match responses::load_named("identify-partialmatch") {
                                             Some(response) => response
                                                 .replace("{name}", &person.name)
                                                 .replace("{description}", &person.description),
@@ -64,25 +61,21 @@ pub async fn continue_identify(bot_message: impl BotMessage + 'static, name: Str
                             match matched_option {
                                 Some(person) => MsgCount::SingleMsg(Msg::Text(person)),
                                 None => MsgCount::SingleMsg(Msg::Text(
-                                    match responses::load("identify-notfound") {
-                                        Some(response) => response,
-                                        _ => responses::unavailable(),
-                                    },
+                                    responses::load_named("identify-notfound")
+                                        .unwrap_or_else(responses::unavailable),
                                 )),
                             }
                         }
                         _ => MsgCount::SingleMsg(Msg::Text(
-                            match responses::load("identify-notfound") {
-                                Some(response) => response,
-                                _ => responses::unavailable(),
-                            },
+                            responses::load_named("identify-notfound")
+                                .unwrap_or_else(responses::unavailable),
                         )),
                     }
                 }
-                _ => MsgCount::SingleMsg(Msg::Text(match responses::load("identify-dberror") {
-                    Some(response) => response,
-                    _ => responses::unavailable(),
-                })),
+                _ => MsgCount::SingleMsg(Msg::Text(
+                    responses::load_named("identify-dberror")
+                        .unwrap_or_else(responses::unavailable),
+                )),
             };
             arc_message.send_message(partial_match).await;
         }

@@ -17,10 +17,7 @@ pub async fn start_search(bot_message: impl BotMessage + 'static) {
 
     arc_message
         .send_message(MsgCount::SingleMsg(Msg::Text(
-            match responses::load("search-start") {
-                Some(response) => response,
-                _ => responses::unavailable(),
-            },
+            responses::load_named("search-start").unwrap_or_else(responses::unavailable),
         )))
         .await;
 }
@@ -35,14 +32,11 @@ pub async fn continue_search(bot_message: impl BotMessage + 'static, processesed
 
     let response = match search_option {
         Some(results) => {
-            let mut msgs: Vec<Msg> = vec![Msg::Text(match responses::load("search-success") {
-                Some(response) => response,
-                _ => responses::unavailable(),
-            })];
-            let search_template = match responses::load("search-content") {
-                Some(response) => response,
-                _ => responses::unavailable(),
-            };
+            let mut msgs: Vec<Msg> = vec![Msg::Text(
+                responses::load_named("search-success").unwrap_or_else(responses::unavailable),
+            )];
+            let search_template =
+                responses::load_named("search-content").unwrap_or_else(responses::unavailable);
             for result in results {
                 msgs.push(Msg::Text(
                     search_template
@@ -52,10 +46,9 @@ pub async fn continue_search(bot_message: impl BotMessage + 'static, processesed
             }
             MsgCount::MultiMsg(msgs)
         }
-        _ => MsgCount::SingleMsg(Msg::Text(match responses::load("search-fail") {
-            Some(response) => response,
-            _ => responses::unavailable(),
-        })),
+        _ => MsgCount::SingleMsg(Msg::Text(
+            responses::load_named("search-fail").unwrap_or_else(responses::unavailable),
+        )),
     };
     arc_message.send_message(response).await;
 }

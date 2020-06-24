@@ -19,7 +19,7 @@ pub async fn start_notes(bot_message: impl BotMessage + 'static) {
         Some(notes) => {
             // Load the notes template from responses json, or use default if failed
             let note_template =
-                responses::load("notes-template").unwrap_or("{num}. {note}".to_string());
+                responses::load_text("notes-template").unwrap_or("{num}. {note}".to_string());
             let mut notes_string = "".to_string();
             let mut note_ids: Vec<String> = vec![];
             // Iterate over notes
@@ -43,7 +43,7 @@ pub async fn start_notes(bot_message: impl BotMessage + 'static) {
             arc_message
                 .send_message(MsgCount::MultiMsg(vec![
                     Msg::Text(
-                        responses::load("notes-start").unwrap_or_else(responses::unavailable),
+                        responses::load_named("notes-start").unwrap_or_else(responses::unavailable),
                     ),
                     Msg::Text(notes_string),
                 ]))
@@ -53,7 +53,7 @@ pub async fn start_notes(bot_message: impl BotMessage + 'static) {
         None => {
             arc_message
                 .send_message(MsgCount::SingleMsg(Msg::Text(
-                    responses::load("notes-fail").unwrap_or_else(responses::unavailable),
+                    responses::load_named("notes-fail").unwrap_or_else(responses::unavailable),
                 )))
                 .await;
         }
@@ -82,7 +82,8 @@ pub async fn continue_notes(
     let mut new_note_ids = note_ids.clone();
 
     // Load the dynamic template for notes
-    let note_template = responses::load("notes-template").unwrap_or("{num}. {note}".to_string());
+    let note_template =
+        responses::load_text("notes-template").unwrap_or("{num}. {note}".to_string());
     //---------------------------------------------------------ADD NOTE ACTION
     if command.starts_with("add ") {
         // add he new note (trim add keyword from the front)
@@ -91,7 +92,7 @@ pub async fn continue_notes(
         // Notify user of Add action
         arc_message
             .send_message(MsgCount::SingleMsg(Msg::Text(
-                responses::load("notes-add").unwrap_or_else(responses::unavailable),
+                responses::load_named("notes-add").unwrap_or_else(responses::unavailable),
             )))
             .await;
         // If it succeeds we'll get an updated list of the current notes
@@ -130,7 +131,8 @@ pub async fn continue_notes(
                 // Notify of note deletion
                 arc_message
                     .send_message(MsgCount::SingleMsg(Msg::Text(
-                        responses::load("notes-delete").unwrap_or_else(responses::unavailable),
+                        responses::load_named("notes-delete")
+                            .unwrap_or_else(responses::unavailable),
                     )))
                     .await;
                 // If updated list is avaialable
@@ -152,7 +154,7 @@ pub async fn continue_notes(
                     arc_message
                         .send_message(MsgCount::MultiMsg(vec![
                             Msg::Text(
-                                responses::load("notes-start")
+                                responses::load_named("notes-start")
                                     .unwrap_or_else(responses::unavailable),
                             ),
                             Msg::Text(notes_string),
@@ -164,7 +166,7 @@ pub async fn continue_notes(
         } else {
             arc_message
                 .send_message(MsgCount::SingleMsg(Msg::Text(
-                    responses::load("notes-invalid").unwrap_or_else(responses::unavailable),
+                    responses::load_named("notes-invalid").unwrap_or_else(responses::unavailable),
                 )))
                 .await;
         }
@@ -172,7 +174,7 @@ pub async fn continue_notes(
     } else {
         arc_message
             .send_message(MsgCount::SingleMsg(Msg::Text(
-                responses::load("notes-invalid").unwrap_or_else(responses::unavailable),
+                responses::load_named("notes-invalid").unwrap_or_else(responses::unavailable),
             )))
             .await;
     }

@@ -172,7 +172,7 @@ async fn handler(bot_message: impl BotMessage + 'static, processesed_text: Strin
         if processesed_text == "cancel last" {
             bot_message
                 .send_message(MsgCount::SingleMsg(Msg::Text(
-                    responses::load("cancel-nothing").unwrap_or_else(responses::unavailable),
+                    responses::load_named("cancel-nothing").unwrap_or_else(responses::unavailable),
                 )))
                 .await;
         }
@@ -287,7 +287,7 @@ async fn cancel_history(bot_message: impl BotMessage + 'static) {
     remove_state(&bot_message.get_id()).await;
     bot_message
         .send_message(MsgCount::SingleMsg(Msg::Text(
-            responses::load("cancel-state").unwrap_or_else(responses::unavailable),
+            responses::load_named("cancel-state").unwrap_or_else(responses::unavailable),
         )))
         .await;
 }
@@ -309,7 +309,8 @@ fn wipe_history(bot_message: Arc<impl BotMessage + 'static>, state: UserState) {
                     util::log_info(source, &format!("deleted state record '{}'", state));
                     bot_message
                         .send_message(MsgCount::SingleMsg(Msg::Text(
-                            responses::load("delay-notice").unwrap_or_else(responses::unavailable),
+                            responses::load_named("delay-notice")
+                                .unwrap_or_else(responses::unavailable),
                         )))
                         .await;
                 //If the current state is not older than threshold wait time

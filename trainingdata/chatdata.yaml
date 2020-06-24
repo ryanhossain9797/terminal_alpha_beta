@@ -18,6 +18,7 @@ utterances:
   - hellow bot
   - how's it going
   - whazzup
+  - henlo
 
 # about intent
 ---
@@ -68,4 +69,5 @@ utterances:
   - what os were you made with
   - what technology do you run on?
   - what's your system architecture
+  - what's your os
   

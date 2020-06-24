@@ -7,14 +7,8 @@ const NAMES: [&'static str; 2] = ["Terminal Alpha", "Terminal Beta"];
 ///Message to send when the user's message can't be handled at all.
 pub async fn unsupported_notice(m: impl BotMessage) {
     m.send_message(MsgCount::MultiMsg(vec![
-        Msg::Text(match load("unsupported-notice-1") {
-            Some(response) => response,
-            None => unavailable(),
-        }),
-        Msg::Text(match load("unsupported-notice-2") {
-            Some(response) => response,
-            None => unavailable(),
-        }),
+        Msg::Text(load_named("unsupported-notice-1").unwrap_or_else(responses::unavailable)),
+        Msg::Text(load_named("unsupported-notice-2").unwrap_or_else(responses::unavailable)),
     ]))
     .await;
 }
@@ -24,10 +18,7 @@ pub async fn unsupported_notice(m: impl BotMessage) {
 pub async fn unknown_state_notice(bot_message: impl BotMessage + 'static) {
     bot_message
         .send_message(MsgCount::SingleMsg(Msg::Text(
-            match load("unknown-state") {
-                Some(response) => response,
-                None => unavailable(),
-            },
+            load_named("unknown-state").unwrap_or_else(responses::unavailable),
         )))
         .await;
 }
@@ -36,7 +27,7 @@ pub async fn unknown_state_notice(bot_message: impl BotMessage + 'static) {
 ///If unavailable replies with a default message.
 pub async fn custom_response(m: impl BotMessage, key: String) {
     m.send_message(MsgCount::SingleMsg(Msg::Text(load_named(&key).unwrap_or(
-        load("unknown-question").unwrap_or_else(responses::unavailable),
+        load_named("unknown-question").unwrap_or_else(responses::unavailable),
     ))))
     .await;
 }
@@ -48,7 +39,7 @@ pub async fn custom_response(m: impl BotMessage, key: String) {
 ///#### `Terminal Beta:`
 pub fn load_named(key: &str) -> Option<String> {
     if let Some(name) = NAMES.choose(&mut rand::thread_rng()) {
-        if let Some(response) = load(key) {
+        if let Some(response) = load_text(key) {
             return Some(format!("{}:\n{}", name, response));
         }
     }
@@ -57,7 +48,7 @@ pub fn load_named(key: &str) -> Option<String> {
 
 ///Loads a response from the JSON storage for the provided key.  
 ///Returns the Option<String>, May be None if response is not found.
-pub fn load(key: &str) -> Option<String> {
+pub fn load_text(key: &str) -> Option<String> {
     if let Some(json) = &*RESPONSES {
         match &json[key] {
             Value::String(response) => {
@@ -125,7 +116,7 @@ mod tests {
     use super::*;
     #[test]
     fn test_response_pass() {
-        let response = load("chat-start");
+        let response = load_named("chat-start");
         assert!(match response {
             Some(response_text) => response_text.contains("free to ask any"),
             None => false,
@@ -134,7 +125,7 @@ mod tests {
 
     #[test]
     fn test_response_fail() {
-        let response = load("chat-what");
+        let response = load_named("chat-what");
         assert!(match response {
             Some(_) => false,
             None => true,

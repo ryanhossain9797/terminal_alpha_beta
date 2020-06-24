@@ -16,10 +16,7 @@ pub async fn start_gif(bot_message: impl BotMessage + 'static) {
     wipe_history(Arc::clone(&arc_message), UserState::Animation);
     arc_message
         .send_message(MsgCount::SingleMsg(Msg::Text(
-            match responses::load("animation-start") {
-                Some(response) => response,
-                _ => responses::unavailable(),
-            },
+            responses::load_named("animation-start").unwrap_or_else(responses::unavailable),
         )))
         .await;
 }
@@ -55,10 +52,7 @@ pub async fn continue_gif(bot_message: impl BotMessage + 'static, processed_text
     // If something fails
     arc_message
         .send_message(MsgCount::SingleMsg(Msg::Text(
-            match responses::load("animation-fail") {
-                Some(response) => response,
-                _ => responses::unavailable(),
-            },
+            responses::load_named("animation-fail").unwrap_or_else(responses::unavailable),
         )))
         .await;
 }
