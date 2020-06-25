@@ -1,18 +1,13 @@
 //----------------------mod.rs name is mandatory as it is the main file for the handlers module
 //----------------------'handlers/mod.rs' means handlers module
-mod animation;
-mod chat;
-mod corona;
-mod extras;
-mod identify;
-mod info;
-mod notes;
+
+mod actions;
 mod responses;
-mod search;
 mod state;
 extern crate snips_nlu_lib;
 
 use crate::functions::*;
+use actions::*;
 use state::userstate::*;
 
 use async_trait::async_trait;
