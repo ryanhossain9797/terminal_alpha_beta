@@ -6,6 +6,12 @@ use futures::stream::StreamExt;
 use mongodb::bson::{doc, oid, Bson};
 use serde_json::Value;
 
+use reqwest::header::USER_AGENT;
+use reqwest::Client;
+
+use select::document::Document;
+use select::predicate::*;
+
 ///Logs the provided text to the action_log.txt file.  
 ///Used for when a message is unknown.
 pub fn log_message(processed_text: String) {
@@ -241,4 +247,68 @@ pub async fn get_info(title: String, pass: String) -> Option<String> {
         }
     }
     None
+}
+
+pub struct SearchResult {
+    pub title: String,
+    pub description: String,
+    pub link: String,
+}
+
+const AGENT_STRING: &str =
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.10; rv:34.0) Gecko/20100101 Firefox/34.0";
+///Google searches
+///Returns list of SearchResult structs
+pub async fn google_search(search: String) -> Option<Vec<SearchResult>> {
+    let request_string = format!(
+        "https://www.google.com/search?q={}&gws_rd=ssl&num={}",
+        search, 5
+    );
+    if let Ok(body) = Client::new()
+        .get(request_string.as_str())
+        .header(USER_AGENT, AGENT_STRING)
+        .send()
+        .await
+    {
+        if let Ok(text) = body.text().await {
+            let document = Document::from(text.as_str());
+            let mut results: Vec<SearchResult> = Vec::new();
+            for node in document.find(
+                Attr("id", "search")
+                    .descendant(Attr("id", "rso"))
+                    .descendant(Class("g"))
+                    .descendant(Class("rc")),
+            ) {
+                let mut link = String::new();
+                if let Some(a) = node.find(Class("r").child(Name("a"))).into_iter().next() {
+                    if let Some(l) = a.attr("href") {
+                        link = l.to_string();
+                    }
+                }
+                let mut description = String::new();
+                if let Some(desc) = node
+                    .find(Class("s").descendant(Name("span").and(Class("st"))))
+                    .into_iter()
+                    .next()
+                {
+                    for child in desc.children() {
+                        &description.push_str(
+                            &(format!(" {}", child.html())
+                                .replace(" <em>", "")
+                                .replace("</em>", "")),
+                        );
+                    }
+                }
+                for new_node in node.find(Class("LC20lb")) {
+                    results.push(SearchResult {
+                        title: new_node.text(),
+                        link: link.clone(),
+                        description: description.clone(),
+                    });
+                }
+            }
+            return Some(results);
+        }
+    }
+    return None;
 }

@@ -624,6 +624,13 @@
               "text": "whazzup"
             }
           ]
+        },
+        {
+          "data": [
+            {
+              "text": "henlo"
+            }
+          ]
         }
       ]
     },
@@ -1232,6 +1239,13 @@
         {
           "data": [
             {
+              "text": "what are my notes"
+            }
+          ]
+        },
+        {
+          "data": [
+            {
               "text": "i want to save a note"
             }
           ]
@@ -1290,6 +1304,21 @@
             },
             {
               "text": " something"
+            }
+          ]
+        },
+        {
+          "data": [
+            {
+              "text": "help me "
+            },
+            {
+              "entity": "searchWord",
+              "slot_name": "searchTerm",
+              "text": "find"
+            },
+            {
+              "text": " some things"
             }
           ]
         },
@@ -1393,6 +1422,13 @@
           "data": [
             {
               "text": "what's your system architecture"
+            }
+          ]
+        },
+        {
+          "data": [
+            {
+              "text": "what's your os"
             }
           ]
         }
