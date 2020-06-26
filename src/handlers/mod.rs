@@ -12,7 +12,7 @@ use state::userstate::*;
 
 use async_trait::async_trait;
 use once_cell::sync::Lazy;
-use serde_json;
+
 use snips_nlu_lib::SnipsNluEngine;
 use std::fs::*;
 use std::sync::Arc;
@@ -124,18 +124,7 @@ async fn handler(bot_message: impl BotMessage + 'static, processesed_text: Strin
         //---"cancel last will shut off the conversation"
         if processesed_text == "cancel last" {
             cancel_history(bot_message).await;
-        }
-        //---"if state is chat"
-        //------Chat will not be a state any more.
-        //------Rather any unknown message will be handled by chat in default
-        /*
-        else if record.state == "chat".to_string() {
-            println!("continuing chat");
-            chat::continue_chat(message.clone(), processesed_text.clone()).await
-        }
-        */
-        //---"if state is search"
-        else if let UserState::Search = record.state {
+        }else if let UserState::Search = record.state {
             util::log_info(source, "continuing search");
             search::continue_search(bot_message, processesed_text.clone()).await;
         }

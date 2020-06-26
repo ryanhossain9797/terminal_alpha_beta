@@ -30,7 +30,7 @@ pub async fn start_notes(bot_message: impl BotMessage + 'static) {
                 notes_string.push_str(
                     &(note_template
                         .replace("{num}", &format!("{}", note.position))
-                        .replace("{note}", &format!("{}", note.note))),
+                        .replace("{note}", &note.note.to_string())),
                 );
             }
 
@@ -107,7 +107,7 @@ pub async fn continue_notes(
                 notes_string.push_str(
                     &(note_template
                         .replace("{num}", &format!("{}", note.position))
-                        .replace("{note}", &format!("{}", note.note))),
+                        .replace("{note}", &note.note.to_string())),
                 );
             }
 
@@ -147,7 +147,7 @@ pub async fn continue_notes(
                         notes_string.push_str(
                             &(note_template
                                 .replace("{num}", &format!("{}", note.position))
-                                .replace("{note}", &format!("{}", note.note))),
+                                .replace("{note}", &note.note.to_string())),
                         );
                     }
                     // Send new notes

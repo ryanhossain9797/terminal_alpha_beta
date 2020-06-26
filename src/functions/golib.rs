@@ -1,8 +1,16 @@
 //---For CGO
+use serde_json::Value;
 use std::ffi::{CStr, CString};
 use std::os::raw::c_char;
 
-use serde_json::Value;
+use reqwest::header::USER_AGENT;
+use reqwest::Client;
+
+use select::document::Document;
+use select::predicate::*;
+
+// extern crate google_somethin;
+// use google_somethin::google;
 
 ///THE FOLLOWING IS USED TO INTERACT WITH THE 'golibs' STUFF
 ///DEPENDENT ON GOLANG LIBS
@@ -29,7 +37,7 @@ pub struct SearchResult {
 ///WARNING!! unsafe calls made here
 ///Google searches using GoLang lib
 ///Returns list of SearchResult structs
-pub fn google_search(search: String) -> Option<Vec<SearchResult>> {
+pub async fn google_search(search: String) -> Option<Vec<SearchResult>> {
     println!("GO GETTING SEARCH RESULTS: {}", search);
     let c_search = CString::new(search).expect("CString::new failed");
     let ptr = c_search.as_ptr();
@@ -42,32 +50,70 @@ pub fn google_search(search: String) -> Option<Vec<SearchResult>> {
     let string = c_str
         .to_str()
         .expect("Error translating search data from library");
-    if let Some(json) = serde_json::from_str(&string.to_string()).ok() {
-        println!("GET_INFO: search json fetched successfully");
-        match json {
-            Value::Object(map) => match &map.get("results") {
-                Some(Value::Array(results)) => {
-                    let mut result_msgs: Vec<SearchResult> = vec![];
-
-                    for result in results {
-                        match (result.get("description"), result.get("link")) {
-                            (Some(Value::String(description)), Some(Value::String(link))) => {
-                                result_msgs.push(SearchResult {
-                                    description: description.clone(),
-                                    link: link.clone(),
-                                });
-                            }
-                            _ => (),
-                        }
-                    }
-                    return Some(result_msgs);
+    if let Ok(Value::Object(map)) = serde_json::from_str(&string.to_string()) {
+        if let Some(Value::Array(results)) = &map.get("results") {
+            let mut result_msgs: Vec<SearchResult> = vec![];
+            for result in results {
+                if let (Some(Value::String(description)), Some(Value::String(link))) =
+                    (result.get("description"), result.get("link"))
+                {
+                    result_msgs.push(SearchResult {
+                        description: description.clone(),
+                        link: link.clone(),
+                    });
                 }
-                _ => (),
-            },
-            _ => (),
+            }
+            return Some(result_msgs);
         }
     }
-    return None;
+
+    None
+}
+
+#[allow(dead_code)]
+pub async fn google_search_new(search: String) -> Option<Vec<SearchResult>> {
+    let request_string = format!(
+        "https://www.google.com/search?q={}&gws_rd=ssl&num={}",
+        search, 5
+    );
+    let body = grab_body(request_string.as_str()).await;
+    let document = Document::from(body.as_str());
+    let mut results: Vec<SearchResult> = Vec::new();
+    for node in document.find(
+        Attr("id", "ires")
+            .descendant(Class("bkWMgd"))
+            .descendant(Class("r"))
+            .descendant(Name("a")),
+    ) {
+        let link = node.attr("href").unwrap();
+        for new_node in node.find(Class("LC20lb")) {
+            results.push(grab_section(new_node.text(), link.to_string()))
+        }
+    }
+
+    Some(results)
+}
+
+async fn grab_body(url: &str) -> String {
+    Client::new()
+        .get(url)
+        .header(
+            USER_AGENT,
+            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.10; rv:34.0) Gecko/20100101 Firefox/34.0",
+        )
+        .send()
+        .await
+        .unwrap()
+        .text()
+        .await
+        .unwrap()
+}
+
+fn grab_section(title: String, link: String) -> SearchResult {
+    SearchResult {
+        description: title,
+        link,
+    }
 }
 
 // pub fn get_info(title: String, pass: String) -> Option<String> {

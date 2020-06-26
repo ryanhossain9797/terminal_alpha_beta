@@ -28,7 +28,7 @@ pub async fn continue_search(bot_message: impl BotMessage + 'static, processesed
     let arc_message = Arc::new(bot_message);
     //---Delete the UserState Record
     immediate_purge_history(Arc::clone(&arc_message), UserState::Search);
-    let search_option = golib::google_search(processesed_text);
+    let search_option = golib::google_search(processesed_text).await;
 
     let response = match search_option {
         Some(results) => {

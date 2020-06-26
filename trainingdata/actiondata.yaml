@@ -25,6 +25,7 @@ utterances:
   - help me [searchTerm](search)
   - help me [searchTerm](search) for something
   - "[searchTerm](search) something"
+  - help me [searchTerm](find) some things 
   - i want to [searchTerm](find) something
   - can you [searchTerm](look up) something for me
   - can you [searchTerm](look for) something for me

@@ -60,7 +60,7 @@ async fn filter(message: DMessage, ctx: Context) {
         //-----------------------remove self mention from message
         let mut msg = message.content.replace(&handle, "");
         msg = msg.trim().to_string();
-        msg = msg.trim_start_matches("/").to_string();
+        msg = msg.trim_start_matches('/').to_string();
         msg = msg.trim().to_string();
         msg = msg.to_lowercase();
         let space_trimmer = Regex::new(r"\s+").unwrap();
@@ -91,7 +91,7 @@ async fn filter(message: DMessage, ctx: Context) {
 ///Sender handles forwarding the message.
 async fn sender(message: DMessage, ctx: Context, processed_text: String, start_conversation: bool) {
     let disc_msg = DiscordMessage {
-        message: message.clone(),
+        message,
         ctx,
         start_conversation,
     };

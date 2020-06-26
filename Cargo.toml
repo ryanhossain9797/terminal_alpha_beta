@@ -13,7 +13,7 @@ telegram-bot = {git = "https://github.com/telegram-rs/telegram-bot"}
 dotenv = "0.15.0"
 once_cell = "1.4.0"
 colored = "1.9.3"
-base64 = "0.12.2"
+base64 = "0.12.3"
 regex = "1"
 rand = "0.7"
 reqwest = "0.10.6"

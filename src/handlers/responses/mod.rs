@@ -2,7 +2,7 @@ use super::*;
 use rand::seq::SliceRandom;
 use serde_json::Value;
 
-const NAMES: [&'static str; 2] = ["Terminal Alpha", "Terminal Beta"];
+const NAMES: [&str; 2] = ["Terminal Alpha", "Terminal Beta"];
 
 ///Message to send when the user's message can't be handled at all.
 pub async fn unsupported_notice(m: impl BotMessage) {
@@ -43,7 +43,7 @@ pub fn load_named(key: &str) -> Option<String> {
             return Some(format!("{}:\n{}", name, response));
         }
     }
-    return None;
+    None
 }
 
 ///Loads a response from the JSON storage for the provided key.  
@@ -54,22 +54,21 @@ pub fn load_text(key: &str) -> Option<String> {
             Value::String(response) => {
                 return Some(response.to_string());
             }
-            Value::Array(responses) => match responses.choose(&mut rand::thread_rng()) {
-                Some(Value::String(response)) => return Some(response.to_string()),
-                _ => {}
-            },
+            Value::Array(responses) => {
+                if let Some(Value::String(response)) = responses.choose(&mut rand::thread_rng()) {
+                    return Some(response.to_string());
+                }
+            }
             _ => {}
         }
     }
-    return None;
+    None
 }
 
 ///Literally Just a harcoded string
 ///```
-///# fn main() {
 ///let a = response_unavailable();
 ///assert_eq!("response unavailable error".to_string(), a);
-///# }
 ///```
 pub fn unavailable() -> String {
     "response unavailable error".to_string()
@@ -126,9 +125,6 @@ mod tests {
     #[test]
     fn test_response_fail() {
         let response = load_named("chat-what");
-        assert!(match response {
-            Some(_) => false,
-            None => true,
-        });
+        assert!(response.is_none());
     }
 }

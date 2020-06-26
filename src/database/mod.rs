@@ -27,7 +27,7 @@ async fn initialize_mongo() {
         if let Ok(token) = env::var("MONGO_AUTH") {
             if let Ok(client_options) = ClientOptions::parse(&token).await {
                 if let Ok(client) = Client::with_options(client_options) {
-                    if let Ok(_) = MONGO.set(client.database("terminal")) {
+                    if MONGO.set(client.database("terminal")).is_ok() {
                         *initialized = true;
                         util::log_info(source, "Initialized successfully");
                     }
@@ -44,7 +44,7 @@ pub async fn get_mongo() -> Option<&'static Database> {
     let source = "MONGO_GET";
     // this is racy, but that's OK: it's just a fast case
     let client_option = MONGO.get();
-    if let Some(_) = client_option {
+    if client_option.is_some() {
         util::log_info(source, "Already initialized");
         return client_option;
     }

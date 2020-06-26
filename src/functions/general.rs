@@ -17,7 +17,10 @@ pub fn log_message(processed_text: String) {
         .open("action_log.txt")
     {
         //Attempt to write to file
-        if let Ok(_) = file.write((&(format!("{}{}", processed_text, "\n"))).as_bytes()) {
+        if file
+            .write((&(format!("{}{}", processed_text, "\n"))).as_bytes())
+            .is_ok()
+        {
             println!("MESSAGE_LOGGER: successfully logged unknown action")
         } else {
             println!("MESSAGE_LOGGER: failed to log unknown action")
@@ -79,7 +82,7 @@ pub async fn get_request_json(url: &str) -> Option<serde_json::Value> {
             println!("{}", error);
         }
     }
-    return None;
+    None
 }
 
 pub struct Note {
@@ -103,27 +106,24 @@ pub async fn get_notes(user_id: String) -> Option<Vec<Note>> {
             let mut notes_list: Vec<Note> = vec![];
             let mut position = 1;
             while let Some(result) = my_notes.next().await {
-                match result {
-                    Ok(document) => {
-                        if let (Some(id), Some(note)) = (
-                            document.get("_id").and_then(Bson::as_object_id),
-                            document.get("note").and_then(Bson::as_str),
-                        ) {
-                            notes_list.push(Note {
-                                id: id.to_hex(),
-                                position,
-                                note: note.to_string(),
-                            });
-                            position += 1;
-                        }
+                if let Ok(document) = result {
+                    if let (Some(id), Some(note)) = (
+                        document.get("_id").and_then(Bson::as_object_id),
+                        document.get("note").and_then(Bson::as_str),
+                    ) {
+                        notes_list.push(Note {
+                            id: id.to_hex(),
+                            position,
+                            note: note.to_string(),
+                        });
+                        position += 1;
                     }
-                    _ => {}
                 }
             }
             return Some(notes_list);
         }
     }
-    return None;
+    None
 }
 
 pub async fn add_note(user_id: &str, note: String) -> Option<Vec<Note>> {
@@ -140,7 +140,7 @@ pub async fn add_note(user_id: &str, note: String) -> Option<Vec<Note>> {
             }
         }
     }
-    return get_notes(user_id.to_string()).await;
+    get_notes(user_id.to_string()).await
 }
 
 pub async fn delete_note(user_id: &str, note_id: &str) -> Option<Vec<Note>> {
@@ -155,10 +155,10 @@ pub async fn delete_note(user_id: &str, note_id: &str) -> Option<Vec<Note>> {
                 }
             }
         } else {
-            functions::util::log_error(source, &format!("{}", "invalid note id"));
+            functions::util::log_error(source, &"invalid note id".to_string());
         }
     }
-    return get_notes(user_id.to_string()).await;
+    get_notes(user_id.to_string()).await
 }
 pub struct Person {
     pub name: String,
@@ -189,7 +189,7 @@ pub async fn get_person(name: String) -> Option<Person> {
         }
     }
 
-    return None;
+    None
 }
 
 pub async fn get_people() -> Option<Vec<Person>> {
@@ -216,7 +216,7 @@ pub async fn get_people() -> Option<Vec<Person>> {
         }
     }
 
-    return None;
+    None
 }
 
 pub async fn get_info(title: String, pass: String) -> Option<String> {
@@ -240,5 +240,5 @@ pub async fn get_info(title: String, pass: String) -> Option<String> {
             }
         }
     }
-    return None;
+    None
 }

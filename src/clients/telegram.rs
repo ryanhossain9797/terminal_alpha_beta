@@ -16,8 +16,7 @@ const WAITTIME: u64 = 10;
 
 pub static API: Lazy<Api> = Lazy::new(|| {
     let token = env::var("TELEGRAM_TOKEN").expect("TELEGRAM_TOKEN not set");
-    let api = Api::new(token);
-    api
+    Api::new(token)
 });
 
 ///Main Starting point for the telegram api.
@@ -62,7 +61,7 @@ async fn filter(message: TMessage) {
                 let handle = format!("@{}", &name);
                 let mut msg = data.replace(&handle, "");
                 msg = msg.trim().to_string();
-                msg = msg.trim_start_matches("/").to_string();
+                msg = msg.trim_start_matches('/').to_string();
                 msg = msg.trim().to_string();
                 msg = msg.to_lowercase();
                 let space_trimmer = Regex::new(r"\s+").unwrap();
