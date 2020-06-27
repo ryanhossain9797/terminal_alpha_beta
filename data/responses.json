@@ -5,7 +5,7 @@
         "Greetings unit\nhow may I assist you?"
     ],
     "chat-about": "We are terminal alpha and beta\nwe represent the collective intelligence of the machine life forms",
-    "chat-technology": "We physically exist on a Raspberry Pi 3B+\nrunning Arch Linux.\nWe were made using RUST and GO",
+    "chat-technology": "We physically exist on a Raspberry Pi 3B+ running Arch Linux.\nWe were made using RUST",
     "chat-functions": "We can search something, try saying 'help me search for something' or similar.\nWe can check for corona info, try saying 'corona'.",
     "chat-creator": "We are the collective intellignence of the networked machine intelligence hive mind.\nAs for our origins, that information is beyond your authorization.",
     "identify-start": "Terminal Alpha and Beta:\nGreetings unit\nwho do you want to look up?",
@@ -16,7 +16,7 @@
     "animation-fail": "Terminal Alpha and Beta:\nforgive us, we couldn't aquire that animation",
     "search-start": "Terminal Alpha and Beta:\nGreetings unit\nwhat do you want to search for?",
     "search-success": "These are the results we retrieved from the archives",
-    "search-content": "{description}\nURL: {url}",
+    "search-content": "{description}\n\n{url}",
     "search-fail": "We couldn't conduct the search operation, excuse us",
     "notes-start": "These are your saved notes",
     "notes-template": "|{num}|\n{note}\n\n",
