@@ -292,11 +292,12 @@ pub async fn google_search(search: String) -> Option<Vec<SearchResult>> {
                     .next()
                 {
                     for child in desc.children() {
-                        &description.push_str(
-                            &(format!(" {}", child.inner_html())
-                                .replace(" <em>", "")
-                                .replace("</em>", "")),
-                        );
+                        let frag = scraper::Html::parse_fragment(&child.html());
+                        for node in frag.tree {
+                            if let scraper::node::Node::Text(text) = node {
+                                &description.push_str(&(format!("{}", text.text)));
+                            }
+                        }
                     }
                 }
                 for new_node in node.find(Class("LC20lb")) {
