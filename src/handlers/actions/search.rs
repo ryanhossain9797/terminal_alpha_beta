@@ -28,15 +28,16 @@ pub async fn continue_search(bot_message: impl BotMessage + 'static, processesed
     let arc_message = Arc::new(bot_message);
     //---Delete the UserState Record
     immediate_purge_history(Arc::clone(&arc_message), UserState::Search);
-    let search_option = general::google_search(processesed_text).await;
+    let search_option = general::google_search(processesed_text);
 
     let response = match search_option {
         Some(results) => {
             let mut msgs: Vec<Msg> = vec![Msg::Text(
                 responses::load_named("search-success").unwrap_or_else(responses::unavailable),
             )];
-            let search_template =
-                responses::load_named("search-content").unwrap_or_else(responses::unavailable);
+            //Load template for search results
+            let search_template = responses::load_text("search-content")
+                .unwrap_or("{description}\nURL: {url}".to_string());
             for result in results {
                 msgs.push(Msg::Text(
                     search_template

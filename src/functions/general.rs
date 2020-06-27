@@ -6,8 +6,8 @@ use futures::stream::StreamExt;
 use mongodb::bson::{doc, oid, Bson};
 use serde_json::Value;
 
+use reqwest::blocking::Client;
 use reqwest::header::USER_AGENT;
-use reqwest::Client;
 
 use select::document::Document;
 use select::predicate::*;
@@ -259,7 +259,7 @@ const AGENT_STRING: &str =
     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.10; rv:34.0) Gecko/20100101 Firefox/34.0";
 ///Google searches
 ///Returns list of SearchResult structs
-pub async fn google_search(search: String) -> Option<Vec<SearchResult>> {
+pub fn google_search(search: String) -> Option<Vec<SearchResult>> {
     let request_string = format!(
         "https://www.google.com/search?q={}&gws_rd=ssl&num={}",
         search, 5
@@ -268,9 +268,8 @@ pub async fn google_search(search: String) -> Option<Vec<SearchResult>> {
         .get(request_string.as_str())
         .header(USER_AGENT, AGENT_STRING)
         .send()
-        .await
     {
-        if let Ok(text) = body.text().await {
+        if let Ok(text) = body.text() {
             let document = Document::from(text.as_str());
             let mut results: Vec<SearchResult> = Vec::new();
             for node in document.find(
