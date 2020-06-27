@@ -293,7 +293,7 @@ pub async fn google_search(search: String) -> Option<Vec<SearchResult>> {
                 {
                     for child in desc.children() {
                         &description.push_str(
-                            &(format!(" {}", child.html())
+                            &(format!(" {}", child.inner_html())
                                 .replace(" <em>", "")
                                 .replace("</em>", "")),
                         );
