@@ -57,8 +57,8 @@
         "builtin": [],
         "custom": [
           "searchWord",
-          "infoWord",
-          "personWord"
+          "personWord",
+          "infoWord"
         ]
       },
       "intent_group": [
@@ -69,9 +69,9 @@
       "entity_scope": {
         "builtin": [],
         "custom": [
-          "passWord",
           "infoWord",
           "titleVar",
+          "passWord",
           "passVar"
         ]
       },

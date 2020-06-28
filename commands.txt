@@ -1,3 +1,9 @@
+[target.armv7-unknown-linux-gnueabihf]
+linker = "arm-linux-gnueabihf-gcc"
+
+[target.armv7-unknown-linux-musleabihf]
+linker = "arm-linux-gnueabihf-gcc"
+
 snips-nlu train path/to/data.json path/to/output_folder
 
 scp -P 5914 target/armv7-unknown-linux-gnueabihf/release/terminal_alpha_beta alarm@192.168.0.104:terminal

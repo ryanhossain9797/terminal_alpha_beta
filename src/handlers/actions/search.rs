@@ -1,4 +1,6 @@
 use super::*;
+extern crate search_with_google;
+use search_with_google::search;
 
 ///Adds a userstate record with search state to userstate records map.  
 ///Fires wipe history command for search state.
@@ -28,10 +30,10 @@ pub async fn continue_search(bot_message: impl BotMessage + 'static, processesed
     let arc_message = Arc::new(bot_message);
     //---Delete the UserState Record
     immediate_purge_history(Arc::clone(&arc_message), UserState::Search);
-    let search_option = general::google_search(processesed_text);
+    let search_result = search(&processesed_text, None);
 
-    let response = match search_option {
-        Some(results) => {
+    let response = match search_result {
+        Ok(results) => {
             let mut msgs: Vec<Msg> = vec![Msg::Text(
                 responses::load_named("search-success").unwrap_or_else(responses::unavailable),
             )];
@@ -47,9 +49,12 @@ pub async fn continue_search(bot_message: impl BotMessage + 'static, processesed
             }
             MsgCount::MultiMsg(msgs)
         }
-        _ => MsgCount::SingleMsg(Msg::Text(
-            responses::load_named("search-fail").unwrap_or_else(responses::unavailable),
-        )),
+        Err(error) => {
+            println!("{:?}", error);
+            MsgCount::SingleMsg(Msg::Text(
+                responses::load_named("search-fail").unwrap_or_else(responses::unavailable),
+            ))
+        }
     };
     arc_message.send_message(response).await;
 }

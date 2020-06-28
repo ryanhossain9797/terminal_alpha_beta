@@ -118,8 +118,8 @@
         "args": {
           "entities": [
             "searchWord",
-            "infoWord",
-            "personWord"
+            "personWord",
+            "infoWord"
           ],
           "entity_filter": {
             "automatically_extensible": true
