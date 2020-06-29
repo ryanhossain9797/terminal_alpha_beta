@@ -104,17 +104,17 @@ pub trait BotMessage: Send + Sync {
 }
 
 ///Distributes incoming requests to separate threads
-pub fn distributor(bot_message: impl BotMessage + 'static, processesed_text: String) {
+pub fn distributor(bot_message: impl BotMessage + 'static, processed_text: String) {
     let source = "DISTRIBUTOR";
     //Spawn a new task to handle the message
-    tokio::spawn(async move { handler(bot_message, processesed_text).await });
+    tokio::spawn(async move { handler(bot_message, processed_text).await });
     util::log_info(source, "Handler Thread Spawned");
 }
 
 ///First place to handle messages after distribution
-async fn handler(bot_message: impl BotMessage + 'static, processesed_text: String) {
+async fn handler(bot_message: impl BotMessage + 'static, processed_text: String) {
     let source = "HANDLER";
-    util::log_info(source, &format!("Processed text is {}", processesed_text));
+    util::log_info(source, &format!("Processed text is {}", processed_text));
 
     //---If record from user exists (A Some(record)), some conversation is ongoing
     //---So will be replied regardless of groups or mentions and stuff ('will_respond' is ignored)
@@ -122,26 +122,26 @@ async fn handler(bot_message: impl BotMessage + 'static, processesed_text: Strin
         let record = stored_record.clone();
 
         //---"cancel last will shut off the conversation"
-        if processesed_text == "cancel last" {
+        if processed_text == "cancel last" {
             cancel_history(bot_message).await;
-        }else if let UserState::Search = record.state {
+        } else if let UserState::Search = record.state {
             util::log_info(source, "continuing search");
-            search::continue_search(bot_message, processesed_text.clone()).await;
+            search::continue_search(bot_message, processed_text.clone()).await;
         }
         //---"if state is identify"
         else if let UserState::Identify = record.state {
             util::log_info(source, "continuing identify");
-            identify::continue_identify(bot_message, processesed_text.clone()).await;
+            identify::continue_identify(bot_message, processed_text.clone()).await;
         }
         //---"if state is animatios"
         else if let UserState::Animation = record.state {
             util::log_info(source, "continuing animation");
-            animation::continue_gif(bot_message, processesed_text.clone()).await;
+            animation::continue_gif(bot_message, processed_text.clone()).await;
         }
         //---"if state is animatios"
         else if let UserState::Notes(data) = record.state {
             util::log_info(source, "continuing notes");
-            notes::continue_notes(bot_message, processesed_text.clone(), data).await;
+            notes::continue_notes(bot_message, processed_text.clone(), data).await;
         }
         //---"if state is unknown"
         else {
@@ -153,7 +153,7 @@ async fn handler(bot_message: impl BotMessage + 'static, processesed_text: Strin
     //---will start processing new info
     else if bot_message.start_conversation() {
         //---cancel last does nothing as there's nothing to cancel
-        if processesed_text == "cancel last" {
+        if processed_text == "cancel last" {
             bot_message
                 .send_message(MsgCount::SingleMsg(Msg::Text(
                     responses::load_named("cancel-nothing").unwrap_or_else(responses::unavailable),
@@ -162,7 +162,7 @@ async fn handler(bot_message: impl BotMessage + 'static, processesed_text: Strin
         }
         //---hand over to the natural understanding system for advanced matching
         else {
-            natural_understanding(bot_message, processesed_text).await;
+            natural_understanding(bot_message, processed_text).await;
         }
     }
 }

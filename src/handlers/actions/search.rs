@@ -26,11 +26,15 @@ pub async fn start_search(bot_message: impl BotMessage + 'static) {
 
 ///Finishes search
 ///Fires immediate purge history command for search state
-pub async fn continue_search(bot_message: impl BotMessage + 'static, processesed_text: String) {
+pub async fn continue_search(bot_message: impl BotMessage + 'static, processed_text: String) {
     let arc_message = Arc::new(bot_message);
     //---Delete the UserState Record
     immediate_purge_history(Arc::clone(&arc_message), UserState::Search);
-    let search_result = search(&processesed_text, None);
+    let search_result = search(
+        &processed_text,
+        None,
+        "Mozilla/5.0 (X11; Linux x86_64; rv:77.0) Gecko/20100101 Firefox/77.0".to_string(),
+    );
 
     let response = match search_result {
         Ok(results) => {
