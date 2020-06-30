@@ -343,18 +343,19 @@ fn immediate_purge_history(bot_message: Arc<impl BotMessage + 'static>, state: U
 ///Removes history after 30 seconds if it's not updated with a new time,  
 ///AND the history state matches the provided state.  
 ///Notice Message is provided to user.
-fn wipe_history_new(bot_message: Arc<impl BotMessage + 'static>) {
+#[allow(dead_code)]
+async fn wipe_history_new(bot_message: Arc<impl BotMessage + 'static>) {
     let source = "WIPE_HISTORY";
-    if let None = get_state(&bot_message.get_id()).await {
-        return;
-    }
     tokio::spawn(async move {
         while let Some(record) = get_state(&bot_message.get_id()).await {
             //If the current state is older than threshold wait time
             let elapsed = record.last.elapsed();
             if elapsed > Duration::from_secs(WAITTIME) {
                 remove_state(&bot_message.get_id()).await;
-                util::log_info(source, &format!("deleted state record '{}'", state));
+                util::log_info(
+                    source,
+                    &format!("deleted state record for user '{}'", bot_message.get_id()),
+                );
                 bot_message
                     .send_message(MsgCount::SingleMsg(Msg::Text(
                         responses::load_named("delay-notice")
@@ -363,8 +364,8 @@ fn wipe_history_new(bot_message: Arc<impl BotMessage + 'static>) {
                     .await;
             //If the current state is not older than threshold wait time
             } else {
-                tokio::time::delay_for(Duration::from_secs(WAITTIME - elapsed.as_secs())).await;
                 util::log_info(source, "aborted record delete due to recency");
+                tokio::time::delay_for(Duration::from_secs(WAITTIME - elapsed.as_secs())).await;
             }
         }
         util::log_info(

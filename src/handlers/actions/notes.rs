@@ -181,6 +181,6 @@ pub async fn continue_notes(
     // Update the state, if this action was a failure, with same old note ids
     // Else the new note ids
     set_state(id, UserState::Notes(new_note_ids)).await;
-    // And of course the history cleaner
+    // And of course clean history
     wipe_history(Arc::clone(&arc_message), UserState::Notes(vec![]));
 }
