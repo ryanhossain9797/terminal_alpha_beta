@@ -52,7 +52,7 @@ async fn main() {
     //             }),
     //         ];
     //         //---And run them, wait for them to finish,
-    //         //---Which is hoepfully never, because that would mean it crashed.
+    //         //---Which is hopefully never, because that would mean it crashed.
     //         futures::future::join_all(tasks).await;
     //     })
     //     .await;

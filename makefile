@@ -15,7 +15,7 @@ arm-musl-2:
 cross-arm:
 	cross build --target armv7-unknown-linux-gnueabihf
 cross-arm-musl:
-	cross build --target armv7-unknown-linux-musleabihf
+	cross build --target armv7-unknown-linux-musleabihf --release
 arm64:
 	cargo build --target aarch64-unknown-linux-gnu
 train:

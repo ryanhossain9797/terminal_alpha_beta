@@ -34,7 +34,8 @@ pub async fn continue_search(bot_message: impl BotMessage + 'static, processed_t
         &processed_text,
         None,
         "Mozilla/5.0 (X11; Linux x86_64; rv:77.0) Gecko/20100101 Firefox/77.0".to_string(),
-    );
+    )
+    .await;
 
     let response = match search_result {
         Ok(results) => {
