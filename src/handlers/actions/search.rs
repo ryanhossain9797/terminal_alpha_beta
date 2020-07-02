@@ -1,5 +1,4 @@
 use super::*;
-extern crate search_with_google;
 use search_with_google::search;
 
 ///Adds a userstate record with search state to userstate records map.  
@@ -33,7 +32,7 @@ pub async fn continue_search(bot_message: impl BotMessage + 'static, processed_t
     let search_result = search(
         &processed_text,
         None,
-        "Mozilla/5.0 (X11; Linux x86_64; rv:77.0) Gecko/20100101 Firefox/77.0".to_string(),
+        "Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101 Firefox/78.0".to_string(),
     )
     .await;
 

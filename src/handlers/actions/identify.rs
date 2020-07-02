@@ -1,6 +1,4 @@
 use super::*;
-
-extern crate closestmatch;
 use closestmatch::*;
 
 ///Adds a userstate record with identify state to userstate records map.  

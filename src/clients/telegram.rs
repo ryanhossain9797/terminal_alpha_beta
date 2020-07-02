@@ -1,7 +1,5 @@
 //--------TELGRAM CODE
-extern crate openssl_probe;
 use super::*;
-
 use async_trait::async_trait;
 use futures::StreamExt;
 use once_cell::sync::Lazy;

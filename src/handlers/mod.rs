@@ -4,19 +4,16 @@
 mod actions;
 mod responses;
 mod state;
-extern crate snips_nlu_lib;
 
 use crate::functions::*;
 use actions::*;
 use state::userstate::*;
 
+use std::{fs::*, sync::Arc, time::Duration};
+
 use async_trait::async_trait;
 use once_cell::sync::Lazy;
-
 use snips_nlu_lib::SnipsNluEngine;
-use std::fs::*;
-use std::sync::Arc;
-use std::time::Duration;
 
 ///Long wait time, Used in runing system
 const LONGWAIT: u64 = 30;
