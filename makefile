@@ -8,6 +8,9 @@ arm:
 	cargo build --target armv7-unknown-linux-gnueabihf
 arm-release:
 	cargo build --target armv7-unknown-linux-gnueabihf --release
+# Doesn't work
+arm-release-static:
+	RUSTFLAGS="-C target-feature=+crt-static" cargo build --target armv7-unknown-linux-gnueabihf --release
 arm-musl:
 	RUSTFLAGS="-C target-feature=-crt-static" cargo build --target armv7-unknown-linux-musleabihf
 arm-musl-2:
