@@ -11,3 +11,13 @@ pub fn log_warning(source: &str, msg: &str) {
 pub fn log_error(source: &str, msg: &str) {
     println!("{}: {}", source.green(), msg.red())
 }
+
+pub fn make_info<'a>(source: &'a str) -> impl Fn(&str) + 'a {
+    move |msg: &str| println!("{}: {}", source.green(), msg.blue())
+}
+pub fn make_warning<'a>(source: &'a str) -> impl Fn(&str) + 'a {
+    move |msg: &str| println!("{}: {}", source.green(), msg.yellow())
+}
+pub fn make_error<'a>(source: &'a str) -> impl Fn(&str) + 'a {
+    move |msg: &str| println!("{}: {}", source.green(), msg.red())
+}

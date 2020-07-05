@@ -14,7 +14,7 @@ use serde_json::Value;
 
 ///Logs the provided text to the action_log.txt file.  
 ///Used for when a message is unknown.
-pub fn log_message(processed_text: String) {
+pub fn log_message(processed_text: &str) {
     //Open/Create the action_log.txt file with read, append, create options
     if let Ok(mut file) = OpenOptions::new()
         .read(true)
@@ -36,7 +36,6 @@ pub fn log_message(processed_text: String) {
         println!("MESSAGE_LOGGER: failed to open file for logging unknown action")
     }
 }
-
 
 ///Retrieves the title and pass for the info intent.  
 ///Parses the intent JSON.

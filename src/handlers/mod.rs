@@ -111,7 +111,8 @@ pub fn distributor(bot_message: impl BotMessage + 'static, processed_text: Strin
 ///First place to handle messages after distribution
 async fn handler(bot_message: impl BotMessage + 'static, processed_text: String) {
     let source = "HANDLER";
-    util::log_info(source, &format!("Processed text is {}", processed_text));
+    let info = util::make_info(source);
+    info(&format!("Processed text is {}", processed_text));
 
     //---If record from user exists (A Some(record)), some conversation is ongoing
     //---So will be replied regardless of groups or mentions and stuff ('will_respond' is ignored)
@@ -122,27 +123,27 @@ async fn handler(bot_message: impl BotMessage + 'static, processed_text: String)
         if processed_text == "cancel last" {
             cancel_history(bot_message).await;
         } else if let UserState::Search = record.state {
-            util::log_info(source, "continuing search");
+            info("continuing search");
             search::continue_search(bot_message, processed_text.clone()).await;
         }
         //---"if state is identify"
         else if let UserState::Identify = record.state {
-            util::log_info(source, "continuing identify");
+            info("continuing identify");
             identify::continue_identify(bot_message, processed_text.clone()).await;
         }
         //---"if state is animatios"
         else if let UserState::Animation = record.state {
-            util::log_info(source, "continuing animation");
+            info("continuing animation");
             animation::continue_gif(bot_message, processed_text.clone()).await;
         }
         //---"if state is animatios"
         else if let UserState::Notes(data) = record.state {
-            util::log_info(source, "continuing notes");
+            info("continuing notes");
             notes::continue_notes(bot_message, processed_text.clone(), data).await;
         }
         //---"if state is unknown"
         else {
-            util::log_info(source, "some unknown state");
+            info("some unknown state");
             responses::unknown_state_notice(bot_message).await;
         }
     }
@@ -167,6 +168,10 @@ async fn handler(bot_message: impl BotMessage + 'static, processed_text: String)
 ///Uses natural understanding to determine intent if no state is found
 async fn natural_understanding(bot_message: impl BotMessage + 'static, processed_text: String) {
     let source = "NATURAL_ACTION_PICKER";
+
+    let info = util::make_info(source);
+    let warning = util::make_warning(source);
+    let error = util::make_error(source);
     //---Stuff required to run the NLU engine to get an intent
     if let Some(engine) = &*NLUENGINE {
         let intents_alternatives = 1;
@@ -182,13 +187,10 @@ async fn natural_understanding(bot_message: impl BotMessage + 'static, processed
             .unwrap();
 
         if let Some(intent) = result.intent.intent_name.clone() {
-            util::log_info(
-                source,
-                &format!(
-                    "{} with confidence {}",
-                    intent, result.intent.confidence_score
-                ),
-            );
+            info(&format!(
+                "{} with confidence {}",
+                intent, result.intent.confidence_score
+            ));
             //Tries to match against existing intents like chat, search etc
             //Only valid if confidence greater than 0.5
             if result.intent.confidence_score > 0.5 {
@@ -197,66 +199,66 @@ async fn natural_understanding(bot_message: impl BotMessage + 'static, processed
                     util::log_info(source, "ACTION_PICKER: intent json is valid");
                     match &*intent {
                         "chat" => {
-                            util::log_info(source, "starting chat");
+                            info("starting chat");
                             chat::start_chat(bot_message).await
                         }
                         "search" => {
-                            util::log_info(source, "starting search");
+                            info("starting search");
                             search::start_search(bot_message).await
                         }
                         "identify" => {
-                            util::log_info(source, "starting identify");
+                            info("starting identify");
                             identify::start_identify(bot_message).await
                         }
                         "animation" => {
-                            util::log_info(source, "starting animation");
+                            info("starting animation");
                             animation::start_gif(bot_message).await
                         }
                         "info" => {
-                            util::log_info(source, "starting info");
+                            info("starting info");
                             info::start_info(bot_message, json).await
                         }
                         "notes" => {
-                            util::log_info(source, "starting notes");
+                            info("starting notes");
                             notes::start_notes(bot_message).await
                         }
                         "corona" => {
-                            util::log_info(source, "starting corona");
+                            info("starting corona");
                             corona::start_corona(bot_message).await
                         }
                         "unknown" => {
-                            util::log_info(source, "starting unknown state test");
+                            info("starting unknown state test");
                             extras::start_unknown(bot_message).await
                         }
                         _ => {
                             //Forward to chat for more intents
-                            util::log_info(source, "forwarding to chat");
+                            info("forwarding to chat");
                             chat::continue_chat(bot_message, processed_text, &intent).await;
                         }
                     }
                 }
                 //If failed to parse the intent result as json
                 else {
-                    util::log_error(source, "coldn't convert intent data to JSON");
-                    general::log_message(processed_text);
+                    error("couldn't convert intent data to JSON");
+                    general::log_message(&processed_text);
                     responses::unsupported_notice(bot_message).await
                 }
             }
             //Unsure intent if cannot match to any intent confidently
             else {
-                util::log_warning(source, "couldn't match an intent confidently");
-                general::log_message(processed_text.clone());
+                warning("couldn't match an intent confidently");
+                general::log_message(&processed_text);
                 responses::unsupported_notice(bot_message).await
             }
         }
         //Unknown intent if can't match intent at all
         else {
-            util::log_warning(source, "unknown intent");
-            general::log_message(processed_text.clone());
+            warning("unknown intent");
+            general::log_message(&processed_text);
             responses::unsupported_notice(bot_message).await
         };
     } else {
-        util::log_error(source, "NLU engine load failed");
+        error("NLU engine load failed");
         responses::unsupported_notice(bot_message).await
     }
 }
@@ -278,6 +280,7 @@ async fn cancel_history(bot_message: impl BotMessage + 'static) {
 ///Notice Message is provided to user.
 fn wipe_history(bot_message: Arc<impl BotMessage + 'static>, state: UserState) {
     let source = "WIPE_HISTORY";
+    let info = util::make_info(source);
     tokio::spawn(async move {
         //Wait a specified amount of time before deleting user state
         tokio::time::delay_for(Duration::from_secs(WAITTIME)).await;
@@ -296,28 +299,22 @@ fn wipe_history(bot_message: Arc<impl BotMessage + 'static>, state: UserState) {
                         .await;
                 //If the current state is not older than threshold wait time
                 } else {
-                    util::log_info(source, "aborted record delete due to recency");
+                    info("aborted record delete due to recency");
                 }
             //If the current state doesn't match pending deletion state
             } else {
-                util::log_info(
-                    source,
-                    &format!(
-                        "aborted record delete for '{}' because current state is '{}'",
-                        state, record.state
-                    ),
-                );
+                info(&format!(
+                    "aborted record delete for '{}' because current state is '{}'",
+                    state, record.state
+                ));
             }
         //If user has no pending state
         } else {
-            util::log_info(
-                source,
-                &format!(
-                    "aborted record delete for '{}', there is no recorded state for '{}'",
-                    state,
-                    bot_message.get_id()
-                ),
-            )
+            info(&format!(
+                "aborted record delete for '{}', there is no recorded state for '{}'",
+                state,
+                bot_message.get_id()
+            ))
         }
     });
 }
