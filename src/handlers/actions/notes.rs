@@ -11,7 +11,7 @@ pub async fn start_notes(bot_message: impl BotMessage + 'static) {
     let info = util::make_info(source);
     info("notes initiated");
     let id = bot_message.get_id();
-    // New Arc cloneable version of message
+    // New Arc clone-able version of message
     let arc_message = Arc::new(bot_message);
 
     // Fetch the notes
@@ -24,7 +24,7 @@ pub async fn start_notes(bot_message: impl BotMessage + 'static) {
             let mut notes_string = "".to_string();
             let mut note_ids: Vec<String> = vec![];
             // Iterate over notes
-            for note in notes {
+            notes.into_iter().for_each(|note| {
                 // Construct the notes string
                 // Also push ids to note_ids simultaneously
                 note_ids.push(note.id);
@@ -33,14 +33,12 @@ pub async fn start_notes(bot_message: impl BotMessage + 'static) {
                         .replace("{num}", &format!("{}", note.position))
                         .replace("{note}", &note.note.to_string())),
                 );
-            }
-
+            });
             // Only update state on successful notes retrieval
             set_state(id.clone(), UserState::Notes(note_ids)).await;
             // And of course the history cleaner
             wipe_history(Arc::clone(&arc_message), UserState::Notes(vec![]));
             info(&format!("record added for id {}", id));
-
             arc_message
                 .send_message(MsgCount::MultiMsg(vec![
                     Msg::Text(
@@ -137,7 +135,7 @@ pub async fn continue_notes(
                             .unwrap_or_else(responses::unavailable),
                     )))
                     .await;
-                // If updated list is avaialable
+                // If updated list is available
                 if let Some(notes) = notes_option {
                     let mut notes_string = "".to_string();
                     // Overwrite old note ids

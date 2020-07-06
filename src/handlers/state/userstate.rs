@@ -40,6 +40,7 @@ impl fmt::Display for UserState {
     }
 }
 
+///Returns the state of the Provided user
 pub async fn get_state(id: &str) -> Option<UserStateRecord> {
     let map = RECORDS.lock().await;
     match map.get(id) {
@@ -47,6 +48,8 @@ pub async fn get_state(id: &str) -> Option<UserStateRecord> {
         None => None,
     }
 }
+
+///Sets the Provided user's state to the Provided state
 pub async fn set_state(id: String, state: UserState) {
     let mut map = RECORDS.lock().await;
     map.insert(
@@ -57,6 +60,7 @@ pub async fn set_state(id: String, state: UserState) {
         },
     );
 }
+///Remove the Provided user's state
 pub async fn remove_state(id: &str) {
     let mut map = RECORDS.lock().await;
     map.remove(id);

@@ -45,7 +45,7 @@ pub async fn continue_identify(bot_message: impl BotMessage + 'static, name: Str
                         Some(name) => {
                             println!("closest name is {}", name);
                             let mut matched_option: Option<String> = None;
-                            for person in people {
+                            people.iter().for_each(|person| {
                                 if person.name == name {
                                     matched_option =
                                         Some(match responses::load_named("identify-partialmatch") {
@@ -55,7 +55,7 @@ pub async fn continue_identify(bot_message: impl BotMessage + 'static, name: Str
                                             _ => responses::unavailable(),
                                         })
                                 }
-                            }
+                            });
                             match matched_option {
                                 Some(person) => MsgCount::SingleMsg(Msg::Text(person)),
                                 None => MsgCount::SingleMsg(Msg::Text(

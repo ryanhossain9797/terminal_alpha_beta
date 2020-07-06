@@ -36,7 +36,7 @@ pub async fn start_corona(m: impl BotMessage) {
                 Some(Value::Array(country_list)) => {
                     println!("CORONA: Got country list");
                     let mut countries: Vec<Country> = vec![];
-                    for country in country_list {
+                    country_list.iter().for_each(|country| {
                         match (
                             country.get("Country"),
                             country.get("NewConfirmed"),
@@ -76,7 +76,7 @@ pub async fn start_corona(m: impl BotMessage) {
                                 println! {"CORONA: country keys error"}
                             }
                         }
-                    }
+                    });
                     countries.sort_unstable_by(|first, second| {
                         first.new_confirmed.cmp(&second.new_confirmed).reverse()
                     });
@@ -85,12 +85,12 @@ pub async fn start_corona(m: impl BotMessage) {
                     let new_template = responses::load_text("corona-new").unwrap_or(
                         "(Fallback)\nname: {1}\nnew confirmed: {2}\nnew deaths: {3}\n".to_string(),
                     );
-                    for country in &countries[..10] {
+                    &countries[..10].iter().for_each(|country| {
                         new_cases_message += &new_template
                             .replace("{1}", &country.country)
                             .replace("{2}", &format!("{}", country.new_confirmed))
                             .replace("{3}", &format!("{}", country.new_deaths));
-                    }
+                    });
                     m.send_message(MsgCount::SingleMsg(Msg::Text(new_cases_message)))
                         .await;
                     countries.sort_unstable_by(|first, second| {
@@ -102,12 +102,12 @@ pub async fn start_corona(m: impl BotMessage) {
                         "(Fallback)\nname: {1}\ntotal confirmed: {2}\ntotal deaths: {3}\n"
                             .to_string(),
                     );
-                    for country in &countries[..10] {
+                    &countries[..10].iter().for_each(|country| {
                         total_cases_message += &total_template
                             .replace("{1}", &country.country)
                             .replace("{2}", &format!("{}", country.total_confirmed))
                             .replace("{3}", &format!("{}", country.total_deaths));
-                    }
+                    });
                     m.send_message(MsgCount::SingleMsg(Msg::Text(total_cases_message)))
                         .await;
                 }
