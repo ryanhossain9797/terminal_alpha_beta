@@ -5,11 +5,13 @@ use serde_json::Value;
 ///Fires wipe history command for animation state.
 pub async fn start_gif(bot_message: impl BotMessage + 'static) {
     let source = "START_ANIMATION";
-    util::log_info(source, "animation initiated");
+    let info = util::make_info(source);
+    
+    info("animation initiated");
     let id = bot_message.get_id();
     // Set the state
     set_state(id.clone(), UserState::Animation).await;
-    util::log_info(source, &format!("record added for id {}", id));
+    info(&format!("record added for id {}", id));
     // Arc cloneable message
     let arc_message = Arc::new(bot_message);
     // And fire off wipe history
@@ -25,7 +27,8 @@ pub async fn start_gif(bot_message: impl BotMessage + 'static) {
 ///Fires immediate purge history command for animation state.
 pub async fn continue_gif(bot_message: impl BotMessage + 'static, processed_text: String) {
     let source = "CONTINUE_ANIMATION";
-    util::log_info(source, "animation response");
+    let info = util::make_info(source);
+    info("animation response");
     // Arc cloneable message
     let arc_message = Arc::new(bot_message);
     // Purge state history

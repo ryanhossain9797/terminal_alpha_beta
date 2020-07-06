@@ -18,24 +18,24 @@ pub async fn start_chat(bot_message: impl BotMessage) {
 ///Fires wipe history command for Chat state.
 pub async fn continue_chat(bot_message: impl BotMessage, _processed_text: String, intent: &str) {
     let source = "CONTINUE_CHAT";
-
+    let info = util::make_info(source);
     if intent == "greet" {
-        util::log_info(source, "starting greet");
+        info("starting greet");
         responses::custom_response(bot_message, "chat-greet".to_string()).await
     } else if intent == "about" {
-        util::log_info(source, "starting about");
+        info("starting about");
         responses::custom_response(bot_message, "chat-about".to_string()).await
     } else if intent == "technology" {
-        util::log_info(source, "starting technology");
+        info("starting technology");
         responses::custom_response(bot_message, "chat-technology".to_string()).await
     } else if intent == "functions" {
-        util::log_info(source, "starting functions");
+        info("starting functions");
         responses::custom_response(bot_message, "chat-functions".to_string()).await
     } else if intent == "creator" {
-        util::log_info(source, "starting creator");
+        info("starting creator");
         responses::custom_response(bot_message, "chat-creator".to_string()).await
     } else {
-        util::log_info(source, "unsupported");
+        info("unsupported");
         responses::unsupported_notice(bot_message).await
     }
 }

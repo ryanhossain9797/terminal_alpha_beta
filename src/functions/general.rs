@@ -134,15 +134,17 @@ pub async fn get_notes(user_id: String) -> Option<Vec<Note>> {
 
 pub async fn add_note(user_id: &str, note: String) -> Option<Vec<Note>> {
     let source = "NOTE_ADD";
+    let info = functions::util::make_info(source);
+    let error = functions::util::make_error(source);
     if let Some(db) = database::get_mongo().await {
         let notes = db.collection("notes");
         match notes
             .insert_one(doc! {"id":&user_id, "note": &note}, None)
             .await
         {
-            Ok(_) => functions::util::log_info(source, "successful insertion"),
-            Err(error) => {
-                functions::util::log_error(source, &format!("{}", error));
+            Ok(_) => info("successful insertion"),
+            Err(err) => {
+                error(&format!("{}", err));
             }
         }
     }
@@ -151,17 +153,19 @@ pub async fn add_note(user_id: &str, note: String) -> Option<Vec<Note>> {
 
 pub async fn delete_note(user_id: &str, note_id: &str) -> Option<Vec<Note>> {
     let source = "NOTE_DELETE";
+    let info = functions::util::make_info(source);
+    let error = functions::util::make_error(source);
     if let Some(db) = database::get_mongo().await {
         let notes = db.collection("notes");
         if let Ok(object_id) = oid::ObjectId::with_string(note_id) {
             match notes.delete_one(doc! {"_id": object_id}, None).await {
-                Ok(_) => functions::util::log_info(source, "successful delete"),
-                Err(error) => {
-                    functions::util::log_error(source, &format!("{}", error));
+                Ok(_) => info("successful delete"),
+                Err(err) => {
+                    error(&format!("{}", err));
                 }
             }
         } else {
-            functions::util::log_error(source, &"invalid note id".to_string());
+            error(&"invalid note id".to_string());
         }
     }
     get_notes(user_id.to_string()).await

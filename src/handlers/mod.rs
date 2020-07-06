@@ -103,9 +103,10 @@ pub trait BotMessage: Send + Sync {
 ///Distributes incoming requests to separate threads
 pub fn distributor(bot_message: impl BotMessage + 'static, processed_text: String) {
     let source = "DISTRIBUTOR";
+    let info = util::make_info(source);
     //Spawn a new task to handle the message
     tokio::spawn(async move { handler(bot_message, processed_text).await });
-    util::log_info(source, "Handler Thread Spawned");
+    info("Handler Thread Spawned");
 }
 
 ///First place to handle messages after distribution
@@ -196,7 +197,7 @@ async fn natural_understanding(bot_message: impl BotMessage + 'static, processed
             if result.intent.confidence_score > 0.5 {
                 //---Convert result to json string
                 if let Ok(json) = serde_json::to_string(&result) {
-                    util::log_info(source, "ACTION_PICKER: intent json is valid");
+                    info("ACTION_PICKER: intent json is valid");
                     match &*intent {
                         "chat" => {
                             info("starting chat");
@@ -290,7 +291,7 @@ fn wipe_history(bot_message: Arc<impl BotMessage + 'static>, state: UserState) {
                 //If the current state is older than threshold wait time
                 if record.last.elapsed() > Duration::from_secs(WAITTIME) {
                     remove_state(&bot_message.get_id()).await;
-                    util::log_info(source, &format!("deleted state record '{}'", state));
+                    info(&format!("deleted state record '{}'", state));
                     bot_message
                         .send_message(MsgCount::SingleMsg(Msg::Text(
                             responses::load_named("delay-notice")
@@ -324,11 +325,12 @@ fn wipe_history(bot_message: Arc<impl BotMessage + 'static>, state: UserState) {
 ///No notice provided.
 fn immediate_purge_history(bot_message: Arc<impl BotMessage + 'static>, state: UserState) {
     let source = "PURGE_HISTORY";
+    let info = util::make_info(source);
     tokio::spawn(async move {
         if let Some(r) = get_state(&bot_message.get_id()).await {
             if r.state == state {
                 remove_state(&bot_message.get_id()).await;
-                util::log_info(source, &format!("deleted state record for {}", state));
+                info(&format!("deleted state record for {}", state));
             }
         }
     });
@@ -340,16 +342,17 @@ fn immediate_purge_history(bot_message: Arc<impl BotMessage + 'static>, state: U
 #[allow(dead_code)]
 async fn wipe_history_new(bot_message: Arc<impl BotMessage + 'static>) {
     let source = "WIPE_HISTORY";
+    let info = util::make_info(source);
     tokio::spawn(async move {
         while let Some(record) = get_state(&bot_message.get_id()).await {
             //If the current state is older than threshold wait time
             let elapsed = record.last.elapsed();
             if elapsed > Duration::from_secs(WAITTIME) {
                 remove_state(&bot_message.get_id()).await;
-                util::log_info(
-                    source,
-                    &format!("deleted state record for user '{}'", bot_message.get_id()),
-                );
+                info(&format!(
+                    "deleted state record for user '{}'",
+                    bot_message.get_id()
+                ));
                 bot_message
                     .send_message(MsgCount::SingleMsg(Msg::Text(
                         responses::load_named("delay-notice")
@@ -358,13 +361,13 @@ async fn wipe_history_new(bot_message: Arc<impl BotMessage + 'static>) {
                     .await;
             //If the current state is not older than threshold wait time
             } else {
-                util::log_info(source, "aborted record delete due to recency");
+                info("aborted record delete due to recency");
                 tokio::time::delay_for(Duration::from_secs(WAITTIME - elapsed.as_secs())).await;
             }
         }
-        util::log_info(
-            source,
-            &format!("aborted record delete for user '{}'", bot_message.get_id()),
-        )
+        info(&format!(
+            "aborted record delete for user '{}'",
+            bot_message.get_id()
+        ))
     });
 }

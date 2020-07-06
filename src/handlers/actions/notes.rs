@@ -8,7 +8,8 @@ use super::*;
 
 pub async fn start_notes(bot_message: impl BotMessage + 'static) {
     let source = "START_NOTES";
-    util::log_info(source, "notes initiated");
+    let info = util::make_info(source);
+    info("notes initiated");
     let id = bot_message.get_id();
     // New Arc cloneable version of message
     let arc_message = Arc::new(bot_message);
@@ -38,7 +39,7 @@ pub async fn start_notes(bot_message: impl BotMessage + 'static) {
             set_state(id.clone(), UserState::Notes(note_ids)).await;
             // And of course the history cleaner
             wipe_history(Arc::clone(&arc_message), UserState::Notes(vec![]));
-            util::log_info(source, &format!("record added for id {}", id));
+            info(&format!("record added for id {}", id));
 
             arc_message
                 .send_message(MsgCount::MultiMsg(vec![
@@ -69,7 +70,8 @@ pub async fn continue_notes(
     note_ids: Vec<String>,
 ) {
     let source = "CONTINUE_NOTES";
-    util::log_info(source, &format!("continuing with notes '{}'", command));
+    let info = util::make_info(source);
+    info(&format!("continuing with notes '{}'", command));
     let id = bot_message.get_id();
 
     // New Arc cloneable version of message
