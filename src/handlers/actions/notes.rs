@@ -97,19 +97,20 @@ pub async fn continue_notes(
             .await;
         // If it succeeds we'll get an updated list of the current notes
         if let Some(notes) = notes_option {
-            let mut notes_string = "".to_string();
-            // First get rid of old note_ids as that's outdated info now
+            // Overwrite old note ids
             new_note_ids = vec![];
             // Construct the notes string
             // Also push ids to note_ids simultaneously
-            for note in notes {
-                new_note_ids.push(note.id);
-                notes_string.push_str(
-                    &(note_template
-                        .replace("{num}", &format!("{}", note.position))
-                        .replace("{note}", &note.note.to_string())),
-                );
-            }
+            let notes_string = notes
+                .into_iter()
+                .fold("".to_string(), |notes_string, note| {
+                    new_note_ids.push(note.id);
+
+                    notes_string
+                        + &(note_template
+                            .replace("{num}", &format!("{}", note.position))
+                            .replace("{note}", &note.note.to_string()))
+                });
 
             arc_message
                 .send_message(MsgCount::SingleMsg(Msg::Text(notes_string)))
@@ -137,19 +138,21 @@ pub async fn continue_notes(
                     .await;
                 // If updated list is available
                 if let Some(notes) = notes_option {
-                    let mut notes_string = "".to_string();
                     // Overwrite old note ids
                     new_note_ids = vec![];
                     // Construct the notes string
                     // Also push ids to note_ids simultaneously
-                    for note in notes {
-                        new_note_ids.push(note.id);
-                        notes_string.push_str(
-                            &(note_template
-                                .replace("{num}", &format!("{}", note.position))
-                                .replace("{note}", &note.note.to_string())),
-                        );
-                    }
+                    let notes_string =
+                        notes
+                            .into_iter()
+                            .fold("".to_string(), |notes_string, note| {
+                                new_note_ids.push(note.id);
+
+                                notes_string
+                                    + &(note_template
+                                        .replace("{num}", &format!("{}", note.position))
+                                        .replace("{note}", &note.note.to_string()))
+                            });
                     // Send new notes
                     arc_message
                         .send_message(MsgCount::MultiMsg(vec![
@@ -161,6 +164,15 @@ pub async fn continue_notes(
                         ]))
                         .await;
                 }
+            }
+            // If the note number is out of range
+            else {
+                arc_message
+                    .send_message(MsgCount::SingleMsg(Msg::Text(
+                        responses::load_named("notes-invalid")
+                            .unwrap_or_else(responses::unavailable),
+                    )))
+                    .await;
             }
         // If the note number is not actually a valid integer number (invalid input)
         } else {

@@ -85,12 +85,16 @@ pub async fn start_corona(m: impl BotMessage) {
                     let new_template = responses::load_text("corona-new").unwrap_or(
                         "(Fallback)\nname: {1}\nnew confirmed: {2}\nnew deaths: {3}\n".to_string(),
                     );
-                    &countries[..10].iter().for_each(|country| {
-                        new_cases_message += &new_template
-                            .replace("{1}", &country.country)
-                            .replace("{2}", &format!("{}", country.new_confirmed))
-                            .replace("{3}", &format!("{}", country.new_deaths));
-                    });
+                    new_cases_message =
+                        (&countries[..10])
+                            .iter()
+                            .fold(new_cases_message, |message, country| {
+                                message
+                                    + &new_template
+                                        .replace("{1}", &country.country)
+                                        .replace("{2}", &format!("{}", country.new_confirmed))
+                                        .replace("{3}", &format!("{}", country.new_deaths))
+                            });
                     m.send_message(MsgCount::SingleMsg(Msg::Text(new_cases_message)))
                         .await;
                     countries.sort_unstable_by(|first, second| {
@@ -102,12 +106,16 @@ pub async fn start_corona(m: impl BotMessage) {
                         "(Fallback)\nname: {1}\ntotal confirmed: {2}\ntotal deaths: {3}\n"
                             .to_string(),
                     );
-                    &countries[..10].iter().for_each(|country| {
-                        total_cases_message += &total_template
-                            .replace("{1}", &country.country)
-                            .replace("{2}", &format!("{}", country.total_confirmed))
-                            .replace("{3}", &format!("{}", country.total_deaths));
-                    });
+                    total_cases_message =
+                        (&countries[..10])
+                            .iter()
+                            .fold(total_cases_message, |message, country| {
+                                message
+                                    + &total_template
+                                        .replace("{1}", &country.country)
+                                        .replace("{2}", &format!("{}", country.total_confirmed))
+                                        .replace("{3}", &format!("{}", country.total_deaths))
+                            });
                     m.send_message(MsgCount::SingleMsg(Msg::Text(total_cases_message)))
                         .await;
                 }
@@ -121,14 +129,10 @@ pub async fn start_corona(m: impl BotMessage) {
                     let mut total_confirmed: Option<i64> = None;
                     let mut total_deaths: Option<i64> = None;
                     if let Some(Value::Number(num)) = summary.get("TotalConfirmed") {
-                        if let Some(total_confirmed_value) = num.as_i64() {
-                            total_confirmed = Some(total_confirmed_value);
-                        }
+                        total_confirmed = num.as_i64()
                     }
                     if let Some(Value::Number(num)) = summary.get("TotalDeaths") {
-                        if let Some(total_deaths_value) = num.as_i64() {
-                            total_deaths = Some(total_deaths_value);
-                        }
+                        total_deaths = num.as_i64();
                     }
                     match (total_confirmed, total_deaths) {
                         (Some(confirmed), Some(deaths)) => {
