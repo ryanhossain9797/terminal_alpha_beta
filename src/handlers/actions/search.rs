@@ -43,7 +43,7 @@ pub async fn continue_search(bot_message: impl BotMessage + 'static, processed_t
             )];
             //Load template for search results
             let search_template = responses::load_text("search-content")
-                .unwrap_or("{description}\nURL: {url}".to_string());
+                .unwrap_or_else(|| "{description}\nURL: {url}".to_string());
             for result in results {
                 msgs.push(Msg::Text(
                     search_template

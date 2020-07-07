@@ -1,3 +1,4 @@
+#![feature(async_closure)]
 mod clients;
 mod database;
 mod functions;

@@ -19,8 +19,8 @@ pub async fn start_notes(bot_message: impl BotMessage + 'static) {
         // If successful in fetching notes
         Some(notes) => {
             // Load the notes template from responses json, or use default if failed
-            let note_template =
-                responses::load_text("notes-template").unwrap_or("{num}. {note}".to_string());
+            let note_template = responses::load_text("notes-template")
+                .unwrap_or_else(|| "{num}. {note}".to_string());
             let mut notes_string = "".to_string();
             let mut note_ids: Vec<String> = vec![];
             // Iterate over notes
@@ -31,7 +31,7 @@ pub async fn start_notes(bot_message: impl BotMessage + 'static) {
                 notes_string.push_str(
                     &(note_template
                         .replace("{num}", &format!("{}", note.position))
-                        .replace("{note}", &note.note.to_string())),
+                        .replace("{note}", &note.note)),
                 );
             });
             // Only update state on successful notes retrieval
@@ -68,6 +68,7 @@ pub async fn continue_notes(
     note_ids: Vec<String>,
 ) {
     let source = "CONTINUE_NOTES";
+
     let info = util::make_info(source);
     info(&format!("continuing with notes '{}'", command));
     let id = bot_message.get_id();
@@ -75,26 +76,32 @@ pub async fn continue_notes(
     // New Arc cloneable version of message
     let arc_message = Arc::new(bot_message);
 
+    // Create a closure to send single message
+    // Only for reusability
+    let sender_message = Arc::clone(&arc_message);
+    let static_sender = async move |key| {
+        sender_message
+            .send_message(MsgCount::SingleMsg(Msg::Text(
+                responses::load_named(key).unwrap_or_else(responses::unavailable),
+            )))
+            .await;
+    };
     // The note ids to store
-    // If fire some reason the user gives an invalid command
+    // If for some reason the user gives an invalid command
     // The previous IDs will be used again
     // If user modifies the notes, this note_ids will be replaced by the updated note ids
     let mut new_note_ids = note_ids.clone();
 
     // Load the dynamic template for notes
     let note_template =
-        responses::load_text("notes-template").unwrap_or("{num}. {note}".to_string());
+        responses::load_text("notes-template").unwrap_or_else(|| "{num}. {note}".to_string());
     //---------------------------------------------------------ADD NOTE ACTION
     if command.starts_with("add ") {
         // add he new note (trim add keyword from the front)
         let notes_option =
             general::add_note(&id, command.trim_start_matches("add ").to_string()).await;
         // Notify user of Add action
-        arc_message
-            .send_message(MsgCount::SingleMsg(Msg::Text(
-                responses::load_named("notes-add").unwrap_or_else(responses::unavailable),
-            )))
-            .await;
+        static_sender("notes-add").await;
         // If it succeeds we'll get an updated list of the current notes
         if let Some(notes) = notes_option {
             // Overwrite old note ids
@@ -109,7 +116,7 @@ pub async fn continue_notes(
                     notes_string
                         + &(note_template
                             .replace("{num}", &format!("{}", note.position))
-                            .replace("{note}", &note.note.to_string()))
+                            .replace("{note}", &note.note))
                 });
 
             arc_message
@@ -130,12 +137,7 @@ pub async fn continue_notes(
                 // Deleting will return updated list of notes
                 let notes_option = general::delete_note(&id, note_id).await;
                 // Notify of note deletion
-                arc_message
-                    .send_message(MsgCount::SingleMsg(Msg::Text(
-                        responses::load_named("notes-delete")
-                            .unwrap_or_else(responses::unavailable),
-                    )))
-                    .await;
+                static_sender("notes-delete").await;
                 // If updated list is available
                 if let Some(notes) = notes_option {
                     // Overwrite old note ids
@@ -151,7 +153,7 @@ pub async fn continue_notes(
                                 notes_string
                                     + &(note_template
                                         .replace("{num}", &format!("{}", note.position))
-                                        .replace("{note}", &note.note.to_string()))
+                                        .replace("{note}", &note.note))
                             });
                     // Send new notes
                     arc_message
@@ -167,32 +169,19 @@ pub async fn continue_notes(
             }
             // If the note number is out of range
             else {
-                arc_message
-                    .send_message(MsgCount::SingleMsg(Msg::Text(
-                        responses::load_named("notes-invalid")
-                            .unwrap_or_else(responses::unavailable),
-                    )))
-                    .await;
+                static_sender("notes-invalid").await;
             }
         // If the note number is not actually a valid integer number (invalid input)
         } else {
-            arc_message
-                .send_message(MsgCount::SingleMsg(Msg::Text(
-                    responses::load_named("notes-invalid").unwrap_or_else(responses::unavailable),
-                )))
-                .await;
+            static_sender("notes-invalid").await;
         }
     // If the action itself is invalid (anything other than 'add' or 'delete')
     } else {
-        arc_message
-            .send_message(MsgCount::SingleMsg(Msg::Text(
-                responses::load_named("notes-invalid").unwrap_or_else(responses::unavailable),
-            )))
-            .await;
+        static_sender("notes-invalid").await;
     }
     // Update the state, if this action was a failure, with same old note ids
     // Else the new note ids
     set_state(id, UserState::Notes(new_note_ids)).await;
-    // And of course clean history
+    // And of course clear history
     wipe_history(Arc::clone(&arc_message), UserState::Notes(vec![]));
 }
