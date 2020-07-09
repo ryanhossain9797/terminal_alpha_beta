@@ -21,7 +21,7 @@ pub async fn start_search(bot_message: impl BotMessage + 'static) {
     wipe_history(Arc::clone(&arc_message), UserState::Search);
 
     arc_message
-        .send_message(responses::load_named("search-start").unwrap_or_else(responses::unavailable))
+        .send_message(responses::load("search-start").unwrap_or_else(responses::unavailable))
         .await;
 }
 
@@ -41,7 +41,7 @@ pub async fn continue_search(bot_message: impl BotMessage + 'static, processed_t
     let response = match search_result {
         Ok(results) => {
             let mut msgs: Vec<Msg> = vec![Msg::Text(
-                responses::load_named("search-success").unwrap_or_else(responses::unavailable),
+                responses::load("search-success").unwrap_or_else(responses::unavailable),
             )];
             //Load template for search results
             let search_template = responses::load_text("search-content")
@@ -58,7 +58,7 @@ pub async fn continue_search(bot_message: impl BotMessage + 'static, processed_t
         Err(error) => {
             println!("{:?}", error);
             MsgCount::SingleMsg(Msg::Text(
-                responses::load_named("search-fail").unwrap_or_else(responses::unavailable),
+                responses::load("search-fail").unwrap_or_else(responses::unavailable),
             ))
         }
     };

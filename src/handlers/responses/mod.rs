@@ -23,8 +23,8 @@ const NAMES: [&str; 2] = ["Terminal Alpha", "Terminal Beta"];
 ///Message to send when the user's message can't be handled at all.
 pub async fn unsupported_notice(m: impl BotMessage) {
     m.send_message(MsgCount::MultiMsg(vec![
-        Msg::Text(load_named("unsupported-notice-1").unwrap_or_else(responses::unavailable)),
-        Msg::Text(load_named("unsupported-notice-2").unwrap_or_else(responses::unavailable)),
+        Msg::Text(load("unsupported-notice-1").unwrap_or_else(responses::unavailable)),
+        Msg::Text(load("unsupported-notice-2").unwrap_or_else(responses::unavailable)),
     ]))
     .await;
 }
@@ -33,7 +33,7 @@ pub async fn unsupported_notice(m: impl BotMessage) {
 //Usually represents an Error or a WIP state.
 pub async fn unknown_state_notice(bot_message: impl BotMessage + 'static) {
     bot_message
-        .send_message(load_named("unknown-state").unwrap_or_else(responses::unavailable))
+        .send_message(load("unknown-state").unwrap_or_else(responses::unavailable))
         .await;
 }
 
@@ -41,9 +41,8 @@ pub async fn unknown_state_notice(bot_message: impl BotMessage + 'static) {
 ///If unavailable replies with a default message.
 pub async fn custom_response(m: impl BotMessage, key: &str) {
     m.send_message(
-        load_named(key).unwrap_or_else(|| {
-            load_named("unknown-question").unwrap_or_else(responses::unavailable)
-        }),
+        load(key)
+            .unwrap_or_else(|| load("unknown-question").unwrap_or_else(responses::unavailable)),
     )
     .await;
 }
@@ -53,7 +52,7 @@ pub async fn custom_response(m: impl BotMessage, key: &str) {
 ///#### `Terminal Alpha:`  
 ///or
 ///#### `Terminal Beta:`
-pub fn load_named(key: &str) -> Option<String> {
+pub fn load(key: &str) -> Option<String> {
     if let Some(name) = NAMES.choose(&mut rand::thread_rng()) {
         if let Some(response) = load_text(key) {
             return Some(format!("{}:\n{}", name, response));
@@ -131,7 +130,7 @@ mod tests {
     use super::*;
     #[test]
     fn test_response_pass() {
-        let response = load_named("chat-start");
+        let response = load("chat-start");
         assert!(match response {
             Some(response_text) => response_text.contains("free to ask any"),
             None => false,
@@ -140,7 +139,7 @@ mod tests {
 
     #[test]
     fn test_response_fail() {
-        let response = load_named("chat-what");
+        let response = load("chat-what");
         assert!(response.is_none());
     }
 }

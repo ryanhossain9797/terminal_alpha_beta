@@ -28,7 +28,7 @@ pub async fn start_corona(bot_message: impl BotMessage) {
         Some(Value::Object(map)) => {
             bot_message
                 .send_message(
-                    responses::load_named("corona-header").unwrap_or_else(responses::unavailable),
+                    responses::load("corona-header").unwrap_or_else(responses::unavailable),
                 )
                 .await;
 
@@ -81,7 +81,7 @@ pub async fn start_corona(bot_message: impl BotMessage) {
                     countries.sort_unstable_by(|first, second| {
                         first.new_confirmed.cmp(&second.new_confirmed).reverse()
                     });
-                    let mut new_cases_message = responses::load_named("corona-new-header")
+                    let mut new_cases_message = responses::load("corona-new-header")
                         .unwrap_or_else(|| "(Fallback) Top new cases:\n".to_string());
                     let new_template = responses::load_text("corona-new").unwrap_or_else(|| {
                         "(Fallback)\nname: {1}\nnew confirmed: {2}\nnew deaths: {3}\n".to_string()
@@ -100,7 +100,7 @@ pub async fn start_corona(bot_message: impl BotMessage) {
                     countries.sort_unstable_by(|first, second| {
                         first.total_confirmed.cmp(&second.total_confirmed).reverse()
                     });
-                    let mut total_cases_message = responses::load_named("corona-total-header")
+                    let mut total_cases_message = responses::load("corona-total-header")
                         .unwrap_or_else(|| "(Fallback) Top total cases:\n".to_string());
                     let total_template =
                         responses::load_text("corona-total").unwrap_or_else(|| {
@@ -138,14 +138,14 @@ pub async fn start_corona(bot_message: impl BotMessage) {
                         (Some(confirmed), Some(deaths)) => {
                             bot_message
                                 .send_message(MsgCount::MultiMsg(vec![
-                                    Msg::Text(match responses::load_named("corona-body") {
+                                    Msg::Text(match responses::load("corona-body") {
                                         Some(response) => response
                                             .replace("{confirmed}", &format!("{}", confirmed))
                                             .replace("{deaths}", &format!("{}", deaths)),
                                         _ => responses::unavailable(),
                                     }),
                                     Msg::Text(
-                                        responses::load_named("corona-footer")
+                                        responses::load("corona-footer")
                                             .unwrap_or_else(responses::unavailable),
                                     ),
                                 ]))
@@ -162,6 +162,6 @@ pub async fn start_corona(bot_message: impl BotMessage) {
     }
     //If the whole shebang fails
     bot_message
-        .send_message(responses::load_named("corona-fail").unwrap_or_else(responses::unavailable))
+        .send_message(responses::load("corona-fail").unwrap_or_else(responses::unavailable))
         .await;
 }

@@ -11,9 +11,7 @@ pub async fn start_identify(bot_message: impl BotMessage + 'static) {
     let arc_message = Arc::new(bot_message);
     wipe_history(Arc::clone(&arc_message), UserState::Identify);
     arc_message
-        .send_message(
-            responses::load_named("identify-start").unwrap_or_else(responses::unavailable),
-        )
+        .send_message(responses::load("identify-start").unwrap_or_else(responses::unavailable))
         .await;
 }
 
@@ -46,7 +44,7 @@ pub async fn continue_identify(bot_message: impl BotMessage + 'static, name: Str
                             people.iter().for_each(|person| {
                                 if person.name == name {
                                     matched_option =
-                                        Some(match responses::load_named("identify-partialmatch") {
+                                        Some(match responses::load("identify-partialmatch") {
                                             Some(response) => response
                                                 .replace("{name}", &person.name)
                                                 .replace("{description}", &person.description),
@@ -56,17 +54,15 @@ pub async fn continue_identify(bot_message: impl BotMessage + 'static, name: Str
                             });
                             match matched_option {
                                 Some(person) => person,
-                                None => responses::load_named("identify-notfound")
+                                None => responses::load("identify-notfound")
                                     .unwrap_or_else(responses::unavailable),
                             }
                         }
-                        _ => responses::load_named("identify-notfound")
+                        _ => responses::load("identify-notfound")
                             .unwrap_or_else(responses::unavailable),
                     }
                 }
-                _ => {
-                    responses::load_named("identify-dberror").unwrap_or_else(responses::unavailable)
-                }
+                _ => responses::load("identify-dberror").unwrap_or_else(responses::unavailable),
             };
             arc_message.send_message(partial_match).await;
         }

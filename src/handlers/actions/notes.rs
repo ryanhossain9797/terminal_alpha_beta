@@ -42,7 +42,7 @@ pub async fn start_notes(bot_message: impl BotMessage + 'static) {
             arc_message
                 .send_message(MsgCount::MultiMsg(vec![
                     Msg::Text(
-                        responses::load_named("notes-start").unwrap_or_else(responses::unavailable),
+                        responses::load("notes-start").unwrap_or_else(responses::unavailable),
                     ),
                     Msg::Text(notes_string),
                 ]))
@@ -51,9 +51,7 @@ pub async fn start_notes(bot_message: impl BotMessage + 'static) {
         // If not successful in fetching notes
         None => {
             arc_message
-                .send_message(
-                    responses::load_named("notes-fail").unwrap_or_else(responses::unavailable),
-                )
+                .send_message(responses::load("notes-fail").unwrap_or_else(responses::unavailable))
                 .await;
         }
     }
@@ -81,7 +79,7 @@ pub async fn continue_notes(
     let sender_message = Arc::clone(&arc_message);
     let static_sender = async move |key| {
         sender_message
-            .send_message(responses::load_named(key).unwrap_or_else(responses::unavailable))
+            .send_message(responses::load(key).unwrap_or_else(responses::unavailable))
             .await;
     };
     // The note ids to store
@@ -155,7 +153,7 @@ pub async fn continue_notes(
                     arc_message
                         .send_message(MsgCount::MultiMsg(vec![
                             Msg::Text(
-                                responses::load_named("notes-start")
+                                responses::load("notes-start")
                                     .unwrap_or_else(responses::unavailable),
                             ),
                             Msg::Text(notes_string),
