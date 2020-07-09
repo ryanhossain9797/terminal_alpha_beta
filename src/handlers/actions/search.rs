@@ -4,13 +4,17 @@ use search_with_google::search;
 ///Adds a userstate record with search state to userstate records map.  
 ///Fires wipe history command for search state.
 pub async fn start_search(bot_message: impl BotMessage + 'static) {
-    println!("START_SEARCH: search initiated");
+    let source = "START_SEARCH";
+
+    let info = util::make_info(source);
+    info("search initiated");
 
     let id = bot_message.get_id();
     //---Insert Search intent
     set_state(id.clone(), UserState::Search).await;
 
-    println!("START_SEARCH: record added for id {}", id);
+    info(&format!("record added for if: {}", id));
+
     //---Make a cloneable ARC version of the Message
     let arc_message = Arc::new(bot_message);
     //---Fire off wipe

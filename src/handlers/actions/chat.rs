@@ -10,7 +10,7 @@ pub async fn start_chat(bot_message: impl BotMessage) {
 
     println!("START_CHAT: responding to chat intent");
 
-    responses::custom_response(bot_message, "chat-start".to_string()).await
+    responses::custom_response(bot_message, "chat-start").await
 }
 
 ///Continues chat.  
@@ -19,23 +19,17 @@ pub async fn start_chat(bot_message: impl BotMessage) {
 pub async fn continue_chat(bot_message: impl BotMessage, _processed_text: String, intent: &str) {
     let source = "CONTINUE_CHAT";
     let info = util::make_info(source);
-    if intent == "greet" {
-        info("starting greet");
-        responses::custom_response(bot_message, "chat-greet".to_string()).await
-    } else if intent == "about" {
-        info("starting about");
-        responses::custom_response(bot_message, "chat-about".to_string()).await
-    } else if intent == "technology" {
-        info("starting technology");
-        responses::custom_response(bot_message, "chat-technology".to_string()).await
-    } else if intent == "functions" {
-        info("starting functions");
-        responses::custom_response(bot_message, "chat-functions".to_string()).await
-    } else if intent == "creator" {
-        info("starting creator");
-        responses::custom_response(bot_message, "chat-creator".to_string()).await
-    } else {
-        info("unsupported");
-        responses::unsupported_notice(bot_message).await
-    }
+
+    use responses::custom_response as response;
+
+    let response = match intent {
+        "greet" => response(bot_message, "chat-greet").await,
+        "about" => response(bot_message, "chat-about").await,
+        "technology" => response(bot_message, "chat-technology").await,
+        "functions" => response(bot_message, "chat-functions").await,
+        "creator" => response(bot_message, "chat-creator").await,
+        _ => responses::unsupported_notice(bot_message).await,
+    };
+    info(&format!("starting {}", intent));
+    response
 }

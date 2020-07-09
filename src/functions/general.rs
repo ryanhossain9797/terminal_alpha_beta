@@ -39,8 +39,8 @@ pub fn log_message(processed_text: &str) {
 
 ///Retrieves the title and pass for the info intent.  
 ///Parses the intent JSON.
-pub fn title_pass_retriever(json_string: String) -> (String, String) {
-    let json_result: Result<Value, _> = serde_json::from_str(&json_string);
+pub fn title_pass_retriever(json_string: &str) -> (String, String) {
+    let json_result: Result<Value, _> = serde_json::from_str(json_string);
     let mut title: String = String::new();
     let mut pass: String = String::new();
     if let Ok(json) = json_result {

@@ -1,8 +1,7 @@
 use super::*;
 
 pub async fn start_info(bot_message: impl BotMessage, json: String) {
-    //println!("ACTION_PICKER: intent json is {}", json);
-    let title_pass = general::title_pass_retriever(json);
+    let title_pass = general::title_pass_retriever(&json);
     println!(
         "ACTION_PICKER: info title pass is {}, {}",
         title_pass.0, title_pass.1

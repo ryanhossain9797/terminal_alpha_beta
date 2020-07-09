@@ -88,7 +88,7 @@ pub trait BotMessage: Send + Sync {
     ///This is used to make cloneable box<T> version of itself.
     // fn dynamic_clone(&self) -> Box<dyn BotMessage>;
     ///Returns the user's user readable name. Not the same as id.
-    fn get_name(&self) -> String;
+    fn get_name(&self) -> &str;
     ///Returns the user's unique id. This is needed to uniquely identify users.
     fn get_id(&self) -> String;
     ///Used to send messages to the sender (user) of this message.

@@ -24,14 +24,14 @@ pub async fn continue_identify(bot_message: impl BotMessage + 'static, name: Str
     immediate_purge_history(Arc::clone(&arc_message), UserState::Identify);
     println!("IDENTIFY: beginning identification");
     match general::get_person(name.to_string()).await {
-        //---Part one
+        //---If exact match on name
         Some(person) => {
             arc_message
                 .send_message(MsgCount::SingleMsg(Msg::Text(person.description)))
                 .await;
         }
 
-        //---Part two
+        //---Else, try to get closes match
         _ => {
             let partial_match = match general::get_people().await {
                 Some(people) => {

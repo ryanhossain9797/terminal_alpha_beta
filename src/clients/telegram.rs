@@ -57,18 +57,14 @@ async fn filter(message: TMessage) {
             if let Some(name) = myname.username {
                 //-----------------------remove self mention from message
                 let handle = format!("@{}", &name);
-                let mut msg = data.replace(&handle, "");
-                msg = msg.trim().to_string();
-                msg = msg.trim_start_matches('/').to_string();
-                msg = msg.trim().to_string();
-                msg = msg.to_lowercase();
+                let mut msg: &str = &data.replace(&handle, "");
+                msg = msg.trim().trim_start_matches('/').trim();
+                let msg: &str = &msg.to_lowercase();
                 let space_trimmer = Regex::new(r"\s+").unwrap();
 
-                let msg_str: &str = &msg[..];
-                msg = space_trimmer.replace_all(msg_str, " ").to_string();
+                let msg: String = space_trimmer.replace_all(msg, " ").into();
                 //-----------------------check if message is from a group chat.......
-                if let MessageChat::Group(group) = &message.chat {
-                    println!("{:?}", group);
+                if let MessageChat::Group(_) = &message.chat {
                     //-----------------------......and check if handle is present if message IS from group chat
                     if data.contains(&handle) {
                         //---true means message is to be processed even if no conversation is in progress
@@ -109,8 +105,8 @@ impl handlers::BotMessage for TelegramMessage {
     // fn dynamic_clone(&self) -> Box<dyn handlers::BotMessage> {
     //     Box::new(self.clone())
     // }
-    fn get_name(&self) -> String {
-        self.message.from.first_name.clone()
+    fn get_name(&self) -> &str {
+        &self.message.from.first_name
     }
     fn get_id(&self) -> String {
         let id: i64 = self.message.from.id.into();

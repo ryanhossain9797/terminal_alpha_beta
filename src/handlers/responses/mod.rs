@@ -25,9 +25,9 @@ pub async fn unknown_state_notice(bot_message: impl BotMessage + 'static) {
 
 ///Simply uses load_response to load a response for the provided key.  
 ///If unavailable replies with a default message.
-pub async fn custom_response(m: impl BotMessage, key: String) {
+pub async fn custom_response(m: impl BotMessage, key: &str) {
     m.send_message(MsgCount::SingleMsg(Msg::Text(
-        load_named(&key).unwrap_or_else(|| {
+        load_named(key).unwrap_or_else(|| {
             load_named("unknown-question").unwrap_or_else(responses::unavailable)
         }),
     )))

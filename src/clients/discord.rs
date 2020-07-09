@@ -54,19 +54,18 @@ impl EventHandler for Handler {
 /// - removes mentions of the bot from the message ("hellow    @machinelifeformbot   world" becomes "hellow      world").
 /// - replaces redundant spaces with single spaces using regex ("hellow      world" becomes "hellow world").
 async fn filter(message: DMessage, ctx: Context) {
+    let source = "DISCORD";
+    let error = functions::util::make_error(source);
     if let Ok(info) = ctx.http.get_current_application_info().await {
         let id: i64 = info.id.into();
-        let handle = format!("<@{}>", &id);
         //-----------------------remove self mention from message
-        let mut msg = message.content.replace(&handle, "");
-        msg = msg.trim().to_string();
-        msg = msg.trim_start_matches('/').to_string();
-        msg = msg.trim().to_string();
-        msg = msg.to_lowercase();
+        let handle = format!("<@{}>", &id);
+        let mut msg: &str = &message.content.replace(&handle, "");
+        msg = msg.trim().trim_start_matches('/').trim();
+        let msg: &str = &msg.to_lowercase();
         let space_trimmer = Regex::new(r"\s+").unwrap();
 
-        let msg_str: &str = &msg[..];
-        msg = space_trimmer.replace_all(msg_str, " ").to_string();
+        let msg: String = space_trimmer.replace_all(msg, " ").into();
         //-----------------------check if message is from a group chat.......
         if !message.is_private() {
             //-----------------------......and check if handle is present if message IS from group chat
@@ -84,7 +83,7 @@ async fn filter(message: DMessage, ctx: Context) {
             sender(message, ctx, msg, true).await
         };
     } else {
-        println!("DISCORD: Error occured while fetching self ID")
+        error("Problem occurred while fetching self ID");
     }
 }
 
@@ -112,8 +111,8 @@ impl handlers::BotMessage for DiscordMessage {
     // fn dynamic_clone(&self) -> Box<dyn handlers::BotMessage> {
     //     Box::new(self.clone())
     // }
-    fn get_name(&self) -> String {
-        self.message.author.name.clone()
+    fn get_name(&self) -> &str {
+        &self.message.author.name
     }
     fn get_id(&self) -> String {
         let id: i64 = self.message.author.id.into();
