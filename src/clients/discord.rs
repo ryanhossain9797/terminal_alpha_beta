@@ -121,7 +121,8 @@ impl handlers::BotMessage for DiscordMessage {
     fn start_conversation(&self) -> bool {
         self.start_conversation
     }
-    async fn send_message(&self, msg: handlers::MsgCount) {
+    async fn send_message<T: Into<handlers::MsgCount> + Send>(&self, msg: T) {
+        let msg: handlers::MsgCount = msg.into();
         match msg {
             handlers::MsgCount::SingleMsg(msg) => match msg {
                 handlers::Msg::Text(text) => {

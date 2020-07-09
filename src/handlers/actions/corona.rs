@@ -27,9 +27,9 @@ pub async fn start_corona(bot_message: impl BotMessage) {
         //If Successful
         Some(Value::Object(map)) => {
             bot_message
-                .send_message(MsgCount::SingleMsg(Msg::Text(
+                .send_message(
                     responses::load_named("corona-header").unwrap_or_else(responses::unavailable),
-                )))
+                )
                 .await;
 
             //Work through the json to get the country specific data
@@ -96,9 +96,7 @@ pub async fn start_corona(bot_message: impl BotMessage) {
                                         .replace("{2}", &format!("{}", country.new_confirmed))
                                         .replace("{3}", &format!("{}", country.new_deaths))
                             });
-                    bot_message
-                        .send_message(MsgCount::SingleMsg(Msg::Text(new_cases_message)))
-                        .await;
+                    bot_message.send_message(new_cases_message).await;
                     countries.sort_unstable_by(|first, second| {
                         first.total_confirmed.cmp(&second.total_confirmed).reverse()
                     });
@@ -119,9 +117,7 @@ pub async fn start_corona(bot_message: impl BotMessage) {
                                         .replace("{2}", &format!("{}", country.total_confirmed))
                                         .replace("{3}", &format!("{}", country.total_deaths))
                             });
-                    bot_message
-                        .send_message(MsgCount::SingleMsg(Msg::Text(total_cases_message)))
-                        .await;
+                    bot_message.send_message(total_cases_message).await;
                 }
                 _ => error("No Value for 'Countries' key"),
             }
@@ -166,8 +162,6 @@ pub async fn start_corona(bot_message: impl BotMessage) {
     }
     //If the whole shebang fails
     bot_message
-        .send_message(MsgCount::SingleMsg(Msg::Text(
-            responses::load_named("corona-fail").unwrap_or_else(responses::unavailable),
-        )))
+        .send_message(responses::load_named("corona-fail").unwrap_or_else(responses::unavailable))
         .await;
 }

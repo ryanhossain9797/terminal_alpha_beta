@@ -1,6 +1,22 @@
 use super::*;
+use once_cell::sync::Lazy;
 use rand::seq::SliceRandom;
 use serde_json::Value;
+
+///RESPONSES: Response json holding all the responses.  
+///Put in a json so they can be modified without recompiling the bot.  
+///Loaded at startup, Restart Bot to reload.
+static RESPONSES: Lazy<Option<serde_json::Value>> = Lazy::new(|| {
+    println!("\nLoading JSON responses");
+    match read_to_string("data/responses.json") {
+        Ok(json) => serde_json::from_str(&json).ok(),
+        Err(_) => None,
+    }
+});
+
+pub fn initialize_responses() {
+    Lazy::force(&RESPONSES);
+}
 
 const NAMES: [&str; 2] = ["Terminal Alpha", "Terminal Beta"];
 
@@ -17,24 +33,22 @@ pub async fn unsupported_notice(m: impl BotMessage) {
 //Usually represents an Error or a WIP state.
 pub async fn unknown_state_notice(bot_message: impl BotMessage + 'static) {
     bot_message
-        .send_message(MsgCount::SingleMsg(Msg::Text(
-            load_named("unknown-state").unwrap_or_else(responses::unavailable),
-        )))
+        .send_message(load_named("unknown-state").unwrap_or_else(responses::unavailable))
         .await;
 }
 
 ///Simply uses load_response to load a response for the provided key.  
 ///If unavailable replies with a default message.
 pub async fn custom_response(m: impl BotMessage, key: &str) {
-    m.send_message(MsgCount::SingleMsg(Msg::Text(
+    m.send_message(
         load_named(key).unwrap_or_else(|| {
             load_named("unknown-question").unwrap_or_else(responses::unavailable)
         }),
-    )))
+    )
     .await;
 }
 
-///Uses load() to load a response,  
+///Uses load_text() to load a response,  
 ///then prepends  
 ///#### `Terminal Alpha:`  
 ///or

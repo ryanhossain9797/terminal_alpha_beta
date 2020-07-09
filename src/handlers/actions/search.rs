@@ -21,9 +21,7 @@ pub async fn start_search(bot_message: impl BotMessage + 'static) {
     wipe_history(Arc::clone(&arc_message), UserState::Search);
 
     arc_message
-        .send_message(MsgCount::SingleMsg(Msg::Text(
-            responses::load_named("search-start").unwrap_or_else(responses::unavailable),
-        )))
+        .send_message(responses::load_named("search-start").unwrap_or_else(responses::unavailable))
         .await;
 }
 

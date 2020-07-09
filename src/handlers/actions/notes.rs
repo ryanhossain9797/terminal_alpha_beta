@@ -51,9 +51,9 @@ pub async fn start_notes(bot_message: impl BotMessage + 'static) {
         // If not successful in fetching notes
         None => {
             arc_message
-                .send_message(MsgCount::SingleMsg(Msg::Text(
+                .send_message(
                     responses::load_named("notes-fail").unwrap_or_else(responses::unavailable),
-                )))
+                )
                 .await;
         }
     }
@@ -81,9 +81,7 @@ pub async fn continue_notes(
     let sender_message = Arc::clone(&arc_message);
     let static_sender = async move |key| {
         sender_message
-            .send_message(MsgCount::SingleMsg(Msg::Text(
-                responses::load_named(key).unwrap_or_else(responses::unavailable),
-            )))
+            .send_message(responses::load_named(key).unwrap_or_else(responses::unavailable))
             .await;
     };
     // The note ids to store
@@ -119,9 +117,7 @@ pub async fn continue_notes(
                             .replace("{note}", &note.note))
                 });
 
-            arc_message
-                .send_message(MsgCount::SingleMsg(Msg::Text(notes_string)))
-                .await;
+            arc_message.send_message(notes_string).await;
         }
     //---------------------------------------------------------DELETE NOTE ACTION
     } else if command.starts_with("delete ") {

@@ -11,9 +11,9 @@ pub async fn start_identify(bot_message: impl BotMessage + 'static) {
     let arc_message = Arc::new(bot_message);
     wipe_history(Arc::clone(&arc_message), UserState::Identify);
     arc_message
-        .send_message(MsgCount::SingleMsg(Msg::Text(
+        .send_message(
             responses::load_named("identify-start").unwrap_or_else(responses::unavailable),
-        )))
+        )
         .await;
 }
 
@@ -26,9 +26,7 @@ pub async fn continue_identify(bot_message: impl BotMessage + 'static, name: Str
     match general::get_person(name.to_string()).await {
         //---If exact match on name
         Some(person) => {
-            arc_message
-                .send_message(MsgCount::SingleMsg(Msg::Text(person.description)))
-                .await;
+            arc_message.send_message(person.description).await;
         }
 
         //---Else, try to get closes match
@@ -57,23 +55,18 @@ pub async fn continue_identify(bot_message: impl BotMessage + 'static, name: Str
                                 }
                             });
                             match matched_option {
-                                Some(person) => MsgCount::SingleMsg(Msg::Text(person)),
-                                None => MsgCount::SingleMsg(Msg::Text(
-                                    responses::load_named("identify-notfound")
-                                        .unwrap_or_else(responses::unavailable),
-                                )),
+                                Some(person) => person,
+                                None => responses::load_named("identify-notfound")
+                                    .unwrap_or_else(responses::unavailable),
                             }
                         }
-                        _ => MsgCount::SingleMsg(Msg::Text(
-                            responses::load_named("identify-notfound")
-                                .unwrap_or_else(responses::unavailable),
-                        )),
+                        _ => responses::load_named("identify-notfound")
+                            .unwrap_or_else(responses::unavailable),
                     }
                 }
-                _ => MsgCount::SingleMsg(Msg::Text(
-                    responses::load_named("identify-dberror")
-                        .unwrap_or_else(responses::unavailable),
-                )),
+                _ => {
+                    responses::load_named("identify-dberror").unwrap_or_else(responses::unavailable)
+                }
             };
             arc_message.send_message(partial_match).await;
         }

@@ -7,9 +7,7 @@ pub async fn start_info(bot_message: impl BotMessage, json: String) {
         title_pass.0, title_pass.1
     );
     if let Some(info) = general::get_info(title_pass.0, title_pass.1).await {
-        bot_message
-            .send_message(MsgCount::SingleMsg(Msg::Text(info)))
-            .await;
+        bot_message.send_message(info).await;
     } else {
         responses::unsupported_notice(bot_message).await;
     }

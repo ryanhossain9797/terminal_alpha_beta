@@ -9,9 +9,9 @@ pub async fn start_unknown(bot_message: impl BotMessage + 'static) {
     let arc_message = Arc::new(bot_message);
     wipe_history(Arc::clone(&arc_message), UserState::Unknown);
     arc_message
-        .send_message(MsgCount::SingleMsg(Msg::Text(
+        .send_message(
             responses::load_named("intentional-unknownstate")
                 .unwrap_or_else(responses::unavailable),
-        )))
+        )
         .await;
 }

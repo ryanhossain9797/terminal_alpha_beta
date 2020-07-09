@@ -7,6 +7,7 @@ mod state;
 
 use crate::functions::*;
 use actions::*;
+use responses::*;
 use state::userstate::*;
 
 use std::{fs::*, sync::Arc, time::Duration};
@@ -30,17 +31,6 @@ static NLUENGINE: Lazy<Option<SnipsNluEngine>> = Lazy::new(|| {
     SnipsNluEngine::from_path("data/rootengine/").ok()
 });
 
-///RESPONSES: Response json holding all the responses.  
-///Put in a json so they can be modified without recompiling the bot.  
-///Loaded at startup, Restart Bot to reload.
-static RESPONSES: Lazy<Option<serde_json::Value>> = Lazy::new(|| {
-    println!("\nLoading JSON responses");
-    match read_to_string("data/responses.json") {
-        Ok(json) => serde_json::from_str(&json).ok(),
-        Err(_) => None,
-    }
-});
-
 ///HTTP client for..... HTTP things
 static CLIENT: Lazy<reqwest::Client> = Lazy::new(|| {
     println!("\nLoading Api Client");
@@ -54,8 +44,8 @@ static CLIENT: Lazy<reqwest::Client> = Lazy::new(|| {
 pub fn initialize() {
     initialize_state();
     Lazy::force(&NLUENGINE);
-    Lazy::force(&RESPONSES);
     Lazy::force(&CLIENT);
+    initialize_responses();
 }
 
 ///ENUM, Represents Message count
@@ -66,6 +56,21 @@ pub enum MsgCount {
     SingleMsg(Msg),
     MultiMsg(Vec<Msg>),
     // NoMsg,
+}
+
+impl From<String> for MsgCount {
+    fn from(s: String) -> Self {
+        MsgCount::SingleMsg(Msg::Text(s))
+    }
+}
+
+impl From<Option<String>> for MsgCount {
+    fn from(s: Option<String>) -> Self {
+        match s {
+            Some(msg) => MsgCount::SingleMsg(Msg::Text(msg)),
+            None => MsgCount::SingleMsg(Msg::Text("response unavailable error".to_string())),
+        }
+    }
 }
 
 ///ENUM, Represents Message type
@@ -92,7 +97,7 @@ pub trait BotMessage: Send + Sync {
     ///Returns the user's unique id. This is needed to uniquely identify users.
     fn get_id(&self) -> String;
     ///Used to send messages to the sender (user) of this message.
-    async fn send_message(&self, message: MsgCount);
+    async fn send_message<T: Into<MsgCount> + Send>(&self, message: T);
     ///Used to check whether a new conversation should be started.  
     ///Sometimes if the user is in a state, Bot will always respond.  
     ///However if not in a state, bot needs to know when it should or should not respond.  
@@ -154,9 +159,9 @@ async fn handler(bot_message: impl BotMessage + 'static, processed_text: String)
         //---cancel last does nothing as there's nothing to cancel
         if processed_text == "cancel last" {
             bot_message
-                .send_message(MsgCount::SingleMsg(Msg::Text(
+                .send_message(
                     responses::load_named("cancel-nothing").unwrap_or_else(responses::unavailable),
-                )))
+                )
                 .await;
         }
         //---hand over to the natural understanding system for advanced matching
@@ -270,9 +275,7 @@ async fn natural_understanding(bot_message: impl BotMessage + 'static, processed
 async fn cancel_history(bot_message: impl BotMessage + 'static) {
     remove_state(&bot_message.get_id()).await;
     bot_message
-        .send_message(MsgCount::SingleMsg(Msg::Text(
-            responses::load_named("cancel-state").unwrap_or_else(responses::unavailable),
-        )))
+        .send_message(responses::load_named("cancel-state").unwrap_or_else(responses::unavailable))
         .await;
 }
 
@@ -293,10 +296,10 @@ fn wipe_history(bot_message: Arc<impl BotMessage + 'static>, state: UserState) {
                     remove_state(&bot_message.get_id()).await;
                     info(&format!("deleted state record '{}'", state));
                     bot_message
-                        .send_message(MsgCount::SingleMsg(Msg::Text(
+                        .send_message(
                             responses::load_named("delay-notice")
                                 .unwrap_or_else(responses::unavailable),
-                        )))
+                        )
                         .await;
                 //If the current state is not older than threshold wait time
                 } else {
@@ -354,10 +357,10 @@ async fn wipe_history_new(bot_message: Arc<impl BotMessage + 'static>) {
                     bot_message.get_id()
                 ));
                 bot_message
-                    .send_message(MsgCount::SingleMsg(Msg::Text(
+                    .send_message(
                         responses::load_named("delay-notice")
                             .unwrap_or_else(responses::unavailable),
-                    )))
+                    )
                     .await;
             //If the current state is not older than threshold wait time
             } else {

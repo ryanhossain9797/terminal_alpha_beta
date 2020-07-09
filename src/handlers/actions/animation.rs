@@ -6,7 +6,7 @@ use serde_json::Value;
 pub async fn start_gif(bot_message: impl BotMessage + 'static) {
     let source = "START_ANIMATION";
     let info = util::make_info(source);
-    
+
     info("animation initiated");
     let id = bot_message.get_id();
     // Set the state
@@ -17,9 +17,7 @@ pub async fn start_gif(bot_message: impl BotMessage + 'static) {
     // And fire off wipe history
     wipe_history(Arc::clone(&arc_message), UserState::Animation);
     arc_message
-        .send_message(MsgCount::SingleMsg(Msg::Text(
-            responses::load_named("animation-start").unwrap_or_else(responses::unavailable),
-        )))
+        .send_message(responses::load_named("animation-start"))
         .await;
 }
 
@@ -54,8 +52,6 @@ pub async fn continue_gif(bot_message: impl BotMessage + 'static, processed_text
     }
     // If something fails
     arc_message
-        .send_message(MsgCount::SingleMsg(Msg::Text(
-            responses::load_named("animation-fail").unwrap_or_else(responses::unavailable),
-        )))
+        .send_message(responses::load_named("animation-fail"))
         .await;
 }
