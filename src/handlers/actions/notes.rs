@@ -41,17 +41,15 @@ pub async fn start_notes(bot_message: impl BotMessage + 'static) {
             info(&format!("record added for id {}", id));
             arc_message
                 .send_message(MsgCount::MultiMsg(vec![
-                    Msg::Text(
-                        responses::load("notes-start").unwrap_or_else(responses::unavailable),
-                    ),
-                    Msg::Text(notes_string),
+                    responses::load("notes-start").into(),
+                    notes_string.into(),
                 ]))
                 .await;
         }
         // If not successful in fetching notes
         None => {
             arc_message
-                .send_message(responses::load("notes-fail").unwrap_or_else(responses::unavailable))
+                .send_message(responses::load("notes-fail"))
                 .await;
         }
     }
@@ -78,9 +76,7 @@ pub async fn continue_notes(
     // Only for reusability
     let sender_message = Arc::clone(&arc_message);
     let static_sender = async move |key| {
-        sender_message
-            .send_message(responses::load(key).unwrap_or_else(responses::unavailable))
-            .await;
+        sender_message.send_message(responses::load(key)).await;
     };
     // The note ids to store
     // If for some reason the user gives an invalid command
@@ -152,11 +148,8 @@ pub async fn continue_notes(
                     // Send new notes
                     arc_message
                         .send_message(MsgCount::MultiMsg(vec![
-                            Msg::Text(
-                                responses::load("notes-start")
-                                    .unwrap_or_else(responses::unavailable),
-                            ),
-                            Msg::Text(notes_string),
+                            responses::load("notes-start").into(),
+                            notes_string.into(),
                         ]))
                         .await;
                 }

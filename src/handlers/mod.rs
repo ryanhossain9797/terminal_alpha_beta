@@ -58,12 +58,17 @@ pub enum MsgCount {
     // NoMsg,
 }
 
+///When passed an String
+///Uses the value as a MsgCount::SingleMsg(Msg::Text)  
 impl From<String> for MsgCount {
     fn from(s: String) -> Self {
         MsgCount::SingleMsg(Msg::Text(s))
     }
 }
 
+///When passed an Option<String>  
+///Uses the Some value as a MsgCount::SingleMsg(Msg::Text)  
+///Uses the 'response unavailable...' message in case of None as MsgCount::SingleMsg(Msg::Text)  
 impl From<Option<String>> for MsgCount {
     fn from(s: Option<String>) -> Self {
         match s {
@@ -79,6 +84,26 @@ impl From<Option<String>> for MsgCount {
 pub enum Msg {
     Text(String),
     File(String),
+}
+
+///When passed an Option<String>  
+///Uses the Some value as a Msg::Text  
+///Uses the 'response unavailable...' message in case of None as Msg::Text  
+impl From<Option<String>> for Msg {
+    fn from(s: Option<String>) -> Self {
+        match s {
+            Some(msg) => Msg::Text(msg),
+            None => Msg::Text("response unavailable error".to_string()),
+        }
+    }
+}
+
+///When passed an String
+///Uses the value as a Msg::Text  
+impl From<String> for Msg {
+    fn from(s: String) -> Self {
+        Msg::Text(s)
+    }
 }
 
 ///# Used to generalize Message Updates for various platforms
@@ -159,9 +184,7 @@ async fn handler(bot_message: impl BotMessage + 'static, processed_text: String)
         //---cancel last does nothing as there's nothing to cancel
         if processed_text == "cancel last" {
             bot_message
-                .send_message(
-                    responses::load("cancel-nothing").unwrap_or_else(responses::unavailable),
-                )
+                .send_message(responses::load("cancel-nothing"))
                 .await;
         }
         //---hand over to the natural understanding system for advanced matching
@@ -275,7 +298,7 @@ async fn natural_understanding(bot_message: impl BotMessage + 'static, processed
 async fn cancel_history(bot_message: impl BotMessage + 'static) {
     remove_state(&bot_message.get_id()).await;
     bot_message
-        .send_message(responses::load("cancel-state").unwrap_or_else(responses::unavailable))
+        .send_message(responses::load("cancel-state"))
         .await;
 }
 
@@ -296,9 +319,7 @@ fn wipe_history(bot_message: Arc<impl BotMessage + 'static>, state: UserState) {
                     remove_state(&bot_message.get_id()).await;
                     info(&format!("deleted state record '{}'", state));
                     bot_message
-                        .send_message(
-                            responses::load("delay-notice").unwrap_or_else(responses::unavailable),
-                        )
+                        .send_message(responses::load("delay-notice"))
                         .await;
                 //If the current state is not older than threshold wait time
                 } else {
@@ -356,9 +377,7 @@ async fn wipe_history_new(bot_message: Arc<impl BotMessage + 'static>) {
                     bot_message.get_id()
                 ));
                 bot_message
-                    .send_message(
-                        responses::load("delay-notice").unwrap_or_else(responses::unavailable),
-                    )
+                    .send_message(responses::load("delay-notice"))
                     .await;
             //If the current state is not older than threshold wait time
             } else {

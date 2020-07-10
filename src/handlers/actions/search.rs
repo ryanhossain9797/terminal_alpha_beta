@@ -21,7 +21,7 @@ pub async fn start_search(bot_message: impl BotMessage + 'static) {
     wipe_history(Arc::clone(&arc_message), UserState::Search);
 
     arc_message
-        .send_message(responses::load("search-start").unwrap_or_else(responses::unavailable))
+        .send_message(responses::load("search-start"))
         .await;
 }
 
@@ -40,26 +40,23 @@ pub async fn continue_search(bot_message: impl BotMessage + 'static, processed_t
 
     let response = match search_result {
         Ok(results) => {
-            let mut msgs: Vec<Msg> = vec![Msg::Text(
-                responses::load("search-success").unwrap_or_else(responses::unavailable),
-            )];
+            let mut msgs: Vec<Msg> = vec![responses::load("search-success").into()];
             //Load template for search results
             let search_template = responses::load_text("search-content")
                 .unwrap_or_else(|| "{description}\nURL: {url}".to_string());
             for result in results {
-                msgs.push(Msg::Text(
+                msgs.push(
                     search_template
                         .replace("{description}", &result.description)
-                        .replace("{url}", &result.link),
-                ));
+                        .replace("{url}", &result.link)
+                        .into(),
+                );
             }
             MsgCount::MultiMsg(msgs)
         }
         Err(error) => {
             println!("{:?}", error);
-            MsgCount::SingleMsg(Msg::Text(
-                responses::load("search-fail").unwrap_or_else(responses::unavailable),
-            ))
+            responses::load("search-fail").into()
         }
     };
     arc_message.send_message(response).await;

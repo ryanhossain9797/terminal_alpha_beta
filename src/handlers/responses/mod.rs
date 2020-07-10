@@ -23,8 +23,8 @@ const NAMES: [&str; 2] = ["Terminal Alpha", "Terminal Beta"];
 ///Message to send when the user's message can't be handled at all.
 pub async fn unsupported_notice(m: impl BotMessage) {
     m.send_message(MsgCount::MultiMsg(vec![
-        Msg::Text(load("unsupported-notice-1").unwrap_or_else(responses::unavailable)),
-        Msg::Text(load("unsupported-notice-2").unwrap_or_else(responses::unavailable)),
+        load("unsupported-notice-1").into(),
+        load("unsupported-notice-2").into(),
     ]))
     .await;
 }
@@ -32,19 +32,16 @@ pub async fn unsupported_notice(m: impl BotMessage) {
 ///Notice to send when the stored state for a user is not supported.  
 //Usually represents an Error or a WIP state.
 pub async fn unknown_state_notice(bot_message: impl BotMessage + 'static) {
-    bot_message
-        .send_message(load("unknown-state").unwrap_or_else(responses::unavailable))
-        .await;
+    bot_message.send_message(load("unknown-state")).await;
 }
 
 ///Simply uses load_response to load a response for the provided key.  
 ///If unavailable replies with a default message.
-pub async fn custom_response(m: impl BotMessage, key: &str) {
-    m.send_message(
-        load(key)
-            .unwrap_or_else(|| load("unknown-question").unwrap_or_else(responses::unavailable)),
-    )
-    .await;
+pub async fn custom_response(bot_message: impl BotMessage, key: &str) {
+    match load(key) {
+        Some(msg) => bot_message.send_message(msg).await,
+        _ => bot_message.send_message(load("unknown-question")).await,
+    }
 }
 
 ///Uses load_text() to load a response,  
@@ -78,15 +75,6 @@ pub fn load_text(key: &str) -> Option<String> {
         }
     }
     None
-}
-
-///Literally Just a harcoded string
-///```
-///let a = response_unavailable();
-///assert_eq!("response unavailable error".to_string(), a);
-///```
-pub fn unavailable() -> String {
-    "response unavailable error".to_string()
 }
 
 /*

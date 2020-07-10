@@ -27,9 +27,7 @@ pub async fn start_corona(bot_message: impl BotMessage) {
         //If Successful
         Some(Value::Object(map)) => {
             bot_message
-                .send_message(
-                    responses::load("corona-header").unwrap_or_else(responses::unavailable),
-                )
+                .send_message(responses::load("corona-header"))
                 .await;
 
             //Work through the json to get the country specific data
@@ -138,16 +136,16 @@ pub async fn start_corona(bot_message: impl BotMessage) {
                         (Some(confirmed), Some(deaths)) => {
                             bot_message
                                 .send_message(MsgCount::MultiMsg(vec![
-                                    Msg::Text(match responses::load("corona-body") {
-                                        Some(response) => response
-                                            .replace("{confirmed}", &format!("{}", confirmed))
-                                            .replace("{deaths}", &format!("{}", deaths)),
-                                        _ => responses::unavailable(),
-                                    }),
-                                    Msg::Text(
-                                        responses::load("corona-footer")
-                                            .unwrap_or_else(responses::unavailable),
-                                    ),
+                                    (match responses::load("corona-body") {
+                                        Some(response) => Some(
+                                            response
+                                                .replace("{confirmed}", &format!("{}", confirmed))
+                                                .replace("{deaths}", &format!("{}", deaths)),
+                                        ),
+                                        _ => None,
+                                    })
+                                    .into(),
+                                    responses::load("corona-footer").into(),
                                 ]))
                                 .await;
                         }
@@ -162,6 +160,6 @@ pub async fn start_corona(bot_message: impl BotMessage) {
     }
     //If the whole shebang fails
     bot_message
-        .send_message(responses::load("corona-fail").unwrap_or_else(responses::unavailable))
+        .send_message(responses::load("corona-fail"))
         .await;
 }
