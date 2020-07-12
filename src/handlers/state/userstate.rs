@@ -1,14 +1,40 @@
+use super::*;
+use crate::clients::{discord::*, telegram::*};
+use futures_delay_queue::{delay_queue, DelayQueue};
+use futures_intrusive::buffer::GrowingHeapBuf;
 use once_cell::sync::Lazy;
 use std::collections::HashMap;
-use std::fmt;
-use std::time::Instant;
+use std::time::{Duration, Instant};
+use std::{fmt, sync::Arc};
+use tokio::sync::Mutex as TokioMutex;
+
+static RECORDS: Lazy<TokioMutex<HashMap<String, UserStateRecord>>> =
+    Lazy::new(|| TokioMutex::new(HashMap::new()));
+
+// type Cleaner<T> = Lazy<tokio::sync::Mutex<Option<DelayQueue<T, GrowingHeapBuf<T>>>>>;
+// static CLEANER: Cleaner<impl BotMessage> = Lazy::new(|| TokioMutex::new(None));
 
 pub fn initialize_state() {
     Lazy::force(&RECORDS);
+    // tokio::spawn(async move { state_cleaner().await });
 }
 
-static RECORDS: Lazy<tokio::sync::Mutex<HashMap<String, UserStateRecord>>> =
-    Lazy::new(|| tokio::sync::Mutex::new(HashMap::new()));
+// async fn state_cleaner() {
+//     let (clean_request, clean_queue) = delay_queue();
+
+//     let clean_request_opt = Some(clean_request);
+//     *CLEANER.lock().await = clean_request_opt;
+
+//     if let Some(cleaner) = &*CLEANER.lock().await {
+//         cleaner.insert(1, Duration::from_secs(2));
+//         cleaner.insert(5, Duration::from_secs(1));
+//         cleaner.insert(4, Duration::from_secs(5));
+//     }
+//     while let Some(val) = clean_queue.receive().await {
+//         tokio::time::delay_for(Duration::from_secs(2)).await;
+//         println!("val is {}", val);
+//     }
+// }
 
 ///A user state record holds an individual user's state.  
 ///Last holds when it was last updated.

@@ -122,12 +122,16 @@ pub trait BotMessage: Send + Sync {
     ///Returns the user's unique id. This is needed to uniquely identify users.
     fn get_id(&self) -> String;
     ///Used to send messages to the sender (user) of this message.
-    async fn send_message<T: Into<MsgCount> + Send>(&self, message: T);
+    async fn send_message(&self, message: impl Into<MsgCount> + Send + 'static);
     ///Used to check whether a new conversation should be started.  
     ///Sometimes if the user is in a state, Bot will always respond.  
     ///However if not in a state, bot needs to know when it should or should not respond.  
     ///Ex. Won't respond if message is in a group and bot wasn't mentioned.
     fn start_conversation(&self) -> bool;
+}
+
+fn into_msg(msg: impl Into<MsgCount>) -> MsgCount {
+    msg.into()
 }
 
 ///Distributes incoming requests to separate threads
@@ -175,7 +179,7 @@ async fn handler(bot_message: impl BotMessage + 'static, processed_text: String)
         //---"if state is unknown"
         else {
             info("some unknown state");
-            responses::unknown_state_notice(bot_message).await;
+            extra::unknown_state_notice(bot_message).await;
         }
     }
     //---if record from user doesn't exist, but is either IN A PRIVATE CHAT or MENTIONED IN A GROUP CHAT
@@ -257,7 +261,7 @@ async fn natural_understanding(bot_message: impl BotMessage + 'static, processed
                         }
                         "unknown" => {
                             info("starting unknown state test");
-                            extras::start_unknown(bot_message).await
+                            extra::start_unknown(bot_message).await
                         }
                         _ => {
                             //Forward to chat for more intents
@@ -270,25 +274,25 @@ async fn natural_understanding(bot_message: impl BotMessage + 'static, processed
                 else {
                     error("couldn't convert intent data to JSON");
                     general::log_message(&processed_text);
-                    responses::unsupported_notice(bot_message).await
+                    extra::unsupported_notice(bot_message).await
                 }
             }
             //Unsure intent if cannot match to any intent confidently
             else {
                 warning("couldn't match an intent confidently");
                 general::log_message(&processed_text);
-                responses::unsupported_notice(bot_message).await
+                extra::unsupported_notice(bot_message).await
             }
         }
         //Unknown intent if can't match intent at all
         else {
             warning("unknown intent");
             general::log_message(&processed_text);
-            responses::unsupported_notice(bot_message).await
+            extra::unsupported_notice(bot_message).await
         };
     } else {
         error("NLU engine load failed");
-        responses::unsupported_notice(bot_message).await
+        extra::unsupported_notice(bot_message).await
     }
 }
 
@@ -356,38 +360,5 @@ fn immediate_purge_history(bot_message: Arc<impl BotMessage + 'static>, state: U
                 info(&format!("deleted state record for {}", state));
             }
         }
-    });
-}
-
-///Removes history after 30 seconds if it's not updated with a new time,  
-///AND the history state matches the provided state.  
-///Notice Message is provided to user.
-#[allow(dead_code)]
-async fn wipe_history_new(bot_message: Arc<impl BotMessage + 'static>) {
-    let source = "WIPE_HISTORY";
-    let info = util::make_info(source);
-    tokio::spawn(async move {
-        while let Some(record) = get_state(&bot_message.get_id()).await {
-            //If the current state is older than threshold wait time
-            let elapsed = record.last.elapsed();
-            if elapsed > Duration::from_secs(WAITTIME) {
-                remove_state(&bot_message.get_id()).await;
-                info(&format!(
-                    "deleted state record for user '{}'",
-                    bot_message.get_id()
-                ));
-                bot_message
-                    .send_message(responses::load("delay-notice"))
-                    .await;
-            //If the current state is not older than threshold wait time
-            } else {
-                info("aborted record delete due to recency");
-                tokio::time::delay_for(Duration::from_secs(WAITTIME - elapsed.as_secs())).await;
-            }
-        }
-        info(&format!(
-            "aborted record delete for user '{}'",
-            bot_message.get_id()
-        ))
     });
 }

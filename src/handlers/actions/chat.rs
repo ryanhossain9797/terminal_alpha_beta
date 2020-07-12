@@ -10,7 +10,7 @@ pub async fn start_chat(bot_message: impl BotMessage) {
 
     println!("START_CHAT: responding to chat intent");
 
-    responses::custom_response(bot_message, "chat-start").await
+    extra::custom_response(bot_message, "chat-start").await
 }
 
 ///Continues chat.  
@@ -20,7 +20,7 @@ pub async fn continue_chat(bot_message: impl BotMessage, _processed_text: String
     let source = "CONTINUE_CHAT";
     let info = util::make_info(source);
 
-    use responses::custom_response as response;
+    use extra::custom_response as response;
 
     let response = match intent {
         "greet" => response(bot_message, "chat-greet").await,
@@ -28,7 +28,7 @@ pub async fn continue_chat(bot_message: impl BotMessage, _processed_text: String
         "technology" => response(bot_message, "chat-technology").await,
         "functions" => response(bot_message, "chat-functions").await,
         "creator" => response(bot_message, "chat-creator").await,
-        _ => responses::unsupported_notice(bot_message).await,
+        _ => extra::unsupported_notice(bot_message).await,
     };
     info(&format!("starting {}", intent));
     response

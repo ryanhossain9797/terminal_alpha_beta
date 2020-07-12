@@ -1,4 +1,5 @@
 #![feature(async_closure)]
+#![feature(impl_trait_in_bindings)]
 mod clients;
 mod database;
 mod functions;
@@ -12,7 +13,7 @@ async fn main() {
     {
         //---Load up all the ENV variables from .env file
         dotenv().ok();
-        println!("Starting up Terminal Alpha Beta, compiled at");
+        println!("Starting up Terminal Alpha Beta");
         println!("-----Starting TELEGRAM and DISCORD-----\n");
         //---Prints the Date of compilation, added at compile time
         if let Some(date) = option_env!("COMPILED_AT") {
@@ -24,8 +25,8 @@ async fn main() {
         database::initialize().await;
         println!("\nInitialized Everything\n");
     }
-    //Wait tasks to finish,
-    //Which is hoepfully never, because that would mean it crashed.
+    //Wait for tasks to finish,
+    //Which is hopefully never, because that would mean it crashed.
     futures::future::join_all(vec![
         //Spawn a task for telegram
         tokio::spawn(async move {
