@@ -115,9 +115,11 @@ impl handlers::BotMessage for TelegramMessage {
     fn start_conversation(&self) -> bool {
         self.start_conversation
     }
-    async fn send_message(&self, msg: impl Into<handlers::MsgCount> + Send + 'static) {
-        let msg: handlers::MsgCount = msg.into();
-        match msg {
+    fn dyn_clone(&self) -> Box<dyn handlers::BotMessage> {
+        Box::new(self.clone())
+    }
+    async fn send_message(&self, message: handlers::MsgCount) {
+        match message {
             handlers::MsgCount::SingleMsg(msg) => match msg {
                 handlers::Msg::Text(text) => {
                     let _ = API.send(self.message.chat.text(text)).await;

@@ -17,7 +17,7 @@ pub async fn start_gif(bot_message: impl BotMessage + 'static) {
     // And fire off wipe history
     wipe_history(Arc::clone(&arc_message), UserState::Animation);
     arc_message
-        .send_message(responses::load("animation-start"))
+        .send_message(responses::load("animation-start").into())
         .await;
 }
 
@@ -52,6 +52,6 @@ pub async fn continue_gif(bot_message: impl BotMessage + 'static, processed_text
     }
     // If something fails
     arc_message
-        .send_message(responses::load("animation-fail"))
+        .send_message(responses::load("animation-fail").into())
         .await;
 }

@@ -122,14 +122,17 @@ pub trait BotMessage: Send + Sync {
     ///Returns the user's unique id. This is needed to uniquely identify users.
     fn get_id(&self) -> String;
     ///Used to send messages to the sender (user) of this message.
-    async fn send_message(&self, message: impl Into<MsgCount> + Send + 'static);
+    async fn send_message(&self, message: MsgCount);
     ///Used to check whether a new conversation should be started.  
     ///Sometimes if the user is in a state, Bot will always respond.  
     ///However if not in a state, bot needs to know when it should or should not respond.  
     ///Ex. Won't respond if message is in a group and bot wasn't mentioned.
     fn start_conversation(&self) -> bool;
+    ///Returns a Box\<dyn BotMessage\> clone of self
+    fn dyn_clone(&self) -> Box<dyn BotMessage>;
 }
 
+#[allow(dead_code)]
 fn into_msg(msg: impl Into<MsgCount>) -> MsgCount {
     msg.into()
 }
@@ -188,7 +191,7 @@ async fn handler(bot_message: impl BotMessage + 'static, processed_text: String)
         //---cancel last does nothing as there's nothing to cancel
         if processed_text == "cancel last" {
             bot_message
-                .send_message(responses::load("cancel-nothing"))
+                .send_message(responses::load("cancel-nothing").into())
                 .await;
         }
         //---hand over to the natural understanding system for advanced matching
@@ -302,7 +305,7 @@ async fn natural_understanding(bot_message: impl BotMessage + 'static, processed
 async fn cancel_history(bot_message: impl BotMessage + 'static) {
     remove_state(&bot_message.get_id()).await;
     bot_message
-        .send_message(responses::load("cancel-state"))
+        .send_message(responses::load("cancel-state").into())
         .await;
 }
 
@@ -323,7 +326,7 @@ fn wipe_history(bot_message: Arc<impl BotMessage + 'static>, state: UserState) {
                     remove_state(&bot_message.get_id()).await;
                     info(&format!("deleted state record '{}'", state));
                     bot_message
-                        .send_message(responses::load("delay-notice"))
+                        .send_message(responses::load("delay-notice").into())
                         .await;
                 //If the current state is not older than threshold wait time
                 } else {

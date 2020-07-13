@@ -1,5 +1,4 @@
 #![feature(async_closure)]
-#![feature(impl_trait_in_bindings)]
 mod clients;
 mod database;
 mod functions;
@@ -10,6 +9,7 @@ use tokio::prelude::*;
 
 #[tokio::main]
 async fn main() {
+    
     {
         //---Load up all the ENV variables from .env file
         dotenv().ok();
@@ -40,7 +40,7 @@ async fn main() {
     .await;
     //tokio LocalSet based approach for older non-send telegram
     // let local = tokio::task::LocalSet::new();
-    // local
+    // local 
     //     .run_until(async move {
     //         let tasks = vec![
     //             //---A task for telegram

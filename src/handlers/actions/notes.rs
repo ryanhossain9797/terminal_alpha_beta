@@ -49,7 +49,7 @@ pub async fn start_notes(bot_message: impl BotMessage + 'static) {
         // If not successful in fetching notes
         None => {
             arc_message
-                .send_message(responses::load("notes-fail"))
+                .send_message(responses::load("notes-fail").into())
                 .await;
         }
     }
@@ -76,7 +76,9 @@ pub async fn continue_notes(
     // Only for reusability
     let sender_message = Arc::clone(&arc_message);
     let static_sender = async move |key| {
-        sender_message.send_message(responses::load(key)).await;
+        sender_message
+            .send_message(responses::load(key).into())
+            .await;
     };
     // The note ids to store
     // If for some reason the user gives an invalid command
@@ -111,7 +113,7 @@ pub async fn continue_notes(
                             .replace("{note}", &note.note))
                 });
 
-            arc_message.send_message(notes_string).await;
+            arc_message.send_message(notes_string.into()).await;
         }
     //---------------------------------------------------------DELETE NOTE ACTION
     } else if command.starts_with("delete ") {

@@ -11,7 +11,7 @@ pub async fn start_identify(bot_message: impl BotMessage + 'static) {
     let arc_message = Arc::new(bot_message);
     wipe_history(Arc::clone(&arc_message), UserState::Identify);
     arc_message
-        .send_message(responses::load("identify-start"))
+        .send_message(responses::load("identify-start").into())
         .await;
 }
 
@@ -24,7 +24,7 @@ pub async fn continue_identify(bot_message: impl BotMessage + 'static, name: Str
     match general::get_person(name.to_string()).await {
         //---If exact match on name
         Some(person) => {
-            arc_message.send_message(person.description).await;
+            arc_message.send_message(person.description.into()).await;
         }
 
         //---Else, try to get closes match
@@ -64,7 +64,7 @@ pub async fn continue_identify(bot_message: impl BotMessage + 'static, name: Str
                 }
                 _ => responses::load("identify-dberror"),
             };
-            arc_message.send_message(partial_match).await;
+            arc_message.send_message(partial_match.into()).await;
         }
     }
 }

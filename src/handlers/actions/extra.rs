@@ -9,7 +9,7 @@ pub async fn start_unknown(bot_message: impl BotMessage + 'static) {
     let arc_message = Arc::new(bot_message);
     wipe_history(Arc::clone(&arc_message), UserState::Unknown);
     arc_message
-        .send_message(responses::load("intentional-unknownstate"))
+        .send_message(responses::load("intentional-unknownstate").into())
         .await;
 }
 
@@ -17,8 +17,12 @@ pub async fn start_unknown(bot_message: impl BotMessage + 'static) {
 ///If unavailable replies with a default message.
 pub async fn custom_response(bot_message: impl BotMessage, key: &str) {
     match load(key) {
-        Some(msg) => bot_message.send_message(msg).await,
-        _ => bot_message.send_message(load("unknown-question")).await,
+        Some(msg) => bot_message.send_message(msg.into()).await,
+        _ => {
+            bot_message
+                .send_message(load("unknown-question").into())
+                .await
+        }
     }
 }
 
@@ -35,5 +39,5 @@ pub async fn unsupported_notice(bot_message: impl BotMessage) {
 ///Notice to send when the stored state for a user is not supported.  
 //Usually represents an Error or a WIP state.
 pub async fn unknown_state_notice(bot_message: impl BotMessage + 'static) {
-    bot_message.send_message(load("unknown-state")).await;
+    bot_message.send_message(load("unknown-state").into()).await;
 }
