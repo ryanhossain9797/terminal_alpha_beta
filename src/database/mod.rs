@@ -39,11 +39,11 @@ pub async fn get_mongo() -> Option<Database> {
     let source = "MONGO_GET";
     let info = util::make_info(source);
 
-    let client_option = &*MONGO.lock().await;
-    if let Some(db) = client_option {
-        info("DB already initialized");
-        Some(db.clone())
-    } else {
-        None
+    match &*MONGO.lock().await {
+        Some(db) => {
+            info("DB already initialized");
+            Some(db.clone())
+        }
+        _ => None,
     }
 }

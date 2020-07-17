@@ -9,21 +9,21 @@ use tokio::prelude::*;
 
 #[tokio::main]
 async fn main() {
-    
     {
         //---Load up all the ENV variables from .env file
         dotenv().ok();
-        println!("Starting up Terminal Alpha Beta");
-        println!("-----Starting TELEGRAM and DISCORD-----\n");
+        let status = functions::util::make_status();
+        status("Starting up Terminal Alpha Beta");
+        status("-----Starting TELEGRAM and DISCORD-----\n");
         //---Prints the Date of compilation, added at compile time
         if let Some(date) = option_env!("COMPILED_AT") {
-            println!("Compile date {}", date);
+            status("Compile date {}", date);
         }
-        println!("Initializing everything");
+        status("Initializing everything");
         clients::initialize();
         handlers::initialize();
         database::initialize().await;
-        println!("\nInitialized Everything\n");
+        status("\nInitialized Everything\n");
     }
     //Wait for tasks to finish,
     //Which is hopefully never, because that would mean it crashed.
@@ -40,7 +40,7 @@ async fn main() {
     .await;
     //tokio LocalSet based approach for older non-send telegram
     // let local = tokio::task::LocalSet::new();
-    // local 
+    // local
     //     .run_until(async move {
     //         let tasks = vec![
     //             //---A task for telegram

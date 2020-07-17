@@ -24,3 +24,7 @@ pub fn make_warning<'a>(source: &'a str) -> impl Fn(&str) + 'a {
 pub fn make_error<'a>(source: &'a str) -> impl Fn(&str) + 'a {
     move |msg: &str| println!("{}: {}", source.green(), msg.red())
 }
+///Returns a closure that logs the message with purple on white text
+pub fn make_status<'a>() -> impl Fn(&str) + 'a {
+    move |msg: &str| println!("{}", msg.on_white().purple())
+}
