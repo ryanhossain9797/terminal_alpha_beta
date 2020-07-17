@@ -17,7 +17,7 @@ async fn main() {
         status("-----Starting TELEGRAM and DISCORD-----\n");
         //---Prints the Date of compilation, added at compile time
         if let Some(date) = option_env!("COMPILED_AT") {
-            status("Compile date {}", date);
+            status(&format!("Compile date {}", date));
         }
         status("Initializing everything");
         clients::initialize();
