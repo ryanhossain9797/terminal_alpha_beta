@@ -5,10 +5,11 @@ use mongodb::{
     Client,
     Database,
 };
-use once_cell::sync::OnceCell;
+use once_cell::sync::Lazy;
 use std::env;
-static MONGO: OnceCell<Database> = OnceCell::new();
-static MONGO_INITIALIZED: OnceCell<tokio::sync::Mutex<bool>> = OnceCell::new();
+
+static MONGO: Lazy<tokio::sync::Mutex<Option<Database>>> =
+    Lazy::new(|| tokio::sync::Mutex::new(None));
 
 pub async fn initialize() {
     initialize_mongo().await;
@@ -16,42 +17,33 @@ pub async fn initialize() {
 
 async fn initialize_mongo() {
     let source = "MONGO_INIT";
-    let warning = util::make_warning(source);
-    let info = util::make_info(source);
     let error = util::make_error(source);
-    // it hasn't been initialized yet, so let's grab the lock & try to
-    // initialize it
-    let initializing_mutex = MONGO_INITIALIZED.get_or_init(|| tokio::sync::Mutex::new(false));
-    // if initialized is true, then someone else initialized it already.
-    let mut initialized = initializing_mutex.lock().await;
-    if !*initialized {
-        warning("Not yet initialized");
-        // no one else has initialized it yet, so
-        if let Ok(token) = env::var("MONGO_AUTH") {
-            if let Ok(client_options) = ClientOptions::parse(&token).await {
-                if let Ok(client) = Client::with_options(client_options) {
-                    if MONGO.set(client.database("terminal")).is_ok() {
-                        *initialized = true;
-                        info("Initialized successfully");
-                    }
-                }
+
+    // no one else has initialized it yet, so
+    if let Ok(token) = env::var("MONGO_AUTH") {
+        if let Ok(client_options) = ClientOptions::parse(&token).await {
+            if let Ok(client) = Client::with_options(client_options) {
+                *MONGO.lock().await = Some(client.database("terminal"));
+            } else {
+                error("Couldn't initialize client");
             }
+        } else {
+            error("Couldn't parse db token");
         }
-    }
-    if !*initialized {
-        error("Initialization failure")
+    } else {
+        error("Couldn't find DB auth key");
     }
 }
 
-pub async fn get_mongo() -> Option<&'static Database> {
+pub async fn get_mongo() -> Option<Database> {
     let source = "MONGO_GET";
     let info = util::make_info(source);
-    // this is racy, but that's OK: it's just a fast case
-    let client_option = MONGO.get();
-    if client_option.is_some() {
-        info("Already initialized");
-        return client_option;
+
+    let client_option = &*MONGO.lock().await;
+    if let Some(db) = client_option {
+        info("DB already initialized");
+        Some(db.clone())
+    } else {
+        None
     }
-    initialize_mongo().await;
-    MONGO.get()
 }
