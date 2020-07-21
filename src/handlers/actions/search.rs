@@ -1,5 +1,8 @@
 use super::*;
-use search_with_google::search;
+use once_cell::sync::Lazy;
+use search_with_google::Client;
+
+static SEARCH_CLIENT: Lazy<Client> = Lazy::new(|| Client::default());
 
 ///Adds a userstate record with search state to userstate records map.  
 ///Fires wipe history command for search state.
@@ -31,8 +34,8 @@ pub async fn continue_search(bot_message: impl BotMessage + 'static, processed_t
     let arc_message = Arc::new(bot_message);
     //---Delete the UserState Record
     immediate_purge_history(Arc::clone(&arc_message), UserState::Search);
-    let search_client = search_with_google::Client::default();
-    let search_result = search_client
+
+    let search_result = SEARCH_CLIENT
         .search(
             &processed_text,
             None,
