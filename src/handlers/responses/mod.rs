@@ -7,7 +7,7 @@ use serde_json::Value;
 ///Put in a json so they can be modified without recompiling the bot.  
 ///Loaded at startup, Restart Bot to reload.
 static RESPONSES: Lazy<Option<serde_json::Value>> = Lazy::new(|| {
-    println!("\nLoading JSON responses");
+    util::show_status("\nLoading JSON responses");
     match read_to_string("data/responses.json") {
         Ok(json) => serde_json::from_str(&json).ok(),
         Err(_) => None,

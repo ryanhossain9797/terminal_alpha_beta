@@ -27,13 +27,13 @@ const WAITTIME: u64 = LONGWAIT;
 
 ///NLUENGINE: Snips NLU is used to pick actions when they don't match directly
 static NLUENGINE: Lazy<Option<SnipsNluEngine>> = Lazy::new(|| {
-    println!("\nLoading the nlu engine...");
+    util::show_status("\nLoading the nlu engine...");
     SnipsNluEngine::from_path("data/rootengine/").ok()
 });
 
 ///HTTP client for..... HTTP things
 static CLIENT: Lazy<reqwest::Client> = Lazy::new(|| {
-    println!("\nLoading Api Client");
+    util::show_status("\nLoading Api Client");
     reqwest::Client::new()
 });
 

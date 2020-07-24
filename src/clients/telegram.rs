@@ -1,4 +1,5 @@
 //--------TELGRAM CODE
+use super::util::*;
 use super::*;
 use async_trait::async_trait;
 use futures::StreamExt;
@@ -28,7 +29,10 @@ pub(crate) async fn telegram_main() {
                 if let UpdateKind::Message(message) = update.kind {
                     if let MessageKind::Text { ref data, .. } = message.kind {
                         // Print received text message to stdout.
-                        println!("TELEGRAM: <{}>: {}", &message.from.first_name, data);
+                        show_status(&format!(
+                            "TELEGRAM: <{}>: {}",
+                            &message.from.first_name, data
+                        ));
                         // Spawn a handler for the message.
 
                         filter(message).await;

@@ -24,7 +24,7 @@ pub(crate) async fn discord_main() {
     // Shards will automatically attempt to reconnect, and will perform
     // exponential backoff until it reconnects.
     if let Err(why) = client.start().await {
-        println!("Client error: {:?}", why);
+        util::show_status(&format!("Client error: {:?}", why));
     }
 }
 
@@ -35,7 +35,10 @@ impl EventHandler for Handler {
     // Set a handler for the `message` event - so that whenever a new message
     // is received - the closure (or function) passed will be called.
     async fn message(&self, ctx: Context, message: DMessage) {
-        println!("DISCORD: <{}>: {}", message.author.name, message.content);
+        util::show_status(&format!(
+            "DISCORD: <{}>: {}",
+            message.author.name, message.content
+        ));
         if !message.author.bot {
             filter(message, ctx).await;
         }
@@ -43,7 +46,7 @@ impl EventHandler for Handler {
 
     // In this case, just print what the current user's username is.
     async fn ready(&self, _: Context, ready: Ready) {
-        println!("{} is connected!", ready.user.name);
+        util::show_status(&format!("{} is connected!", ready.user.name));
     }
 }
 

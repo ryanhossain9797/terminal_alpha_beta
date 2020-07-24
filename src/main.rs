@@ -5,39 +5,44 @@ mod functions;
 mod handlers;
 use clients::*;
 use dotenv::dotenv;
+use functions::*;
 use tokio::prelude::*;
+use tokio::runtime::Runtime;
 
-#[tokio::main]
-async fn main() {
-    {
-        //---Load up all the ENV variables from .env file
-        dotenv().ok();
-        let status = functions::util::make_status();
-        status("Starting up Terminal Alpha Beta");
-        status("-----Starting TELEGRAM and DISCORD-----\n");
-        //---Prints the Date of compilation, added at compile time
-        if let Some(date) = option_env!("COMPILED_AT") {
-            status(&format!("Compile date {}", date));
+fn main() {
+    let mut rt = Runtime::new().expect("Couldn't set up tokio run");
+    rt.block_on(async {
+        {
+            //---Load up all the ENV variables from .env file
+            dotenv().ok();
+            let status = util::make_status();
+            status("Starting up Terminal Alpha Beta");
+            status("-----Starting TELEGRAM and DISCORD-----\n");
+            //---Prints the Date of compilation, added at compile time
+            if let Some(date) = option_env!("COMPILED_AT") {
+                status(&format!("Compile date {}", date));
+            }
+            status("Initializing everything");
+            clients::initialize();
+            handlers::initialize();
+            database::initialize().await;
+            status("\nInitialized Everything\n");
         }
-        status("Initializing everything");
-        clients::initialize();
-        handlers::initialize();
-        database::initialize().await;
-        status("\nInitialized Everything\n");
-    }
-    //Wait for tasks to finish,
-    //Which is hopefully never, because that would mean it crashed.
-    futures::future::join_all(vec![
-        //Spawn a task for telegram
-        tokio::spawn(async move {
-            run_telegram().await;
-        }),
-        //Spawn a task for discord
-        tokio::spawn(async move {
-            run_discord().await;
-        }),
-    ])
-    .await;
+        //Wait for tasks to finish,
+        //Which is hopefully never, because that would mean it crashed.
+        futures::future::join_all(vec![
+            //Spawn a task for telegram
+            tokio::spawn(async move {
+                run_telegram().await;
+            }),
+            //Spawn a task for discord
+            tokio::spawn(async move {
+                run_discord().await;
+            }),
+        ])
+        .await;
+    });
+
     //tokio LocalSet based approach for older non-send telegram
     // let local = tokio::task::LocalSet::new();
     // local
