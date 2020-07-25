@@ -12,31 +12,26 @@ static RECORDS: Lazy<TokioMutex<HashMap<String, UserStateRecord>>> =
     Lazy::new(|| TokioMutex::new(HashMap::new()));
 
 type Cleaner<T> = OnceCell<DelayQueue<T, GrowingHeapBuf<T>>>;
-static CLEANER: Cleaner<Box<dyn BotMessage>> = OnceCell::new();
+static CLEANER: Cleaner<Box<dyn BotMessage + Send + 'static>> = OnceCell::new();
 
 pub fn initialize_state() {
     Lazy::force(&RECORDS);
-    // tokio::spawn(async { state_cleaner().await });
+    // tokio::spawn(async move { state_cleaner().await });
 }
 
 #[allow(dead_code)]
 async fn state_cleaner() {
-    let local = tokio::task::LocalSet::new();
-
-    let bind = local.run_until(async move {
-        let (clean_request, clean_queue) = delay_queue();
-        {
-            if CLEANER.set(clean_request).is_err() {
-                panic!("couldn't start cleaning queue");
-            }
+    let (clean_request, clean_queue) = delay_queue();
+    {
+        if CLEANER.set(clean_request).is_err() {
+            panic!("couldn't start cleaning queue");
         }
-        while let Some(message) = clean_queue.receive().await {
-            message
-                .send_message("hello from the other thread".to_string().into())
-                .await;
-        }
-    });
-    bind.await;
+    }
+    while let Some(message) = clean_queue.receive().await {
+        message
+            .send_message("hello from the other thread".to_string().into())
+            .await;
+    }
 }
 
 ///A user state record holds an individual user's state.  
