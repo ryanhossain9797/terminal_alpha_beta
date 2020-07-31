@@ -9,6 +9,16 @@ pub struct Note {
     pub note: String,
 }
 
+impl Note {
+    fn new(id: impl Into<String>, position: usize, note: impl Into<String>) -> Self {
+        Note {
+            id: id.into(),
+            position,
+            note: note.into(),
+        }
+    }
+}
+
 pub async fn get_notes(user_id: String) -> Option<Vec<Note>> {
     if let Some(db) = database::get_mongo().await {
         let notes = db.collection("notes");
@@ -29,11 +39,7 @@ pub async fn get_notes(user_id: String) -> Option<Vec<Note>> {
                         document.get("_id").and_then(Bson::as_object_id),
                         document.get("note").and_then(Bson::as_str),
                     ) {
-                        notes_list.push(Note {
-                            id: id.to_hex(),
-                            position,
-                            note: note.to_string(),
-                        });
+                        notes_list.push(Note::new(id.to_hex(), position, note));
                         position += 1;
                     }
                 }

@@ -42,26 +42,6 @@ fn main() {
         ])
         .await;
     });
-
-    //tokio LocalSet based approach for older non-send telegram
-    // let local = tokio::task::LocalSet::new();
-    // local
-    //     .run_until(async move {
-    //         let tasks = vec![
-    //             //---A task for telegram
-    //             tokio::task::spawn_local(async move {
-    //                 run_telegram().await;
-    //             }),
-    //             //---A task for discord
-    //             tokio::task::spawn_local(async move {
-    //                 run_discord().await;
-    //             }),
-    //         ];
-    //         //---And run them, wait for them to finish,
-    //         //---Which is hopefully never, because that would mean it crashed.
-    //         futures::future::join_all(tasks).await;
-    //     })
-    //     .await;
 }
 
 #[allow(dead_code)]
