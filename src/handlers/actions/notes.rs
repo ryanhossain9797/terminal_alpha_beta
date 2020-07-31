@@ -15,7 +15,7 @@ pub async fn start_notes(bot_message: impl BotMessage + 'static) {
     let arc_message = Arc::new(bot_message);
 
     // Fetch the notes
-    match notes_service::get_notes(id.clone()).await {
+    match notes_service::get_notes(&id).await {
         // If successful in fetching notes
         Some(notes) => {
             // Load the notes template from responses json, or use default if failed

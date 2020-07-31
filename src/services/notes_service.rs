@@ -3,6 +3,10 @@ use super::*;
 use futures::stream::StreamExt;
 use mongodb::bson::{doc, oid, Bson};
 
+///A single note
+/// - `id` is the id in the database
+/// - `position` is it's position in the chain
+/// - `note` is the actual content
 pub struct Note {
     pub id: String,
     pub position: usize,
@@ -19,14 +23,15 @@ impl Note {
     }
 }
 
-pub async fn get_notes(user_id: String) -> Option<Vec<Note>> {
+///Returns all notes for the user.
+pub async fn get_notes(user_id: &str) -> Option<Vec<Note>> {
     if let Some(db) = database::get_mongo().await {
         if let Ok(my_notes) = db
             .collection("notes")
             .find(
                 //Searching the 'notes' collection with the specific id
                 doc! {
-                    "id": &user_id
+                    "id": user_id
                 },
                 None,
             )
@@ -55,6 +60,8 @@ pub async fn get_notes(user_id: String) -> Option<Vec<Note>> {
     None
 }
 
+///Adds a new note for the provided note string.  
+///Returns an updated all notes for the user including the new one.
 pub async fn add_note(user_id: &str, note: String) -> Option<Vec<Note>> {
     let source = "NOTE_ADD";
     let info = util_service::make_info(source);
@@ -62,7 +69,7 @@ pub async fn add_note(user_id: &str, note: String) -> Option<Vec<Note>> {
     if let Some(db) = database::get_mongo().await {
         let notes = db.collection("notes");
         match notes
-            .insert_one(doc! {"id":&user_id, "note": &note}, None)
+            .insert_one(doc! {"id":user_id, "note": &note}, None)
             .await
         {
             Ok(_) => info("successful insertion"),
@@ -71,9 +78,11 @@ pub async fn add_note(user_id: &str, note: String) -> Option<Vec<Note>> {
             }
         }
     }
-    get_notes(user_id.to_string()).await
+    get_notes(user_id).await
 }
 
+///Removes the note for the provided user and the provided note id.  
+///Returns an updated all notes for the user excluding the deleted one.
 pub async fn delete_note(user_id: &str, note_id: &str) -> Option<Vec<Note>> {
     let source = "NOTE_DELETE";
     let info = util_service::make_info(source);
@@ -91,5 +100,5 @@ pub async fn delete_note(user_id: &str, note_id: &str) -> Option<Vec<Note>> {
             error("invalid note id");
         }
     }
-    get_notes(user_id.to_string()).await
+    get_notes(user_id).await
 }

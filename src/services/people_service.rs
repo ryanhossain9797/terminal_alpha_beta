@@ -3,6 +3,9 @@ use super::*;
 use futures::stream::StreamExt;
 use mongodb::bson::{doc, Bson};
 
+///A single note
+/// - `name` person's name
+/// - `description` the person's description
 pub struct Person {
     pub name: String,
     pub description: String,
@@ -16,6 +19,7 @@ impl Person {
     }
 }
 
+///Return's a Some(Person) if name matches, otherwise a None
 pub async fn get_person(name: String) -> Option<Person> {
     println!("GETTING PERSON: {}", name);
     if let Some(db) = database::get_mongo().await {
@@ -32,22 +36,24 @@ pub async fn get_person(name: String) -> Option<Person> {
     None
 }
 
+///Returns a Some(Vec<Person>) if successful, otherwise a None
 pub async fn get_people() -> Option<Vec<Person>> {
     if let Some(db) = database::get_mongo().await {
         if let Ok(people) = db.collection("people").find(None, None).await {
             return Some(
                 people
-                    .fold(vec![], |mut people_list, person| async {
-                        if let Ok(document) = person {
+                    .filter_map(async move |person_result| {
+                        if let Ok(document) = person_result {
                             if let (Some(name), Some(description)) = (
                                 document.get("name").and_then(Bson::as_str),
                                 document.get("description").and_then(Bson::as_str),
                             ) {
-                                people_list.push(Person::new(name, description));
+                                return Some(Person::new(name, description));
                             }
                         }
-                        people_list
+                        None
                     })
+                    .collect()
                     .await,
             );
         }
