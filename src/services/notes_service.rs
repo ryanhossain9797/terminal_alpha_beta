@@ -21,30 +21,35 @@ impl Note {
 
 pub async fn get_notes(user_id: String) -> Option<Vec<Note>> {
     if let Some(db) = database::get_mongo().await {
-        let notes = db.collection("notes");
-        let my_notes_result = notes
+        if let Ok(my_notes) = db
+            .collection("notes")
             .find(
+                //Searching the 'notes' collection with the specific id
                 doc! {
                     "id": &user_id
                 },
                 None,
             )
-            .await;
-        if let Ok(mut my_notes) = my_notes_result {
-            let mut notes_list: Vec<Note> = vec![];
-            let mut position = 1;
-            while let Some(result) = my_notes.next().await {
-                if let Ok(document) = result {
-                    if let (Some(id), Some(note)) = (
-                        document.get("_id").and_then(Bson::as_object_id),
-                        document.get("note").and_then(Bson::as_str),
-                    ) {
-                        notes_list.push(Note::new(id.to_hex(), position, note));
-                        position += 1;
-                    }
-                }
-            }
-            return Some(notes_list);
+            .await
+        {
+            //If db search is successful
+            return Some(
+                //Using fold to convert the cursor into a vector of Note objects
+                my_notes
+                    .fold((vec![], 1), |(mut notes_list, position), note| async move {
+                        if let Ok(document) = note {
+                            if let (Some(id), Some(note)) = (
+                                document.get("_id").and_then(Bson::as_object_id),
+                                document.get("note").and_then(Bson::as_str),
+                            ) {
+                                notes_list.push(Note::new(id.to_hex(), position, note));
+                            }
+                        }
+                        (notes_list, position + 1)
+                    })
+                    .await
+                    .0, //Only the vector is needed, position not required for result
+            );
         }
     }
     None
@@ -83,7 +88,7 @@ pub async fn delete_note(user_id: &str, note_id: &str) -> Option<Vec<Note>> {
                 }
             }
         } else {
-            error(&"invalid note id".to_string());
+            error("invalid note id");
         }
     }
     get_notes(user_id.to_string()).await
