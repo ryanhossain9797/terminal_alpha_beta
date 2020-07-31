@@ -15,7 +15,7 @@ struct Summary {}
 
 pub async fn start_corona(bot_message: impl BotMessage) {
     let source = "CORONA";
-    let error = util::make_error(source);
+    let error = util_service::make_error(source);
 
     let url = "https://api.covid19api.com/summary".to_string();
     // let countries: Vec<Country> = vec![];
@@ -23,7 +23,7 @@ pub async fn start_corona(bot_message: impl BotMessage) {
     // println!("CORONA: json string is {}", json_string);
 
     //Fetch countery data from API
-    match general::get_request_json(&url).await {
+    match util_service::get_request_json(&url).await {
         //If Successful
         Some(Value::Object(map)) => {
             bot_message

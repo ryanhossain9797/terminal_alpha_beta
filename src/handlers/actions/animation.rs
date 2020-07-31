@@ -5,7 +5,7 @@ use serde_json::Value;
 ///Fires wipe history command for animation state.
 pub async fn start_gif(bot_message: impl BotMessage + 'static) {
     let source = "START_ANIMATION";
-    let info = util::make_info(source);
+    let info = util_service::make_info(source);
 
     info("animation initiated");
     let id = bot_message.get_id();
@@ -25,7 +25,7 @@ pub async fn start_gif(bot_message: impl BotMessage + 'static) {
 ///Fires immediate purge history command for animation state.
 pub async fn continue_gif(bot_message: impl BotMessage + 'static, processed_text: String) {
     let source = "CONTINUE_ANIMATION";
-    let info = util::make_info(source);
+    let info = util_service::make_info(source);
     info("animation response");
     // Arc cloneable message
     let arc_message = Arc::new(bot_message);
@@ -36,7 +36,7 @@ pub async fn continue_gif(bot_message: impl BotMessage + 'static, processed_text
         processed_text
     );
     // Get json value from request
-    if let Some(Value::Object(map)) = general::get_request_json(&url).await {
+    if let Some(Value::Object(map)) = util_service::get_request_json(&url).await {
         // Get desired stuff from json
         if let Some(Value::Array(gfycats)) = map.get("gfycats") {
             for gif in gfycats {

@@ -18,7 +18,7 @@ pub async fn start_chat(bot_message: impl BotMessage) {
 ///Fires wipe history command for Chat state.
 pub async fn continue_chat(bot_message: impl BotMessage, _processed_text: String, intent: &str) {
     let source = "CONTINUE_CHAT";
-    let info = util::make_info(source);
+    let info = util_service::make_info(source);
 
     use extra::custom_response as response;
 

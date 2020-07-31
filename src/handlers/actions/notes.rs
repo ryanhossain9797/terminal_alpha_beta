@@ -8,14 +8,14 @@ use super::*;
 
 pub async fn start_notes(bot_message: impl BotMessage + 'static) {
     let source = "START_NOTES";
-    let info = util::make_info(source);
+    let info = util_service::make_info(source);
     info("notes initiated");
     let id = bot_message.get_id();
     // New Arc clone-able version of message
     let arc_message = Arc::new(bot_message);
 
     // Fetch the notes
-    match general::get_notes(id.clone()).await {
+    match notes_service::get_notes(id.clone()).await {
         // If successful in fetching notes
         Some(notes) => {
             // Load the notes template from responses json, or use default if failed
@@ -65,7 +65,7 @@ pub async fn continue_notes(
 ) {
     let source = "CONTINUE_NOTES";
 
-    let info = util::make_info(source);
+    let info = util_service::make_info(source);
     info(&format!("continuing with notes '{}'", command));
     let id = bot_message.get_id();
 
@@ -93,7 +93,7 @@ pub async fn continue_notes(
     if command.starts_with("add ") {
         // add he new note (trim add keyword from the front)
         let notes_option =
-            general::add_note(&id, command.trim_start_matches("add ").to_string()).await;
+            notes_service::add_note(&id, command.trim_start_matches("add ").to_string()).await;
         // Notify user of Add action
         static_sender("notes-add").await;
         // If it succeeds we'll get an updated list of the current notes
@@ -127,7 +127,7 @@ pub async fn continue_notes(
             // (may fail if note number is higher than number of notes i.e Index out of bound)
             if let Some(note_id) = note_ids.get(number - 1) {
                 // Deleting will return updated list of notes
-                let notes_option = general::delete_note(&id, note_id).await;
+                let notes_option = notes_service::delete_note(&id, note_id).await;
                 // Notify of note deletion
                 static_sender("notes-delete").await;
                 // If updated list is available

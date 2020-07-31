@@ -21,7 +21,7 @@ pub async fn continue_identify(bot_message: impl BotMessage + 'static, name: Str
     let arc_message = Arc::new(bot_message);
     immediate_purge_history(Arc::clone(&arc_message), UserState::Identify);
     println!("IDENTIFY: beginning identification");
-    match general::get_person(name.to_string()).await {
+    match people_service::get_person(name.to_string()).await {
         //---If exact match on name
         Some(person) => {
             arc_message.send_message(person.description.into()).await;
@@ -29,7 +29,7 @@ pub async fn continue_identify(bot_message: impl BotMessage + 'static, name: Str
 
         //---Else, try to get closes match
         _ => {
-            let partial_match = match general::get_people().await {
+            let partial_match = match people_service::get_people().await {
                 Some(people) => {
                     let mut names: Vec<String> = vec![];
                     people

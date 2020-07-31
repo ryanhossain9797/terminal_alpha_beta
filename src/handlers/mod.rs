@@ -5,7 +5,7 @@ mod actions;
 mod responses;
 mod state;
 
-use crate::functions::*;
+use super::*;
 use actions::*;
 use responses::*;
 use state::userstate::*;
@@ -27,13 +27,13 @@ const WAITTIME: u64 = LONGWAIT;
 
 ///NLUENGINE: Snips NLU is used to pick actions when they don't match directly
 static NLUENGINE: Lazy<Option<SnipsNluEngine>> = Lazy::new(|| {
-    util::show_status("\nLoading the nlu engine...");
+    util_service::show_status("\nLoading the nlu engine...");
     SnipsNluEngine::from_path("data/rootengine/").ok()
 });
 
 ///HTTP client for..... HTTP things
 static CLIENT: Lazy<reqwest::Client> = Lazy::new(|| {
-    util::show_status("\nLoading Api Client");
+    util_service::show_status("\nLoading Api Client");
     reqwest::Client::new()
 });
 
@@ -140,7 +140,7 @@ fn into_msg(msg: impl Into<MsgCount>) -> MsgCount {
 ///Distributes incoming requests to separate threads
 pub fn distributor(bot_message: impl BotMessage + 'static, processed_text: String) {
     let source = "DISTRIBUTOR";
-    let info = util::make_info(source);
+    let info = util_service::make_info(source);
     //Spawn a new task to handle the message
     tokio::spawn(async move { handler(bot_message, processed_text).await });
     info("Handler Thread Spawned");
@@ -149,7 +149,7 @@ pub fn distributor(bot_message: impl BotMessage + 'static, processed_text: Strin
 ///First place to handle messages after distribution
 async fn handler(bot_message: impl BotMessage + 'static, processed_text: String) {
     let source = "HANDLER";
-    let info = util::make_info(source);
+    let info = util_service::make_info(source);
     info(&format!("Processed text is {}", processed_text));
 
     //---If record from user exists (A Some(record)), some conversation is ongoing
@@ -205,9 +205,9 @@ async fn handler(bot_message: impl BotMessage + 'static, processed_text: String)
 async fn natural_understanding(bot_message: impl BotMessage + 'static, processed_text: String) {
     let source = "NATURAL_ACTION_PICKER";
 
-    let info = util::make_info(source);
-    let warning = util::make_warning(source);
-    let error = util::make_error(source);
+    let info = util_service::make_info(source);
+    let warning = util_service::make_warning(source);
+    let error = util_service::make_error(source);
     //---Stuff required to run the NLU engine to get an intent
     if let Some(engine) = &*NLUENGINE {
         let intents_alternatives = 1;
@@ -276,21 +276,21 @@ async fn natural_understanding(bot_message: impl BotMessage + 'static, processed
                 //If failed to parse the intent result as json
                 else {
                     error("couldn't convert intent data to JSON");
-                    general::log_message(&processed_text);
+                    util_service::log_message(&processed_text);
                     extra::unsupported_notice(bot_message).await
                 }
             }
             //Unsure intent if cannot match to any intent confidently
             else {
                 warning("couldn't match an intent confidently");
-                general::log_message(&processed_text);
+                util_service::log_message(&processed_text);
                 extra::unsupported_notice(bot_message).await
             }
         }
         //Unknown intent if can't match intent at all
         else {
             warning("unknown intent");
-            general::log_message(&processed_text);
+            util_service::log_message(&processed_text);
             extra::unsupported_notice(bot_message).await
         };
     } else {
@@ -314,7 +314,7 @@ async fn cancel_history(bot_message: impl BotMessage + 'static) {
 ///Notice Message is provided to user.
 fn wipe_history(bot_message: Arc<impl BotMessage + 'static>, state: UserState) {
     let source = "WIPE_HISTORY";
-    let info = util::make_info(source);
+    let info = util_service::make_info(source);
     tokio::spawn(async move {
         //Wait a specified amount of time before deleting user state
         tokio::time::delay_for(Duration::from_secs(WAITTIME)).await;
@@ -355,7 +355,7 @@ fn wipe_history(bot_message: Arc<impl BotMessage + 'static>, state: UserState) {
 ///No notice provided.
 fn immediate_purge_history(bot_message: Arc<impl BotMessage + 'static>, state: UserState) {
     let source = "PURGE_HISTORY";
-    let info = util::make_info(source);
+    let info = util_service::make_info(source);
     tokio::spawn(async move {
         if let Some(r) = get_state(&bot_message.get_id()).await {
             if r.state == state {

@@ -1,21 +1,21 @@
 #![feature(async_closure)]
 mod clients;
 mod database;
-mod functions;
 mod handlers;
+mod services;
 use clients::*;
 use dotenv::dotenv;
-use functions::*;
+use services::*;
 use tokio::prelude::*;
 use tokio::runtime::Runtime;
 
 fn main() {
-    let mut rt = Runtime::new().expect("Couldn't set up tokio run");
+    let mut rt = Runtime::new().expect("Couldn't set up tokio runtime");
     rt.block_on(async {
         {
             //---Load up all the ENV variables from .env file
-            dotenv().ok();
-            let status = util::make_status();
+            dotenv().expect("Couldn't load environment variables");
+            let status = util_service::make_status();
             status("Starting up Terminal Alpha Beta");
             status("-----Starting TELEGRAM and DISCORD-----\n");
             //---Prints the Date of compilation, added at compile time

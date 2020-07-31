@@ -2,14 +2,14 @@ use super::*;
 use once_cell::sync::Lazy;
 use search_with_google::Client;
 
-static SEARCH_CLIENT: Lazy<Client> = Lazy::new(|| Client::default());
+static SEARCH_CLIENT: Lazy<Client> = Lazy::new(Default::default);
 
 ///Adds a userstate record with search state to userstate records map.  
 ///Fires wipe history command for search state.
 pub async fn start_search(bot_message: impl BotMessage + 'static) {
     let source = "START_SEARCH";
 
-    let info = util::make_info(source);
+    let info = util_service::make_info(source);
     info("search initiated");
 
     let id = bot_message.get_id();

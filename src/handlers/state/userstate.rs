@@ -12,11 +12,11 @@ static RECORDS: Lazy<TokioMutex<HashMap<String, UserStateRecord>>> =
     Lazy::new(|| TokioMutex::new(HashMap::new()));
 
 type Cleaner<T> = OnceCell<DelayQueue<T, GrowingHeapBuf<T>>>;
-static CLEANER: Cleaner<Box<dyn BotMessage + Send + 'static>> = OnceCell::new();
+static CLEANER: Cleaner<Box<dyn BotMessage>> = OnceCell::new();
 
 pub fn initialize_state() {
     Lazy::force(&RECORDS);
-    // tokio::spawn(async move { state_cleaner().await });
+    // tokio::spawn(state_cleaner());
 }
 
 #[allow(dead_code)]
