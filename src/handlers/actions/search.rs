@@ -33,7 +33,7 @@ pub async fn start_search(bot_message: impl BotMessage + 'static) {
 pub async fn continue_search(bot_message: impl BotMessage + 'static, processed_text: String) {
     let arc_message = Arc::new(bot_message);
     //---Delete the UserState Record
-    immediate_purge_history(Arc::clone(&arc_message), UserState::Search);
+    immediate_purge_history(Arc::clone(&arc_message), UserState::Search).await;
 
     let search_result = SEARCH_CLIENT
         .search(

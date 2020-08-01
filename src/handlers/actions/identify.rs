@@ -22,7 +22,7 @@ pub async fn continue_identify(bot_message: impl BotMessage + 'static, name: Str
     let source = "CONTINUE_IDENTIFY";
     let info = util_service::make_info(source);
     let arc_message = Arc::new(bot_message);
-    immediate_purge_history(Arc::clone(&arc_message), UserState::Identify);
+    immediate_purge_history(Arc::clone(&arc_message), UserState::Identify).await;
     info("beginning identification");
     match people_service::get_person(name.to_string()).await {
         //---If exact match on name

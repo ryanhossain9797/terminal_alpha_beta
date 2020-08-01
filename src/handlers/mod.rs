@@ -15,6 +15,7 @@ use std::{fs::*, sync::Arc, time::Duration};
 use async_trait::async_trait;
 use once_cell::sync::Lazy;
 use snips_nlu_lib::SnipsNluEngine;
+use tokio::task;
 
 ///Long wait time, Used in runing system
 const LONGWAIT: u64 = 30;
@@ -315,7 +316,7 @@ async fn cancel_history(bot_message: impl BotMessage + 'static) {
 fn wipe_history(bot_message: Arc<impl BotMessage + 'static>, state: UserState) {
     let source = "WIPE_HISTORY";
     let info = util_service::make_info(source);
-    tokio::spawn(async move {
+    task::spawn(async move {
         //Wait a specified amount of time before deleting user state
         tokio::time::delay_for(Duration::from_secs(WAITTIME)).await;
         if let Some(record) = get_state(&bot_message.get_id()).await {
@@ -353,15 +354,14 @@ fn wipe_history(bot_message: Arc<impl BotMessage + 'static>, state: UserState) {
 ///Immediately purges history IF provided state matches history state.  
 ///Used to remove history after state action is completed.  
 ///No notice provided.
-fn immediate_purge_history(bot_message: Arc<impl BotMessage + 'static>, state: UserState) {
+async fn immediate_purge_history(bot_message: Arc<impl BotMessage + 'static>, state: UserState) {
     let source = "PURGE_HISTORY";
     let info = util_service::make_info(source);
-    tokio::spawn(async move {
-        if let Some(r) = get_state(&bot_message.get_id()).await {
-            if r.state == state {
-                remove_state(&bot_message.get_id()).await;
-                info(&format!("deleted state record for {}", state));
-            }
+
+    if let Some(r) = get_state(&bot_message.get_id()).await {
+        if r.state == state {
+            remove_state(&bot_message.get_id()).await;
+            info(&format!("deleted state record for {}", state));
         }
-    });
+    }
 }

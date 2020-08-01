@@ -30,7 +30,7 @@ pub async fn continue_gif(bot_message: impl BotMessage + 'static, processed_text
     // Arc cloneable message
     let arc_message = Arc::new(bot_message);
     // Purge state history
-    immediate_purge_history(Arc::clone(&arc_message), UserState::Animation);
+    immediate_purge_history(Arc::clone(&arc_message), UserState::Animation).await;
     let url = format!(
         "https://api.gfycat.com/v1/gfycats/search?search_text={}&count=1",
         processed_text
