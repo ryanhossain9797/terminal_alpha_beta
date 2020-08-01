@@ -4,10 +4,11 @@ use closestmatch::*;
 ///Adds a userstate record with identify state to userstate records map.  
 ///Fires wipe history command for identify state.
 pub async fn start_identify(bot_message: impl BotMessage + 'static) {
-    println!("START_IDENTIFY: identify initiated");
+    let source = "START_IDENTIFY";
+    let info = util_service::make_info(source);
+    info("identify initiated");
     let id = bot_message.get_id();
     set_state(id.clone(), UserState::Identify).await;
-    println!("START_IDENTIFY: record added for id {}", id);
     let arc_message = Arc::new(bot_message);
     wipe_history(Arc::clone(&arc_message), UserState::Identify);
     arc_message
@@ -18,9 +19,11 @@ pub async fn start_identify(bot_message: impl BotMessage + 'static) {
 ///Finishes identify.  
 ///Fires immediate purge history command for identify state.
 pub async fn continue_identify(bot_message: impl BotMessage + 'static, name: String) {
+    let source = "CONTINUE_IDENTIFY";
+    let info = util_service::make_info(source);
     let arc_message = Arc::new(bot_message);
     immediate_purge_history(Arc::clone(&arc_message), UserState::Identify);
-    println!("IDENTIFY: beginning identification");
+    info("beginning identification");
     match people_service::get_person(name.to_string()).await {
         //---If exact match on name
         Some(person) => {
@@ -39,7 +42,7 @@ pub async fn continue_identify(bot_message: impl BotMessage + 'static, name: Str
                     let closest_name = cm.get_closest(name.to_string());
                     match closest_name {
                         Some(name) => {
-                            println!("closest name is {}", name);
+                            info(&format!("closest name is {}", name));
                             let mut matched_option: Option<String> = None;
                             people.iter().for_each(|person| {
                                 if person.name == name {

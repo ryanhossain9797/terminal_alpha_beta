@@ -1,14 +1,10 @@
 use super::*;
-//------Chat will not be a state any more.
-//------Rather any unknown message will be handled by chat in default
-//use std::mem::drop;
-//use std::time::Instant;
 
 ///Start chat intent, Only provides a single response without any state
 pub async fn start_chat(bot_message: impl BotMessage) {
-    println!("START_CHAT: chat initiated");
-
-    println!("START_CHAT: responding to chat intent");
+    let source = "START_CHAT";
+    let info = util_service::make_info(source);
+    info("Chat initiated");
 
     extra::custom_response(bot_message, "chat-start").await
 }

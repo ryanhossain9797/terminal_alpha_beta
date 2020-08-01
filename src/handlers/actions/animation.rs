@@ -26,7 +26,7 @@ pub async fn start_gif(bot_message: impl BotMessage + 'static) {
 pub async fn continue_gif(bot_message: impl BotMessage + 'static, processed_text: String) {
     let source = "CONTINUE_ANIMATION";
     let info = util_service::make_info(source);
-    info("animation response");
+    info("Animation response");
     // Arc cloneable message
     let arc_message = Arc::new(bot_message);
     // Purge state history
@@ -41,7 +41,7 @@ pub async fn continue_gif(bot_message: impl BotMessage + 'static, processed_text
         if let Some(Value::Array(gfycats)) = map.get("gfycats") {
             for gif in gfycats {
                 if let Some(Value::String(url)) = gif.get("max2mbGif") {
-                    println!("gif url is {}", url);
+                    info(&format!("gif url is {}", url));
                     arc_message
                         .send_message(MsgCount::SingleMsg(Msg::File(url.to_string())))
                         .await;

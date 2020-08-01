@@ -6,11 +6,11 @@ use tokio::sync::Mutex;
 
 #[derive(Clone)]
 pub struct Country {
-    country: String,
-    total_confirmed: i64,
-    total_deaths: i64,
-    new_confirmed: i64,
-    new_deaths: i64,
+    pub country: String,
+    pub total_confirmed: i64,
+    pub total_deaths: i64,
+    pub new_confirmed: i64,
+    pub new_deaths: i64,
 }
 
 #[derive(Clone)]
@@ -37,6 +37,7 @@ impl Covid {
     async fn update_cache(&mut self) {
         let source = "COVID_SERVICE";
         let error = util_service::make_error(source);
+        let info = util_service::make_info(source);
 
         let url = "https://api.covid19api.com/summary".to_string();
         match util_service::get_request_json(&url).await {
@@ -45,7 +46,7 @@ impl Covid {
                 //Work through the json to get the country specific data
                 match map.get("Countries") {
                     Some(Value::Array(country_list)) => {
-                        println!("CORONA: Got country list");
+                        info("Got country list");
                         let mut countries: Vec<Country> = vec![];
                         country_list.iter().for_each(|country| {
                             match (
@@ -101,7 +102,7 @@ impl Covid {
                 }
                 match map.get("Global") {
                     Some(Value::Object(summary)) => {
-                        println!("CORONA: value for key 'Global' found");
+                        info("Value for key 'Global' found");
                         if let Some(Value::Number(num)) = summary.get("TotalConfirmed") {
                             self.aggregated_total_confirmed = num.as_i64();
                         }
@@ -117,29 +118,39 @@ impl Covid {
         self.time = Instant::now();
     }
 
-    async fn check_updates(&mut self) {
+    async fn refresh(&mut self) {
         if self.time.elapsed() > Duration::from_secs(600) {
+            let info = util_service::make_info("COVID_CACHE");
+            info("Refreshing cache");
             self.update_cache().await;
         }
     }
 
-    async fn get_data(&mut self) -> Self {
-        self.check_updates().await;
-        self.clone()
+    async fn get_top_new(&mut self) -> Option<Vec<Country>> {
+        self.refresh().await;
+        self.top_new.clone()
+    }
+
+    async fn get_top_total(&mut self) -> Option<Vec<Country>> {
+        self.refresh().await;
+        self.top_total.clone()
+    }
+
+    async fn get_aggregate(&mut self) -> (Option<i64>, Option<i64>) {
+        self.refresh().await;
+        (
+            self.aggregated_total_confirmed,
+            self.aggregated_total_deaths,
+        )
     }
 }
 
 pub async fn get_top_new() -> Option<Vec<Country>> {
-    CACHE.lock().await.get_data().await.top_new
+    CACHE.lock().await.get_top_new().await
 }
 pub async fn get_top_total() -> Option<Vec<Country>> {
-    CACHE.lock().await.get_data().await.top_total
+    CACHE.lock().await.get_top_total().await
 }
-
 pub async fn get_aggreagte() -> (Option<i64>, Option<i64>) {
-    let covid_data = CACHE.lock().await.get_data().await;
-    (
-        covid_data.aggregated_total_confirmed,
-        covid_data.aggregated_total_deaths,
-    )
+    CACHE.lock().await.get_aggregate().await
 }
