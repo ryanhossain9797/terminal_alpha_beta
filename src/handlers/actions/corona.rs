@@ -1,7 +1,6 @@
 use super::*;
 use serde_json::Value;
 
-#[allow(dead_code)]
 struct Country {
     country: String,
     total_confirmed: i64,
@@ -10,19 +9,17 @@ struct Country {
     new_deaths: i64,
 }
 
-#[allow(dead_code)]
-struct Summary {}
-
 pub async fn start_corona(bot_message: impl BotMessage) {
     let source = "CORONA";
     let error = util_service::make_error(source);
 
+    let top_new = covid_service::get_top_new();
+    let top_total = covid_service::get_top_total();
+    let aggregate = covid_service::get_aggreagte();
+
     let url = "https://api.covid19api.com/summary".to_string();
-    // let countries: Vec<Country> = vec![];
 
-    // println!("CORONA: json string is {}", json_string);
-
-    //Fetch countery data from API
+    //Fetch country data from API
     match util_service::get_request_json(&url).await {
         //If Successful
         Some(Value::Object(map)) => {
