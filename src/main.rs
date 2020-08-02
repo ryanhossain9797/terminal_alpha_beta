@@ -1,8 +1,10 @@
 #![feature(async_closure)]
+mod api;
 mod clients;
 mod database;
 mod handlers;
 mod services;
+mod util;
 use clients::*;
 use dotenv::dotenv;
 use services::*;
@@ -15,7 +17,7 @@ fn main() {
         {
             //---Load up all the ENV variables from .env file
             dotenv().expect("Couldn't load environment variables");
-            let status = util_service::make_status();
+            let status = util::logger::make_status();
             status("Starting up Terminal Alpha Beta");
             status("-----Starting TELEGRAM and DISCORD-----\n");
             //---Prints the Date of compilation, added at compile time

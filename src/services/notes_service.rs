@@ -64,8 +64,8 @@ pub async fn get_notes(user_id: &str) -> Option<Vec<Note>> {
 ///Returns an updated all notes for the user including the new one.
 pub async fn add_note(user_id: &str, note: String) -> Option<Vec<Note>> {
     let source = "NOTE_ADD";
-    let info = util_service::make_info(source);
-    let error = util_service::make_error(source);
+    let info =util::logger::make_info(source);
+    let error =util::logger::make_error(source);
     if let Some(db) = database::get_mongo().await {
         let notes = db.collection("notes");
         match notes
@@ -85,8 +85,8 @@ pub async fn add_note(user_id: &str, note: String) -> Option<Vec<Note>> {
 ///Returns an updated all notes for the user excluding the deleted one.
 pub async fn delete_note(user_id: &str, note_id: &str) -> Option<Vec<Note>> {
     let source = "NOTE_DELETE";
-    let info = util_service::make_info(source);
-    let error = util_service::make_error(source);
+    let info =util::logger::make_info(source);
+    let error =util::logger::make_error(source);
     if let Some(db) = database::get_mongo().await {
         let notes = db.collection("notes");
         if let Ok(object_id) = oid::ObjectId::with_string(note_id) {

@@ -8,7 +8,7 @@ use super::*;
 
 pub async fn start_notes(bot_message: impl BotMessage + 'static) {
     let source = "START_NOTES";
-    let info = util_service::make_info(source);
+    let info =util::logger::make_info(source);
     info("notes initiated");
     let id = bot_message.get_id();
     // New Arc clone-able version of message
@@ -35,9 +35,8 @@ pub async fn start_notes(bot_message: impl BotMessage + 'static) {
                 );
             });
             // Only update state on successful notes retrieval
-            set_state(id.clone(), UserState::Notes(note_ids)).await;
             // And of course the history cleaner
-            wipe_history(Arc::clone(&arc_message), UserState::Notes(vec![]));
+            set_timed_state(Arc::clone(&arc_message), UserState::Notes(note_ids)).await;
             info(&format!("record added for id {}", id));
             arc_message
                 .send_message(MsgCount::MultiMsg(vec![
@@ -65,7 +64,7 @@ pub async fn continue_notes(
 ) {
     let source = "CONTINUE_NOTES";
 
-    let info = util_service::make_info(source);
+    let info =util::logger::make_info(source);
     info(&format!("continuing with notes '{}'", command));
     let id = bot_message.get_id();
 
@@ -168,9 +167,7 @@ pub async fn continue_notes(
     } else {
         static_sender("notes-invalid").await;
     }
-    // Update the state, if this action was a failure, with same old note ids
-    // Else the new note ids
-    set_state(id, UserState::Notes(new_note_ids)).await;
+
     // And of course clear history
-    wipe_history(Arc::clone(&arc_message), UserState::Notes(vec![]));
+    set_timed_state(Arc::clone(&arc_message), UserState::Notes(new_note_ids)).await;
 }

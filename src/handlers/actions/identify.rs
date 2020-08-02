@@ -5,12 +5,10 @@ use closestmatch::*;
 ///Fires wipe history command for identify state.
 pub async fn start_identify(bot_message: impl BotMessage + 'static) {
     let source = "START_IDENTIFY";
-    let info = util_service::make_info(source);
+    let info = util::logger::make_info(source);
     info("identify initiated");
-    let id = bot_message.get_id();
-    set_state(id.clone(), UserState::Identify).await;
     let arc_message = Arc::new(bot_message);
-    wipe_history(Arc::clone(&arc_message), UserState::Identify);
+    set_timed_state(Arc::clone(&arc_message), UserState::Identify).await;
     arc_message
         .send_message(responses::load("identify-start").into())
         .await;
@@ -20,9 +18,9 @@ pub async fn start_identify(bot_message: impl BotMessage + 'static) {
 ///Fires immediate purge history command for identify state.
 pub async fn continue_identify(bot_message: impl BotMessage + 'static, name: String) {
     let source = "CONTINUE_IDENTIFY";
-    let info = util_service::make_info(source);
+    let info = util::logger::make_info(source);
     let arc_message = Arc::new(bot_message);
-    immediate_purge_history(Arc::clone(&arc_message), UserState::Identify).await;
+    cancel_matching_state(Arc::clone(&arc_message), UserState::Identify).await;
     info("beginning identification");
     match people_service::get_person(name.to_string()).await {
         //---If exact match on name

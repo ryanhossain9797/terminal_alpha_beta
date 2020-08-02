@@ -1,5 +1,4 @@
 //--------TELGRAM CODE
-use super::util_service::*;
 use super::*;
 use async_trait::async_trait;
 use futures::StreamExt;
@@ -8,7 +7,7 @@ use regex::Regex;
 use std::env;
 use std::time::Duration;
 use telegram_bot::Message as TMessage;
-use telegram_bot::*;
+use telegram_bot::{Api, CanSendMessage, GetMe, MessageChat, MessageKind, UpdateKind};
 
 //--- Waiting time for failed connections
 const WAITTIME: u64 = 10;
@@ -29,7 +28,7 @@ pub(crate) async fn telegram_main() {
                 if let UpdateKind::Message(message) = update.kind {
                     if let MessageKind::Text { ref data, .. } = message.kind {
                         // Print received text message to stdout.
-                        show_status(&format!(
+                        util::logger::show_status(&format!(
                             "TELEGRAM: <{}>: {}",
                             &message.from.first_name, data
                         ));

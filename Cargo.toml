@@ -6,10 +6,10 @@ edition = "2018"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
-# [profile.release]
-# lto = true
-# codegen-units = 1
-# panic = 'abort'
+[profile.release]
+lto = true
+codegen-units = 1
+panic = 'abort'
 
 
 [dependencies]
@@ -19,7 +19,6 @@ telegram-bot = {git = "https://github.com/telegram-rs/telegram-bot"}
 serenity = { git = "https://github.com/Lakelezz/serenity", branch = "await", default-features = false, features = ["client", "gateway", "rustls_backend", "model", "utils", "cache"]}
 snips-nlu-lib = { git = "https://github.com/snipsco/snips-nlu-rs", branch = "master" }
 futures-intrusive = "0.3"
-futures-delay-queue = "0.4"
 async-trait = "0.1"
 dotenv = "0.15"
 once_cell = "1.4"

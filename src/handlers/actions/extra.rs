@@ -3,11 +3,12 @@ use super::*;
 //Tests any unknown intent
 pub async fn start_unknown(bot_message: impl BotMessage + 'static) {
     println!("START_UNKNOWN: unknown state initiated");
-    let id = bot_message.get_id();
-    set_state(id.clone(), UserState::Unknown).await;
-    println!("START_UNKNOWN: record added for id {}", id);
+    println!(
+        "START_UNKNOWN: record added for id {}",
+        bot_message.get_id()
+    );
     let arc_message = Arc::new(bot_message);
-    wipe_history(Arc::clone(&arc_message), UserState::Unknown);
+    set_timed_state(Arc::clone(&arc_message), UserState::Unknown).await;
     arc_message
         .send_message(responses::load("intentional-unknownstate").into())
         .await;

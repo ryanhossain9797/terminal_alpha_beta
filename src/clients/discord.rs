@@ -24,7 +24,7 @@ pub(crate) async fn discord_main() {
     // Shards will automatically attempt to reconnect, and will perform
     // exponential backoff until it reconnects.
     if let Err(why) = client.start().await {
-        util_service::show_status(&format!("Client error: {:?}", why));
+       util::logger::show_status(&format!("Client error: {:?}", why));
     }
 }
 
@@ -35,7 +35,7 @@ impl EventHandler for Handler {
     // Set a handler for the `message` event - so that whenever a new message
     // is received - the closure (or function) passed will be called.
     async fn message(&self, ctx: Context, message: DMessage) {
-        util_service::show_status(&format!(
+       util::logger::show_status(&format!(
             "DISCORD: <{}>: {}",
             message.author.name, message.content
         ));
@@ -46,7 +46,7 @@ impl EventHandler for Handler {
 
     // In this case, just print what the current user's username is.
     async fn ready(&self, _: Context, ready: Ready) {
-        util_service::show_status(&format!("{} is connected!", ready.user.name));
+       util::logger::show_status(&format!("{} is connected!", ready.user.name));
     }
 }
 
@@ -58,7 +58,7 @@ impl EventHandler for Handler {
 /// - replaces redundant spaces with single spaces using regex ("hellow      world" becomes "hellow world").
 async fn filter(message: DMessage, ctx: Context) {
     let source = "DISCORD";
-    let error = util_service::make_error(source);
+    let error =util::logger::make_error(source);
     if let Ok(info) = ctx.http.get_current_application_info().await {
         let id: i64 = info.id.into();
         //-----------------------remove self mention from message

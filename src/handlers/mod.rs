@@ -28,13 +28,13 @@ const WAITTIME: u64 = LONGWAIT;
 
 ///NLUENGINE: Snips NLU is used to pick actions when they don't match directly
 static NLUENGINE: Lazy<Option<SnipsNluEngine>> = Lazy::new(|| {
-    util_service::show_status("\nLoading the nlu engine...");
+   util::logger::show_status("\nLoading the nlu engine...");
     SnipsNluEngine::from_path("data/rootengine/").ok()
 });
 
 ///HTTP client for..... HTTP things
 static CLIENT: Lazy<reqwest::Client> = Lazy::new(|| {
-    util_service::show_status("\nLoading Api Client");
+   util::logger::show_status("\nLoading Api Client");
     reqwest::Client::new()
 });
 
@@ -141,7 +141,7 @@ fn into_msg(msg: impl Into<MsgCount>) -> MsgCount {
 ///Distributes incoming requests to separate threads
 pub fn distributor(bot_message: impl BotMessage + 'static, processed_text: String) {
     let source = "DISTRIBUTOR";
-    let info = util_service::make_info(source);
+    let info =util::logger::make_info(source);
     //Spawn a new task to handle the message
     tokio::spawn(async move { handler(bot_message, processed_text).await });
     info("Handler Thread Spawned");
@@ -150,17 +150,17 @@ pub fn distributor(bot_message: impl BotMessage + 'static, processed_text: Strin
 ///First place to handle messages after distribution
 async fn handler(bot_message: impl BotMessage + 'static, processed_text: String) {
     let source = "HANDLER";
-    let info = util_service::make_info(source);
+    let info =util::logger::make_info(source);
     info(&format!("Processed text is {}", processed_text));
 
     //---If record from user exists (A Some(record)), some conversation is ongoing
     //---So will be replied regardless of groups or mentions and stuff ('will_respond' is ignored)
-    if let Some(stored_record) = get_state(&bot_message.get_id()).await {
+    if let Some(stored_record) = retrieve_state(&bot_message.get_id()).await {
         let record = stored_record.clone();
 
         //---"cancel last will shut off the conversation"
         if processed_text == "cancel last" {
-            cancel_history(bot_message).await;
+            purge_state(bot_message).await;
         } else if let UserState::Search = record.state {
             info("continuing search");
             search::continue_search(bot_message, processed_text.clone()).await;
@@ -206,9 +206,9 @@ async fn handler(bot_message: impl BotMessage + 'static, processed_text: String)
 async fn natural_understanding(bot_message: impl BotMessage + 'static, processed_text: String) {
     let source = "NATURAL_ACTION_PICKER";
 
-    let info = util_service::make_info(source);
-    let warning = util_service::make_warning(source);
-    let error = util_service::make_error(source);
+    let info =util::logger::make_info(source);
+    let warning =util::logger::make_warning(source);
+    let error =util::logger::make_error(source);
     //---Stuff required to run the NLU engine to get an intent
     if let Some(engine) = &*NLUENGINE {
         let intents_alternatives = 1;
@@ -277,91 +277,25 @@ async fn natural_understanding(bot_message: impl BotMessage + 'static, processed
                 //If failed to parse the intent result as json
                 else {
                     error("couldn't convert intent data to JSON");
-                    util_service::log_message(&processed_text);
+                   util::logger::log_message(&processed_text);
                     extra::unsupported_notice(bot_message).await
                 }
             }
             //Unsure intent if cannot match to any intent confidently
             else {
                 warning("couldn't match an intent confidently");
-                util_service::log_message(&processed_text);
+               util::logger::log_message(&processed_text);
                 extra::unsupported_notice(bot_message).await
             }
         }
         //Unknown intent if can't match intent at all
         else {
             warning("unknown intent");
-            util_service::log_message(&processed_text);
+           util::logger::log_message(&processed_text);
             extra::unsupported_notice(bot_message).await
         };
     } else {
         error("NLU engine load failed");
         extra::unsupported_notice(bot_message).await
-    }
-}
-
-///Removes current history with a cancellation message.  
-///Doesn't care about state.  
-///Used with the cancel last command.
-async fn cancel_history(bot_message: impl BotMessage + 'static) {
-    remove_state(&bot_message.get_id()).await;
-    bot_message
-        .send_message(responses::load("cancel-state").into())
-        .await;
-}
-
-///Removes history after 30 seconds if it's not updated with a new time,  
-///AND the history state matches the provided state.  
-///Notice Message is provided to user.
-fn wipe_history(bot_message: Arc<impl BotMessage + 'static>, state: UserState) {
-    let source = "WIPE_HISTORY";
-    let info = util_service::make_info(source);
-    task::spawn(async move {
-        //Wait a specified amount of time before deleting user state
-        tokio::time::delay_for(Duration::from_secs(WAITTIME)).await;
-        if let Some(record) = get_state(&bot_message.get_id()).await {
-            //If the current state matches pending deletion state
-            if format!("{}", record.state) == format!("{}", state) {
-                //If the current state is older than threshold wait time
-                if record.last.elapsed() > Duration::from_secs(WAITTIME) {
-                    remove_state(&bot_message.get_id()).await;
-                    info(&format!("deleted state record '{}'", state));
-                    bot_message
-                        .send_message(responses::load("delay-notice").into())
-                        .await;
-                //If the current state is not older than threshold wait time
-                } else {
-                    info("aborted record delete due to recency");
-                }
-            //If the current state doesn't match pending deletion state
-            } else {
-                info(&format!(
-                    "aborted record delete for '{}' because current state is '{}'",
-                    state, record.state
-                ));
-            }
-        //If user has no pending state
-        } else {
-            info(&format!(
-                "aborted record delete for '{}', there is no recorded state for '{}'",
-                state,
-                bot_message.get_id()
-            ))
-        }
-    });
-}
-
-///Immediately purges history IF provided state matches history state.  
-///Used to remove history after state action is completed.  
-///No notice provided.
-async fn immediate_purge_history(bot_message: Arc<impl BotMessage + 'static>, state: UserState) {
-    let source = "PURGE_HISTORY";
-    let info = util_service::make_info(source);
-
-    if let Some(r) = get_state(&bot_message.get_id()).await {
-        if r.state == state {
-            remove_state(&bot_message.get_id()).await;
-            info(&format!("deleted state record for {}", state));
-        }
     }
 }

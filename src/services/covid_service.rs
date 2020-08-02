@@ -36,11 +36,11 @@ impl Covid {
     }
     async fn update_cache(&mut self) {
         let source = "COVID_SERVICE";
-        let error = util_service::make_error(source);
-        let info = util_service::make_info(source);
+        let error = util::logger::make_error(source);
+        let info = util::logger::make_info(source);
 
         let url = "https://api.covid19api.com/summary".to_string();
-        match util_service::get_request_json(&url).await {
+        match api::get_request_json(&url).await {
             //If Successful
             Some(Value::Object(map)) => {
                 //Work through the json to get the country specific data
@@ -120,7 +120,7 @@ impl Covid {
 
     async fn refresh(&mut self) {
         if self.time.elapsed() > Duration::from_secs(600) {
-            let info = util_service::make_info("COVID_CACHE");
+            let info = util::logger::make_info("COVID_CACHE");
             info("Refreshing cache");
             self.update_cache().await;
         }

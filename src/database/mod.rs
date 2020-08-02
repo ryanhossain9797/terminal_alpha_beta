@@ -17,7 +17,7 @@ pub async fn initialize() {
 
 async fn initialize_mongo() {
     let source = "MONGO_INIT";
-    let error = util_service::make_error(source);
+    let error = util::logger::make_error(source);
 
     // no one else has initialized it yet, so
     if let Ok(token) = env::var("MONGO_AUTH") {
@@ -37,7 +37,7 @@ async fn initialize_mongo() {
 
 pub async fn get_mongo() -> Option<Database> {
     let source = "MONGO_GET";
-    let info = util_service::make_info(source);
+    let info = util::logger::make_info(source);
 
     match &*MONGO.lock().await {
         Some(db) => {

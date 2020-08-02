@@ -2,7 +2,7 @@ use super::*;
 
 pub async fn start_corona(bot_message: impl BotMessage) {
     let source = "CORONA";
-    let error = util_service::make_error(source);
+    let error =util::logger::make_error(source);
 
     let top_new = covid_service::get_top_new().await;
     let top_total = covid_service::get_top_total().await;
