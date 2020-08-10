@@ -3,6 +3,7 @@ mod api;
 mod clients;
 mod database;
 mod handlers;
+mod repositories;
 mod services;
 mod util;
 use clients::*;
