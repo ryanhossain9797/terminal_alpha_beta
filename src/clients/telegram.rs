@@ -8,7 +8,6 @@ use std::env;
 use std::time::Duration;
 use telegram_bot::Message as TMessage;
 use telegram_bot::{Api, CanSendMessage, GetMe, MessageChat, MessageKind, UpdateKind};
-use tokio::sync::mpsc;
 
 //--- Waiting time for failed connections
 const WAITTIME: u64 = 10;
@@ -18,10 +17,8 @@ pub static API: Lazy<Api> = Lazy::new(|| {
     Api::new(token)
 });
 
-type MsgSender = mpsc::Sender<(Box<dyn handlers::BotMessage>, String)>;
-
 ///Main Starting point for the telegram api.
-pub(crate) async fn telegram_main(_sender: MsgSender) {
+pub(crate) async fn telegram_main() {
     let mut stream = API.stream();
     //Fetch new updates via long poll method
     while let Some(update_result) = stream.next().await {

@@ -8,12 +8,9 @@ use serenity::{
 };
 use std::env;
 use std::time::Duration;
-use tokio::sync::mpsc;
-
-type MsgSender = mpsc::Sender<(Box<dyn handlers::BotMessage>, String)>;
 
 ///Main Starting point for the Discord api.
-pub(crate) async fn discord_main(_sender: MsgSender) {
+pub(crate) async fn discord_main() {
     // Configure the client with your Discord bot token in the environment.
     let token = env::var("DISCORD_TOKEN").expect("Expected a token in the environment");
 

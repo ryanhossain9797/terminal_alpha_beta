@@ -11,7 +11,6 @@ use dotenv::dotenv;
 use services::*;
 use tokio::prelude::*;
 use tokio::runtime::Runtime;
-use tokio::sync::mpsc;
 fn main() {
     let mut rt = Runtime::new().expect("Couldn't set up tokio runtime");
     rt.block_on(async {
@@ -32,25 +31,16 @@ fn main() {
             status("\nInitialized Everything\n");
         }
 
-        let (sender, receiver) = mpsc::channel::<(Box<dyn handlers::BotMessage>, String)>(100);
-        let message_handler = tokio::spawn(async move {
-            handlers::distributor_new(receiver).await;
-        });
-
-        let telegram_sender = sender.clone();
-        let discord_sender = sender.clone();
-        drop(sender);
         //Wait for tasks to finish,
         //Which is hopefully never, because that would mean it crashed.
         futures::future::join_all(vec![
-            message_handler,
             //Spawn a task for telegram
             tokio::spawn(async {
-                run_telegram(telegram_sender).await;
+                run_telegram().await;
             }),
             //Spawn a task for discord
             tokio::spawn(async {
-                run_discord(discord_sender).await;
+                run_discord().await;
             }),
         ])
         .await;

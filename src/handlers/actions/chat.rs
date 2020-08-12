@@ -6,11 +6,7 @@ pub async fn start_chat(bot_message: impl BotMessage) {
     let info = util::logger::make_info(source);
     info("Chat initiated");
 
-    let dyn_clone = bot_message.dyn_clone();
-
     extra::custom_response(bot_message, "chat-start").await;
-
-    state::userstate::send_msg(dyn_clone).await;
 }
 
 ///Continues chat.  

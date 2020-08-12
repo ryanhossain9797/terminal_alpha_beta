@@ -15,7 +15,7 @@ use std::{fs::*, sync::Arc, time::Duration};
 use async_trait::async_trait;
 use once_cell::sync::Lazy;
 use snips_nlu_lib::SnipsNluEngine;
-use tokio::{sync::mpsc, task};
+use tokio::task;
 
 ///Long wait time, Used in runing system
 const LONGWAIT: u64 = 30;
@@ -136,14 +136,6 @@ pub trait BotMessage: Send + Sync {
 #[allow(dead_code)]
 fn into_msg(msg: impl Into<MsgCount>) -> MsgCount {
     msg.into()
-}
-
-pub async fn distributor_new(mut receiver: mpsc::Receiver<(Box<dyn BotMessage>, String)>) {
-    println!("new distributor");
-    while let Some(val) = receiver.recv().await {
-        println!("{}", val.1);
-    }
-    println!("new distributor ended");
 }
 
 ///Distributes incoming requests to separate threads
