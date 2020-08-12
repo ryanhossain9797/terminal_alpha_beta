@@ -15,7 +15,7 @@ use std::{fs::*, sync::Arc, time::Duration};
 use async_trait::async_trait;
 use once_cell::sync::Lazy;
 use snips_nlu_lib::SnipsNluEngine;
-use tokio::task;
+use tokio::{sync::mpsc, task};
 
 ///Long wait time, Used in runing system
 const LONGWAIT: u64 = 30;
@@ -28,13 +28,13 @@ const WAITTIME: u64 = LONGWAIT;
 
 ///NLUENGINE: Snips NLU is used to pick actions when they don't match directly
 static NLUENGINE: Lazy<Option<SnipsNluEngine>> = Lazy::new(|| {
-   util::logger::show_status("\nLoading the nlu engine...");
+    util::logger::show_status("\nLoading the nlu engine...");
     SnipsNluEngine::from_path("data/rootengine/").ok()
 });
 
 ///HTTP client for..... HTTP things
 static CLIENT: Lazy<reqwest::Client> = Lazy::new(|| {
-   util::logger::show_status("\nLoading Api Client");
+    util::logger::show_status("\nLoading Api Client");
     reqwest::Client::new()
 });
 
@@ -138,10 +138,18 @@ fn into_msg(msg: impl Into<MsgCount>) -> MsgCount {
     msg.into()
 }
 
+pub async fn distributor_new(mut receiver: mpsc::Receiver<(Box<dyn BotMessage>, String)>) {
+    println!("new distributor");
+    while let Some(val) = receiver.recv().await {
+        println!("{}", val.1);
+    }
+    println!("new distributor ended");
+}
+
 ///Distributes incoming requests to separate threads
 pub fn distributor(bot_message: impl BotMessage + 'static, processed_text: String) {
     let source = "DISTRIBUTOR";
-    let info =util::logger::make_info(source);
+    let info = util::logger::make_info(source);
     //Spawn a new task to handle the message
     tokio::spawn(async move { handler(bot_message, processed_text).await });
     info("Handler Thread Spawned");
@@ -150,7 +158,7 @@ pub fn distributor(bot_message: impl BotMessage + 'static, processed_text: Strin
 ///First place to handle messages after distribution
 async fn handler(bot_message: impl BotMessage + 'static, processed_text: String) {
     let source = "HANDLER";
-    let info =util::logger::make_info(source);
+    let info = util::logger::make_info(source);
     info(&format!("Processed text is {}", processed_text));
 
     //---If record from user exists (A Some(record)), some conversation is ongoing
@@ -206,9 +214,9 @@ async fn handler(bot_message: impl BotMessage + 'static, processed_text: String)
 async fn natural_understanding(bot_message: impl BotMessage + 'static, processed_text: String) {
     let source = "NATURAL_ACTION_PICKER";
 
-    let info =util::logger::make_info(source);
-    let warning =util::logger::make_warning(source);
-    let error =util::logger::make_error(source);
+    let info = util::logger::make_info(source);
+    let warning = util::logger::make_warning(source);
+    let error = util::logger::make_error(source);
     //---Stuff required to run the NLU engine to get an intent
     if let Some(engine) = &*NLUENGINE {
         let intents_alternatives = 1;
@@ -277,21 +285,21 @@ async fn natural_understanding(bot_message: impl BotMessage + 'static, processed
                 //If failed to parse the intent result as json
                 else {
                     error("couldn't convert intent data to JSON");
-                   util::logger::log_message(&processed_text);
+                    util::logger::log_message(&processed_text);
                     extra::unsupported_notice(bot_message).await
                 }
             }
             //Unsure intent if cannot match to any intent confidently
             else {
                 warning("couldn't match an intent confidently");
-               util::logger::log_message(&processed_text);
+                util::logger::log_message(&processed_text);
                 extra::unsupported_notice(bot_message).await
             }
         }
         //Unknown intent if can't match intent at all
         else {
             warning("unknown intent");
-           util::logger::log_message(&processed_text);
+            util::logger::log_message(&processed_text);
             extra::unsupported_notice(bot_message).await
         };
     } else {

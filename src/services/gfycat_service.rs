@@ -1,7 +1,7 @@
 use super::*;
 use repositories::gfycat_repository;
 
-pub async fn get_gfycat_by_keyword(keyword: &str) -> Option<String> {
+pub async fn get_by_keyword(keyword: &str) -> Option<String> {
     let source = "GFYCAT_SERVICE";
     let info = util::logger::make_info(source);
     let error = util::logger::make_error(source);

@@ -29,7 +29,7 @@ pub async fn continue_gif(bot_message: impl BotMessage + 'static, processed_text
     cancel_matching_state(Arc::clone(&arc_message), UserState::Animation).await;
 
     // If retrieving gif succeeds
-    if let Some(url) = gfycat_service::get_gfycat_by_keyword(&processed_text).await {
+    if let Some(url) = gfycat_service::get_by_keyword(&processed_text).await {
         arc_message
             .send_message(MsgCount::SingleMsg(Msg::File(url.to_string())))
             .await;

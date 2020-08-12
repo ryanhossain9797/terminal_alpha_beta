@@ -24,7 +24,7 @@ impl Note {
 }
 
 ///Returns all notes for the user.
-pub async fn get_notes(user_id: &str) -> Option<Vec<Note>> {
+pub async fn get_by_user(user_id: &str) -> Option<Vec<Note>> {
     if let Some(db) = database::get_mongo().await {
         if let Ok(my_notes) = db
             .collection("notes")
@@ -61,10 +61,10 @@ pub async fn get_notes(user_id: &str) -> Option<Vec<Note>> {
 }
 
 ///Adds a new note for the provided note string.
-pub async fn add_note(user_id: &str, note: String) {
+pub async fn add(user_id: &str, note: String) {
     let source = "NOTE_ADD";
-    let info =util::logger::make_info(source);
-    let error =util::logger::make_error(source);
+    let info = util::logger::make_info(source);
+    let error = util::logger::make_error(source);
     if let Some(db) = database::get_mongo().await {
         let notes = db.collection("notes");
         match notes
@@ -80,14 +80,17 @@ pub async fn add_note(user_id: &str, note: String) {
 }
 
 ///Removes the note for the provided user and the provided note id.
-pub async fn delete_note(user_id: &str, note_id: &str){
+pub async fn delete_note(user_id: &str, note_id: &str) {
     let source = "NOTE_DELETE";
-    let info =util::logger::make_info(source);
-    let error =util::logger::make_error(source);
+    let info = util::logger::make_info(source);
+    let error = util::logger::make_error(source);
     if let Some(db) = database::get_mongo().await {
         let notes = db.collection("notes");
         if let Ok(object_id) = oid::ObjectId::with_string(note_id) {
-            match notes.delete_one(doc! {"_id": object_id, "id":user_id}, None).await {
+            match notes
+                .delete_one(doc! {"_id": object_id, "id":user_id}, None)
+                .await
+            {
                 Ok(_) => info("successful delete"),
                 Err(err) => {
                     error(&format!("{}", err));

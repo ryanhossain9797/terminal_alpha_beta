@@ -1,14 +1,8 @@
 use super::*;
 
-// pub enum NoteState{
-//     ActionState,
-//     AddState,
-//     DeleteState,
-// }
-
 pub async fn start_notes(bot_message: impl BotMessage + 'static) {
     let source = "START_NOTES";
-    let info =util::logger::make_info(source);
+    let info = util::logger::make_info(source);
     info("notes initiated");
     let id = bot_message.get_id();
     // New Arc clone-able version of message
@@ -64,7 +58,7 @@ pub async fn continue_notes(
 ) {
     let source = "CONTINUE_NOTES";
 
-    let info =util::logger::make_info(source);
+    let info = util::logger::make_info(source);
     info(&format!("continuing with notes '{}'", command));
     let id = bot_message.get_id();
 
