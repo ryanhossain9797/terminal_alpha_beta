@@ -14,7 +14,6 @@ panic = 'abort'
 
 [dependencies]
 futures = "0.3"
-# tokio = {version = "0.2", features = ["full"]}
 async-std = {version = "1.6", features = ["attributes", "unstable", "tokio02"]}
 telegram-bot = {git = "https://github.com/telegram-rs/telegram-bot"}
 serenity = { git = "https://github.com/Lakelezz/serenity", branch = "await", default-features = false, features = ["client", "gateway", "rustls_backend", "model", "utils", "cache"]}
