@@ -1,8 +1,8 @@
 use super::*;
+use async_std::sync::{Mutex, MutexGuard};
 use once_cell::sync::Lazy;
 use serde_json::Value;
 use std::time::*;
-use tokio::sync::{Mutex, MutexGuard};
 
 #[derive(Clone)]
 pub struct Country {

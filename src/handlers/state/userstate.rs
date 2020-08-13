@@ -1,13 +1,13 @@
 use super::*;
 
+use async_std::{task, sync::Mutex};
 use once_cell::sync::Lazy;
 use std::collections::HashMap;
 use std::fmt;
 use std::time::Instant;
-use tokio::sync::Mutex as TokioMutex;
 
-static RECORDS: Lazy<TokioMutex<HashMap<String, UserStateRecord>>> =
-    Lazy::new(|| TokioMutex::new(HashMap::new()));
+static RECORDS: Lazy<Mutex<HashMap<String, UserStateRecord>>> =
+    Lazy::new(|| Mutex::new(HashMap::new()));
 
 pub fn initialize_state() {
     Lazy::force(&RECORDS);
@@ -66,7 +66,7 @@ pub async fn set_timed_state(bot_message: Arc<impl BotMessage + 'static>, state:
 
     task::spawn(async move {
         //Wait a specified amount of time before deleting user state
-        tokio::time::delay_for(Duration::from_secs(WAITTIME)).await;
+        task::sleep(Duration::from_secs(WAITTIME)).await;
         if let Some(record) = get_state(&bot_message.get_id()).await {
             //If the current state matches pending deletion state
             if format!("{}", record.state) == format!("{}", state) {

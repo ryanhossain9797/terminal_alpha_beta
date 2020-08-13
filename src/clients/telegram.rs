@@ -6,6 +6,7 @@ use once_cell::sync::Lazy;
 use regex::Regex;
 use std::env;
 use std::time::Duration;
+use async_std::task;
 use telegram_bot::Message as TMessage;
 use telegram_bot::{Api, CanSendMessage, GetMe, MessageChat, MessageKind, UpdateKind};
 
@@ -40,7 +41,7 @@ pub(crate) async fn telegram_main() {
             }
             Err(error) => {
                 println!("ALPHA BETA MAIN: Hit problems fetching updates, stopping for {} seconds. error is {}", WAITTIME, error);
-                tokio::time::delay_for(Duration::from_secs(WAITTIME)).await;
+                task::sleep(Duration::from_secs(WAITTIME)).await;
                 println!("ALPHA BETA MAIN: Resuming")
             }
         }

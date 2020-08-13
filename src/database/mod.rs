@@ -1,4 +1,5 @@
 use super::*;
+use async_std::sync::Mutex;
 use mongodb::{
     options::ClientOptions,
     // options::FindOptions,
@@ -8,8 +9,7 @@ use mongodb::{
 use once_cell::sync::Lazy;
 use std::env;
 
-static MONGO: Lazy<tokio::sync::Mutex<Option<Database>>> =
-    Lazy::new(|| tokio::sync::Mutex::new(None));
+static MONGO: Lazy<Mutex<Option<Database>>> = Lazy::new(|| Mutex::new(None));
 
 pub async fn initialize() {
     initialize_mongo().await;

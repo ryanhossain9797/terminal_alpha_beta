@@ -12,10 +12,10 @@ use state::userstate::*;
 
 use std::{fs::*, sync::Arc, time::Duration};
 
+use async_std::task;
 use async_trait::async_trait;
 use once_cell::sync::Lazy;
 use snips_nlu_lib::SnipsNluEngine;
-use tokio::task;
 
 ///Long wait time, Used in runing system
 const LONGWAIT: u64 = 30;
@@ -143,7 +143,7 @@ pub fn distributor(bot_message: impl BotMessage + 'static, processed_text: Strin
     let source = "DISTRIBUTOR";
     let info = util::logger::make_info(source);
     //Spawn a new task to handle the message
-    tokio::spawn(async move { handler(bot_message, processed_text).await });
+    task::spawn(async move { handler(bot_message, processed_text).await });
     info("Handler Thread Spawned");
 }
 
