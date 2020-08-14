@@ -6,7 +6,7 @@ mod handlers;
 mod repositories;
 mod services;
 mod util;
-use async_std::task;
+use smol::Task;
 use clients::*;
 use dotenv::dotenv;
 use services::*;
@@ -29,20 +29,21 @@ async fn main() {
         database::initialize().await;
         status("\nInitialized Everything\n");
     }
-
-    //Wait for tasks to finish,
-    //Which is hopefully never, because that would mean it crashed.
-    futures::future::join_all(vec![
-        //Spawn a task for telegram
-        task::spawn(async {
-            run_telegram().await;
-        }),
-        //Spawn a task for discord
-        task::spawn(async {
-            run_discord().await;
-        }),
-    ])
-    .await;
+    smol::run( async {
+        //Wait for tasks to finish,
+        //Which is hopefully never, because that would mean it crashed.
+        futures::future::join_all(vec![
+            //Spawn a task for telegram
+            Task::spawn(async {
+                run_telegram().await;
+            }),
+            //Spawn a task for discord
+            Task::spawn(async {
+                run_discord().await;
+            }),
+        ])
+        .await;
+    })
 }
 
 // #[allow(dead_code)]
