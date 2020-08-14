@@ -32,18 +32,26 @@ fn main() {
 
         //Wait for tasks to finish,
         //Which is hopefully never, because that would mean it crashed.
-        futures::future::join_all(vec![
+        let clients = futures::future::try_join_all(vec![
             //Spawn a task for telegram
             Task::spawn(async {
                 run_telegram().await;
+                return Result::Err::<(), &str>("Telegram failed");
             }),
             //Spawn a task for discord
             Task::spawn(async {
                 run_discord().await;
+                return Result::Err::<(), &str>("Discord failed");
             }),
         ])
         .await;
-    })
+
+        let source = "MAIN";
+        let error = util::logger::make_error(source);
+        if let Err(msg) = clients {
+            error(&format!("One or more clients have failed {}", msg));
+        }
+    });
 }
 
 // #[allow(dead_code)]
