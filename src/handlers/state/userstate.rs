@@ -59,7 +59,7 @@ pub async fn purge_state(bot_message: impl BotMessage + 'static) {
 ///or the recorded state doesn't match provided state.  
 ///Notice Message is provided to user.
 pub async fn set_timed_state(bot_message: Arc<impl BotMessage + 'static>, state: UserState) {
-    let source = "WIPE_HISTORY";
+    let source = "SET_TIMED_STATE";
     let info = util::logger::make_info(source);
 
     //---Insert the intent

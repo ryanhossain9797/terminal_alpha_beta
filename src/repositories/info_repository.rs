@@ -3,7 +3,6 @@ use super::*;
 use mongodb::bson::{doc, Bson};
 
 pub async fn get(title: String, pass: String) -> Option<String> {
-    println!("GETTING INFO: {}", title);
     if let Some(db) = database::get_mongo().await {
         let info = db.collection("info");
         let info_result = info

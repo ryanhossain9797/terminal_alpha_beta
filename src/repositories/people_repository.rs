@@ -21,7 +21,6 @@ impl Person {
 
 ///Return's a Some(Person) if name matches, otherwise a None
 pub async fn get(name: String) -> Option<Person> {
-    println!("GETTING PERSON: {}", name);
     if let Some(db) = database::get_mongo().await {
         if let Ok(Some(document)) = db
             .collection("people")

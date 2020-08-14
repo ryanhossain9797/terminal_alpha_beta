@@ -1,14 +1,14 @@
 use super::*;
 
 //Tests any unknown intent
-pub async fn start_unknown(bot_message: impl BotMessage + 'static) {
-    println!("START_UNKNOWN: unknown state initiated");
-    println!(
-        "START_UNKNOWN: record added for id {}",
-        bot_message.get_id()
-    );
+pub async fn start_unknown(bot_message: impl BotMessage + 'static) {    
+    let source = "START_UNKNOWN";
+    let info = util::logger::make_info(source);
+    info("Unknown state initiated");
     let arc_message = Arc::new(bot_message);
+
     set_timed_state(Arc::clone(&arc_message), UserState::Unknown).await;
+    
     arc_message
         .send_message(responses::load("intentional-unknownstate").into())
         .await;

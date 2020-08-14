@@ -20,6 +20,8 @@ pub static API: Lazy<Api> = Lazy::new(|| {
 
 ///Main Starting point for the telegram api.
 pub(crate) async fn telegram_main() {
+    let source = "TELEGRAM_CLIENT";
+    let error = util::logger::make_error(source);
     let mut stream = API.stream();
     //Fetch new updates via long poll method
     while let Some(update_result) = stream.next().await {
@@ -39,10 +41,10 @@ pub(crate) async fn telegram_main() {
                     }
                 }
             }
-            Err(error) => {
-                println!("ALPHA BETA MAIN: Hit problems fetching updates, stopping for {} seconds. error is {}", WAITTIME, error);
+            Err(err) => {
+                error(&format!("ALPHA BETA MAIN: Hit problems fetching updates, stopping for {} seconds. error is {}", WAITTIME, err));
                 Timer::new(Duration::from_secs(WAITTIME)).await;
-                println!("ALPHA BETA MAIN: Resuming")
+                error(&format!("ALPHA BETA MAIN: Resuming"));
             }
         }
     }

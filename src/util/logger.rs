@@ -25,6 +25,10 @@ pub fn show_status(msg: &str) {
 ///Logs the provided text to the action_log.txt file.  
 ///Used for when a message is unknown.
 pub fn log_message(processed_text: &str) {
+    let source = "LOG_MESSAGE";
+    let info = make_info(source);
+    let error = make_error(source);
+
     //Open/Create the action_log.txt file with read, append, create options
     if let Ok(mut file) = OpenOptions::new()
         .read(true)
@@ -37,12 +41,12 @@ pub fn log_message(processed_text: &str) {
             .write((&(format!("{}{}", processed_text, "\n"))).as_bytes())
             .is_ok()
         {
-            println!("MESSAGE_LOGGER: successfully logged unknown action")
+            info("Successfully logged unknown action");
         } else {
-            println!("MESSAGE_LOGGER: failed to log unknown action")
+            error("Failed to log unknown action");
         }
     } else {
         //If file opening fails
-        println!("MESSAGE_LOGGER: failed to open file for logging unknown action")
+        error("Failed to open file for logging unknown action");
     }
 }

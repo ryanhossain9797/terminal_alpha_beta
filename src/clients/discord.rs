@@ -128,16 +128,18 @@ impl handlers::BotMessage for DiscordMessage {
         Box::new(self.clone())
     }
     async fn send_message(&self, message: handlers::MsgCount) {
+        let source = "DISCORD_SEND";
+        let error = util::logger::make_error(source);
         match message {
             handlers::MsgCount::SingleMsg(msg) => match msg {
                 handlers::Msg::Text(text) => {
                     if let Err(why) = &self.message.channel_id.say(&self.ctx.http, text).await {
-                        println!("Error sending message: {:?}", why);
+                        error(&format!("Error sending message: {:?}", why));
                     }
                 }
                 handlers::Msg::File(url) => {
                     if let Err(why) = &self.message.channel_id.say(&self.ctx.http, url).await {
-                        println!("Error sending message: {:?}", why);
+                        error(&format!("Error sending message: {:?}", why));
                     }
                 }
             },
@@ -149,14 +151,14 @@ impl handlers::BotMessage for DiscordMessage {
                             if let Err(why) =
                                 &self.message.channel_id.say(&self.ctx.http, text).await
                             {
-                                println!("Error sending message: {:?}", why);
+                                error(&format!("Error sending message: {:?}", why));
                             }
                         }
                         handlers::Msg::File(url) => {
                             if let Err(why) =
                                 &self.message.channel_id.say(&self.ctx.http, url).await
                             {
-                                println!("Error sending message: {:?}", why);
+                                error(&format!("Error sending message: {:?}", why));
                             }
                         }
                     }
