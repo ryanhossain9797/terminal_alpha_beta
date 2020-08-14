@@ -15,6 +15,7 @@ panic = 'abort'
 [dependencies]
 futures = "0.3"
 smol = { version = "0.3", features = ["tokio02"] }
+async-mutex = "1.1.5"
 telegram-bot = {git = "https://github.com/telegram-rs/telegram-bot"}
 serenity = { git = "https://github.com/Lakelezz/serenity", branch = "await", default-features = false, features = ["client", "gateway", "rustls_backend", "model", "utils", "cache"]}
 snips-nlu-lib = { git = "https://github.com/snipsco/snips-nlu-rs", branch = "master" }
