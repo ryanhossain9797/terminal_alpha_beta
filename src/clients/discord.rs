@@ -45,8 +45,8 @@ impl EventHandler for Handler {
     }
 
     // In this case, just print what the current user's username is.
-    async fn ready(&self, _: Context, ready: Ready) {
-        util::logger::show_status(&format!("{} is connected!", ready.user.name));
+    async fn ready(&self, _: Context, _: Ready) {
+        util::logger::show_status("Discord is connected!\n");
     }
 }
 

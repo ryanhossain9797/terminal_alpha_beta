@@ -14,7 +14,7 @@ use std::{fs::*, sync::Arc, time::Duration};
 
 use async_trait::async_trait;
 use once_cell::sync::Lazy;
-use smol::Task;
+use async_std::task;
 use snips_nlu_lib::SnipsNluEngine;
 
 ///Long wait time, Used in runing system
@@ -143,7 +143,7 @@ pub fn distributor(bot_message: impl BotMessage + 'static, processed_text: Strin
     let source = "DISTRIBUTOR";
     let info = util::logger::make_info(source);
     //Spawn a new task to handle the message
-    Task::spawn(async move { handler(bot_message, processed_text).await }).detach();
+    let _ = task::spawn(async move { handler(bot_message, processed_text).await });
     info("Handler Thread Spawned");
 }
 

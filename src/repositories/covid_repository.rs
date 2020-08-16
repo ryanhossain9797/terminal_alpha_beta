@@ -1,7 +1,7 @@
 use super::*;
 use once_cell::sync::Lazy;
 use serde_json::Value;
-use async_mutex::{Mutex, MutexGuard};
+use async_std::sync::{Mutex, MutexGuard};
 use std::time::*;
 
 #[derive(Clone)]

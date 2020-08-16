@@ -1,8 +1,8 @@
 use super::*;
 
-use async_mutex::Mutex;
+use async_std::sync::Mutex;
+use async_std::task;
 use once_cell::sync::Lazy;
-use smol::{Task, Timer};
 use std::collections::HashMap;
 use std::fmt;
 use std::time::Instant;
@@ -65,9 +65,9 @@ pub async fn set_timed_state(bot_message: Arc<impl BotMessage + 'static>, state:
     //---Insert the intent
     set_state(bot_message.get_id(), state.clone()).await;
 
-    Task::spawn(async move {
+    let _ = task::spawn(async move {
         //Wait a specified amount of time before deleting user state
-        Timer::new(Duration::from_secs(WAITTIME)).await;
+        task::sleep(Duration::from_secs(WAITTIME)).await;
         if let Some(record) = get_state(&bot_message.get_id()).await {
             //If the current state matches pending deletion state
             if format!("{}", record.state) == format!("{}", state) {
@@ -97,8 +97,7 @@ pub async fn set_timed_state(bot_message: Arc<impl BotMessage + 'static>, state:
                 bot_message.get_id()
             ))
         }
-    })
-    .detach();
+    });
 }
 
 ///Immediately cancel's the state IF provided state matches current state.  

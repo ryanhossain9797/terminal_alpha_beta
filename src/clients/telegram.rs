@@ -1,14 +1,16 @@
 //--------TELGRAM CODE
 use super::*;
+use async_std::task;
 use async_trait::async_trait;
 use futures::StreamExt;
 use once_cell::sync::Lazy;
 use regex::Regex;
-use smol::Timer;
 use std::env;
 use std::time::Duration;
 use telegram_bot::Message as TMessage;
-use telegram_bot::{Api, CanSendMessage, GetMe, MessageChat, MessageKind, UpdateKind};
+use telegram_bot::{
+    Api, CanSendDocument, CanSendMessage, GetMe, InputFileRef, MessageChat, MessageKind, UpdateKind,
+};
 
 //--- Waiting time for failed connections
 const WAITTIME: u64 = 10;
@@ -23,6 +25,7 @@ pub(crate) async fn telegram_main() {
     let source = "TELEGRAM_CLIENT";
     let error = util::logger::make_error(source);
     let mut stream = API.stream();
+    util::logger::show_status("Telegram is connected!\n");
     //Fetch new updates via long poll method
     while let Some(update_result) = stream.next().await {
         match update_result {
@@ -42,9 +45,12 @@ pub(crate) async fn telegram_main() {
                 }
             }
             Err(err) => {
-                error(&format!("ALPHA BETA MAIN: Hit problems fetching updates, stopping for {} seconds. error is {}", WAITTIME, err));
-                Timer::new(Duration::from_secs(WAITTIME)).await;
-                error(&format!("ALPHA BETA MAIN: Resuming"));
+                error(&format!(
+                    "Hit problems fetching updates, stopping for {} seconds. error is {}",
+                    WAITTIME, err
+                ));
+                task::sleep(Duration::from_secs(WAITTIME)).await;
+                error("Resuming");
             }
         }
     }
@@ -131,12 +137,13 @@ impl handlers::BotMessage for TelegramMessage {
                     let _ = API.send(self.message.chat.text(text)).await;
                 }
                 handlers::Msg::File(url) => {
-                    // API.spawn(
-                    //     self.message
-                    //         .chat
-                    //         .photo(InputFileUpload::with_path("files/dp.jpg")),
-                    // );
-                    let _ = API.send(self.message.chat.text(url)).await;
+                    if API
+                        .send(self.message.chat.document(InputFileRef::new(url.clone())))
+                        .await
+                        .is_err()
+                    {
+                        let _ = API.send(self.message.chat.text(url)).await;
+                    }
                 }
             },
             handlers::MsgCount::MultiMsg(msg_list) => {
@@ -147,12 +154,13 @@ impl handlers::BotMessage for TelegramMessage {
                             let _ = API.send(self.message.chat.text(text)).await;
                         }
                         handlers::Msg::File(url) => {
-                            // API.spawn(
-                            //     self.message
-                            //         .chat
-                            //         .photo(InputFileUpload::with_path("files/dp.jpg")),
-                            // );
-                            let _ = API.send(self.message.chat.text(url)).await;
+                            if API
+                                .send(self.message.chat.document(InputFileRef::new(url.clone())))
+                                .await
+                                .is_err()
+                            {
+                                let _ = API.send(self.message.chat.text(url)).await;
+                            }
                         }
                     }
                 }
