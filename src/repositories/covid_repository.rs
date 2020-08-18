@@ -1,7 +1,7 @@
 use super::*;
+use async_std::sync::{Mutex, MutexGuard};
 use once_cell::sync::Lazy;
 use serde_json::Value;
-use async_std::sync::{Mutex, MutexGuard};
 use std::time::*;
 
 #[derive(Clone)]
@@ -42,7 +42,7 @@ impl Covid {
         let url = "https://api.covid19api.com/summary".to_string();
         match api::get_request_json(&url).await {
             //If Successful
-            Some(Value::Object(map)) => {
+            Ok(Value::Object(map)) => {
                 //Work through the json to get the country specific data
                 match map.get("Countries") {
                     Some(Value::Array(country_list)) => {
@@ -113,7 +113,8 @@ impl Covid {
                     _ => error("No Value for 'Global' key"),
                 }
             }
-            _ => error("json initial body doesn't match structure"),
+            Ok(_) => error("Fetched JSON doesn't match strcuture"),
+            Err(err) => error(&format!("Failed to fetch JSON response: {}", err)),
         }
         self.time = Instant::now();
     }

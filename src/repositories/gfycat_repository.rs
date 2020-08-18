@@ -7,7 +7,7 @@ pub async fn get_gfycat_by_keyword(keyword: &str) -> Option<String> {
         keyword
     );
     // Get json value from request
-    if let Some(Value::Object(map)) = api::get_request_json(&url).await {
+    if let Ok(Value::Object(map)) = api::get_request_json(&url).await {
         // Get desired stuff from json
         if let Some(Value::Array(gfycats)) = map.get("gfycats") {
             for gif in gfycats {
