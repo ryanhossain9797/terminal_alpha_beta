@@ -5,13 +5,16 @@ pub async fn start_info(bot_message: impl BotMessage, json: String) {
     let source = "START_INFO";
     let info = util::logger::make_info(source);
     let title_pass = title_pass_retriever(&json);
-    
-    info(&format!("Info title pass is {}, {}", title_pass.0, title_pass.1));
 
-    if let Some(info) = info_service::get_info(title_pass.0, title_pass.1).await {
-        bot_message.send_message(info.into()).await;
-    } else {
-        extra::unsupported_notice(bot_message).await;
+    info(&format!(
+        "Info title pass is {}, {}",
+        title_pass.0, title_pass.1
+    ));
+
+    match info_service::get_info(title_pass.0, title_pass.1).await {
+        Ok(Some(info)) => bot_message.send_message(info.into()).await,
+        Ok(None) => extra::unsupported_notice(bot_message).await,
+        _ => extra::unsupported_notice(bot_message).await, //REPLACE THIS WITH A MESSAGE ABOUT FAILED CONNECTION
     }
 }
 

@@ -1,11 +1,14 @@
 use super::*;
-
 use mongodb::bson::{doc, Bson};
 
-pub async fn get(title: String, pass: String) -> Option<String> {
-    if let Some(db) = database::get_mongo().await {
-        let info = db.collection("info");
-        let info_result = info
+pub async fn get(title: String, pass: String) -> anyhow::Result<Option<String>> {
+    Ok(
+        if let Some(doc) = database::get_mongo()
+            .await
+            .ok_or_else(|| anyhow::anyhow!("Couldn't fetch db connection"))?
+            //If db connection is successful
+            .collection("info")
+            //Search for required info with title and pass
             .find_one(
                 doc! {
                     "title": &title,
@@ -13,14 +16,19 @@ pub async fn get(title: String, pass: String) -> Option<String> {
                 },
                 None,
             )
-            .await;
-        if let Ok(info) = info_result {
-            if let Some(document) = info {
-                if let Some(info) = document.get("info").and_then(Bson::as_str) {
-                    return Some(info.to_string().replace("\\n", "\n"));
-                }
-            }
-        }
-    }
-    None
+            .await?
+        {
+            //If a valid document is found
+            Some(
+                //Get info data
+                doc.get("info")
+                    .and_then(Bson::as_str)
+                    .ok_or_else(|| anyhow::anyhow!("Couldn't fetch info"))?
+                    .to_string(),
+            )
+        } else {
+            //If no valid document is found
+            None
+        },
+    )
 }

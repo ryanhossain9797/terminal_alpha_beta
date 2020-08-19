@@ -28,15 +28,14 @@ pub async fn continue_gif(bot_message: impl BotMessage + 'static, processed_text
     // Purge state history
     cancel_matching_state(Arc::clone(&arc_message), UserState::Animation).await;
 
-    // If retrieving gif succeeds
-    if let Some(url) = gfycat_service::get_by_keyword(&processed_text).await {
-        arc_message
-            .send_message(MsgCount::SingleMsg(Msg::File(url.to_string())))
-            .await;
-        return;
-    }
-    // If something fails
     arc_message
-        .send_message(responses::load("animation-fail").into())
+        .send_message(
+            match gfycat_service::get_by_keyword(&processed_text).await {
+                // If retrieving gif succeeds
+                Ok(url) => MsgCount::SingleMsg(Msg::File(url)),
+                // If retrieving fails
+                _ => responses::load("animation-fail").into(),
+            },
+        )
         .await;
 }

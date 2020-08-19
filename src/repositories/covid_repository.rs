@@ -48,6 +48,7 @@ impl Covid {
                     Some(Value::Array(country_list)) => {
                         info("Got country list");
                         let mut countries: Vec<Country> = vec![];
+
                         country_list.iter().for_each(|country| {
                             match (
                                 country.get("Country"),
@@ -89,10 +90,12 @@ impl Covid {
                                 }
                             }
                         });
+
                         countries.sort_unstable_by(|first, second| {
                             first.new_confirmed.cmp(&second.new_confirmed).reverse()
                         });
                         self.top_new = countries[0..10].to_vec().into();
+
                         countries.sort_unstable_by(|first, second| {
                             first.total_confirmed.cmp(&second.total_confirmed).reverse()
                         });
@@ -103,6 +106,7 @@ impl Covid {
                 match map.get("Global") {
                     Some(Value::Object(summary)) => {
                         info("Value for key 'Global' found");
+
                         if let Some(Value::Number(num)) = summary.get("TotalConfirmed") {
                             self.aggregated_total_confirmed = num.as_i64();
                         }
@@ -127,21 +131,27 @@ impl Covid {
         }
     }
 
-    pub async fn get_top_new(&mut self) -> Option<Vec<Country>> {
+    pub async fn get_top_new(&mut self) -> anyhow::Result<Vec<Country>> {
         self.refresh().await;
-        self.top_new.clone()
+        self.top_new
+            .clone()
+            .ok_or_else(|| anyhow::anyhow!("Couldn't fetch top new"))
     }
 
-    pub async fn get_top_total(&mut self) -> Option<Vec<Country>> {
+    pub async fn get_top_total(&mut self) -> anyhow::Result<Vec<Country>> {
         self.refresh().await;
-        self.top_total.clone()
+        self.top_total
+            .clone()
+            .ok_or_else(|| anyhow::anyhow!("Couldn't fetch top total"))
     }
 
-    pub async fn get_aggregate(&mut self) -> (Option<i64>, Option<i64>) {
+    pub async fn get_aggregate(&mut self) -> (anyhow::Result<i64>, anyhow::Result<i64>) {
         self.refresh().await;
         (
-            self.aggregated_total_confirmed,
-            self.aggregated_total_deaths,
+            self.aggregated_total_confirmed
+                .ok_or_else(|| anyhow::anyhow!("Couldn't fetch aggregated total confirmed")),
+            self.aggregated_total_deaths
+                .ok_or_else(|| anyhow::anyhow!("Couldn't fetch aggregated total deaths")),
         )
     }
 }
