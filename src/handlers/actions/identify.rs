@@ -24,7 +24,7 @@ pub async fn continue_identify(bot_message: impl BotMessage + 'static, name: Str
     info("beginning identification");
     match people_service::get_person(name.to_string()).await {
         //---If exact match on name
-        Some(person) => {
+        Ok(Some(person)) => {
             info("Found direct match");
             arc_message.send_message(person.description.into()).await;
         }
@@ -33,7 +33,7 @@ pub async fn continue_identify(bot_message: impl BotMessage + 'static, name: Str
         _ => {
             info("No direct match, trying closest match");
             let partial_match = match people_service::get_people().await {
-                Some(people) => {
+                Ok(people) => {
                     let mut names: Vec<String> = vec![];
                     people
                         .iter()

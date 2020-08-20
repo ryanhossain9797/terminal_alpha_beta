@@ -24,9 +24,13 @@ impl Note {
 }
 
 ///Returns all notes for the user.
-pub async fn get_by_user(user_id: &str) -> Option<Vec<Note>> {
-    if let Some(db) = database::get_mongo().await {
-        if let Ok(my_notes) = db
+pub async fn get_by_user(user_id: &str) -> anyhow::Result<Vec<Note>> {
+    Ok(
+        //Using fold to convert the cursor into a vector of Note objects
+        database::get_mongo()
+            .await
+            .ok_or_else(|| anyhow::anyhow!("Couldn't fetch db connection"))?
+            //If db connection is successful
             .collection("notes")
             .find(
                 //Searching the 'notes' collection with the specific id
@@ -35,69 +39,77 @@ pub async fn get_by_user(user_id: &str) -> Option<Vec<Note>> {
                 },
                 None,
             )
-            .await
-        {
+            .await?
             //If db search is successful
-            return Some(
-                //Using fold to convert the cursor into a vector of Note objects
-                my_notes
-                    .fold((vec![], 1), |(mut notes_list, position), note| async move {
-                        if let Ok(document) = note {
-                            if let (Some(id), Some(note)) = (
-                                document.get("_id").and_then(Bson::as_object_id),
-                                document.get("note").and_then(Bson::as_str),
-                            ) {
-                                notes_list.push(Note::new(id.to_hex(), position, note));
-                            }
+            .fold(
+                (vec![], 1),
+                |(mut notes_list, position), note_result| async move {
+                    if let Ok(document) = note_result {
+                        if let (Some(id), Some(note)) = (
+                            document.get("_id").and_then(Bson::as_object_id),
+                            document.get("note").and_then(Bson::as_str),
+                        ) {
+                            notes_list.push(Note::new(id.to_hex(), position, note));
                         }
-                        (notes_list, position + 1)
-                    })
-                    .await
-                    .0, //Only the vector is needed, position not required for result
-            );
-        }
-    }
-    None
+                    }
+                    (notes_list, position + 1)
+                },
+            )
+            .await
+            .0, //Only the vector is needed, position not required for result
+    )
 }
 
 ///Adds a new note for the provided note string.
-pub async fn add(user_id: &str, note: String) {
+pub async fn add(user_id: &str, note: String) -> anyhow::Result<()> {
     let source = "NOTE_ADD";
     let info = util::logger::make_info(source);
     let error = util::logger::make_error(source);
-    if let Some(db) = database::get_mongo().await {
-        let notes = db.collection("notes");
-        match notes
-            .insert_one(doc! {"id":user_id, "note": &note}, None)
-            .await
-        {
-            Ok(_) => info("successful insertion"),
-            Err(err) => {
-                error(&format!("{}", err));
-            }
+
+    let notes = database::get_mongo()
+        .await
+        .ok_or_else(|| anyhow::anyhow!("Couldn't fetch db connection"))?
+        .collection("notes");
+    match notes
+        .insert_one(doc! {"id":user_id, "note": &note}, None)
+        .await
+    {
+        Ok(_) => {
+            info("successful insertion");
+            Ok(())
+        }
+        Err(err) => {
+            error(&format!("{}", err));
+            Err(err.into())
         }
     }
 }
 
 ///Removes the note for the provided user and the provided note id.
-pub async fn delete_note(user_id: &str, note_id: &str) {
+pub async fn delete_note(user_id: &str, note_id: &str) -> anyhow::Result<()> {
     let source = "NOTE_DELETE";
     let info = util::logger::make_info(source);
     let error = util::logger::make_error(source);
-    if let Some(db) = database::get_mongo().await {
-        let notes = db.collection("notes");
-        if let Ok(object_id) = oid::ObjectId::with_string(note_id) {
-            match notes
-                .delete_one(doc! {"_id": object_id, "id":user_id}, None)
-                .await
-            {
-                Ok(_) => info("successful delete"),
-                Err(err) => {
-                    error(&format!("{}", err));
-                }
-            }
-        } else {
-            error("invalid note id");
+
+    let notes = database::get_mongo()
+        .await
+        .ok_or_else(|| anyhow::anyhow!("Couldn't fetch db connection"))?
+        .collection("notes");
+
+    match notes
+        .delete_one(
+            doc! {"_id": oid::ObjectId::with_string(note_id).map_err(|_| anyhow::anyhow!("Invalid note id"))?, "id":user_id},
+            None,
+        )
+        .await
+    {
+        Ok(_) => {
+            info("successful delete");
+            Ok(())
+        }
+        Err(err) => {
+            error(&format!("{}", err));
+            Err(err.into())
         }
     }
 }

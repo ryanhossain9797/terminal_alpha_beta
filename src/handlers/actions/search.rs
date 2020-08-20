@@ -31,7 +31,7 @@ pub async fn continue_search(bot_message: impl BotMessage + 'static, processed_t
         services::search_service::get_search_results_by_query(&processed_text).await;
 
     let response = match search_result {
-        Some(results) => {
+        Ok(results) => {
             let mut msgs: Vec<Msg> = vec![responses::load("search-success").into()];
             //Load template for search results
             let search_template = responses::load_text("search-content")
@@ -46,7 +46,7 @@ pub async fn continue_search(bot_message: impl BotMessage + 'static, processed_t
             }
             MsgCount::MultiMsg(msgs)
         }
-        None => responses::load("search-fail").into(),
+        _ => responses::load("search-fail").into(),
     };
     info("Sending search results");
     arc_message.send_message(response).await;

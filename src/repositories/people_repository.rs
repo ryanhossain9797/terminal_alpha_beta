@@ -20,42 +20,42 @@ impl Person {
 }
 
 ///Return's a Some(Person) if name matches, otherwise a None
-pub async fn get(name: String) -> Option<Person> {
-    if let Some(db) = database::get_mongo().await {
-        if let Ok(Some(document)) = db
-            .collection("people")
-            .find_one(doc! {"name": &name}, None)
-            .await
-        {
-            if let Some(description) = document.get("description").and_then(Bson::as_str) {
-                return Some(Person::new(name, description));
-            }
-        }
+pub async fn get(name: String) -> anyhow::Result<Option<Person>> {
+    if let Some(document) = database::get_mongo()
+        .await
+        .ok_or_else(|| anyhow::anyhow!("Couldn't fetch db connection"))?
+        .collection("people")
+        .find_one(doc! {"name": &name}, None)
+        .await?
+    {
+        let description = document
+            .get("description")
+            .and_then(Bson::as_str)
+            .ok_or_else(|| anyhow::anyhow!("No field named description"))?;
+        return Ok(Some(Person::new(name, description)));
     }
-    None
+    Ok(None)
 }
 
 ///Returns a Some(Vec<Person>) if successful, otherwise a None
-pub async fn get_all() -> Option<Vec<Person>> {
-    if let Some(db) = database::get_mongo().await {
-        if let Ok(people) = db.collection("people").find(None, None).await {
-            return Some(
-                people
-                    .filter_map(async move |person_result| {
-                        if let Ok(document) = person_result {
-                            if let (Some(name), Some(description)) = (
-                                document.get("name").and_then(Bson::as_str),
-                                document.get("description").and_then(Bson::as_str),
-                            ) {
-                                return Some(Person::new(name, description));
-                            }
-                        }
-                        None
-                    })
-                    .collect()
-                    .await,
-            );
-        }
-    }
-    None
+pub async fn get_all() -> anyhow::Result<Vec<Person>> {
+    Ok(database::get_mongo()
+        .await
+        .ok_or_else(|| anyhow::anyhow!("Couldn't fetch db connection"))?
+        .collection("people")
+        .find(None, None)
+        .await?
+        .filter_map(async move |person_result| {
+            if let Ok(document) = person_result {
+                if let (Some(name), Some(description)) = (
+                    document.get("name").and_then(Bson::as_str),
+                    document.get("description").and_then(Bson::as_str),
+                ) {
+                    return Some(Person::new(name, description));
+                }
+            }
+            None
+        })
+        .collect()
+        .await)
 }

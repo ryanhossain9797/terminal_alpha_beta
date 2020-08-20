@@ -3,6 +3,7 @@ use super::*;
 pub async fn start_notes(bot_message: impl BotMessage + 'static) {
     let source = "START_NOTES";
     let info = util::logger::make_info(source);
+    let error = util::logger::make_error(source);
     info("notes initiated");
     let id = bot_message.get_id();
     // New Arc clone-able version of message
@@ -11,7 +12,7 @@ pub async fn start_notes(bot_message: impl BotMessage + 'static) {
     // Fetch the notes
     match notes_service::get_notes(&id).await {
         // If successful in fetching notes
-        Some(notes) => {
+        Ok(notes) => {
             // Load the notes template from responses json, or use default if failed
             let note_template = responses::load_text("notes-template")
                 .unwrap_or_else(|| "{num}. {note}".to_string());
@@ -40,7 +41,8 @@ pub async fn start_notes(bot_message: impl BotMessage + 'static) {
                 .await;
         }
         // If not successful in fetching notes
-        None => {
+        Err(err) => {
+            error(&format!("{}", err));
             arc_message
                 .send_message(responses::load("notes-fail").into())
                 .await;
@@ -73,6 +75,7 @@ pub async fn continue_notes(
             .send_message(responses::load(key).into())
             .await;
     };
+
     // The note ids to store
     // If for some reason the user gives an invalid command
     // The previous IDs will be used again
@@ -90,7 +93,7 @@ pub async fn continue_notes(
         // Notify user of Add action
         static_sender("notes-add").await;
         // If it succeeds we'll get an updated list of the current notes
-        if let Some(notes) = notes_option {
+        if let Ok(notes) = notes_option {
             // Overwrite old note ids
             new_note_ids = vec![];
             // Construct the notes string
@@ -121,12 +124,15 @@ pub async fn continue_notes(
             if let Some(note_id) = note_ids.get(number - 1) {
                 // Deleting will return updated list of notes
                 let notes_option = notes_service::delete_note(&id, note_id).await;
+
                 // Notify of note deletion
                 static_sender("notes-delete").await;
+
                 // If updated list is available
-                if let Some(notes) = notes_option {
+                if let Ok(notes) = notes_option {
                     // Overwrite old note ids
                     new_note_ids = vec![];
+
                     // Construct the notes string
                     // Also push ids to note_ids simultaneously
                     let notes_string =
@@ -134,12 +140,12 @@ pub async fn continue_notes(
                             .into_iter()
                             .fold("".to_string(), |notes_string, note| {
                                 new_note_ids.push(note.id);
-
                                 notes_string
                                     + &(note_template
                                         .replace("{num}", &format!("{}", note.position))
                                         .replace("{note}", &note.note))
                             });
+
                     // Send new notes
                     arc_message
                         .send_message(MsgCount::MultiMsg(vec![
@@ -149,16 +155,11 @@ pub async fn continue_notes(
                         .await;
                 }
             }
-            // If the note number is out of range
-            else {
-                static_sender("notes-invalid").await;
-            }
-        // If the note number is not actually a valid integer number (invalid input)
-        } else {
-            static_sender("notes-invalid").await;
         }
-    // If the action itself is invalid (anything other than 'add' or 'delete')
     } else {
+        // If the note number is out of range
+        // If the note number is not actually a valid integer number (invalid input)
+        // If the action itself is invalid (anything other than 'add' or 'delete')
         static_sender("notes-invalid").await;
     }
 
