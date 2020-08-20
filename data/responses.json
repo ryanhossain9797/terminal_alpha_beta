@@ -12,6 +12,7 @@
     "identify-partialmatch": "We could not find that exact person\nBut we found a {name}:\n{description}",
     "identify-notfound": "We could not find that person, Tagged for future identification",
     "identify-dberror": "We could not access the people database",
+    "info-fail": "We couldn't connect to the info database, forgive us",
     "animation-start": "Terminal Alpha and Beta:\nGreetings unit\nyou want to find a so called \"GIF\"?\nvery well, name one",
     "animation-fail": "Terminal Alpha and Beta:\nforgive us, we couldn't aquire that animation",
     "search-start": "Terminal Alpha and Beta:\nGreetings unit\nwhat do you want to search for?",

@@ -13,5 +13,3 @@ scp -P 5914 target/armv7-unknown-linux-musleabihf/release/terminal_alpha_beta al
 scp -P 5914 data/responses.json  alarm@192.168.0.104:responses.json
 
 scp -P 5914 -r data/rootengine  alarm@192.168.0.104:rootengine
-
-scp -P 5914 -r nlu  alarm@192.168.0.104:

@@ -14,7 +14,11 @@ pub async fn start_info(bot_message: impl BotMessage, json: String) {
     match info_service::get_info(title_pass.0, title_pass.1).await {
         Ok(Some(info)) => bot_message.send_message(info.into()).await,
         Ok(None) => extra::unsupported_notice(bot_message).await,
-        _ => extra::unsupported_notice(bot_message).await, //REPLACE THIS WITH A MESSAGE ABOUT FAILED CONNECTION
+        _ => {
+            bot_message
+                .send_message(responses::load("info-fail").into())
+                .await
+        }
     }
 }
 
