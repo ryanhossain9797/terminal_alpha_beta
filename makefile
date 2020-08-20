@@ -10,15 +10,17 @@ arm-release:
 	cargo build --target armv7-unknown-linux-gnueabihf --release
 # Doesn't work
 arm-release-static:
-	RUSTFLAGS="-C target-feature=+crt-static" cargo build --target armv7-unknown-linux-gnueabihf --release
+	RUSTFLAGS="-C target-feature=-crt-static" cargo build --target armv7-unknown-linux-gnueabihf --release
+# Doesn't work
 arm-musl:
 	RUSTFLAGS="-C target-feature=-crt-static" cargo build --target armv7-unknown-linux-musleabihf
+# Doesn't work
 arm-musl-2:
-	 CARGO_TARGET_ARMV7_UNKNOWN_LINUX_MUSLEABIHF_LINKER=arm-linux-gnueabihf-gcc CC_armv7_unknown_linux_musleabihf=arm-linux-gnueabihf-gcc cargo build --target armv7-unknown-linux-musleabihf
+	 CARGO_TARGET_ARMV7_UNKNOWN_LINUX_MUSLEABIHF_LINKER=arm-linux-gnueabihf-gcc CC_armv7_unknown_linux_musleabihf=arm-linux-gnueabihf-gcc cargo build --target armv7-unknown-linux-musleabihf --release
 cross-arm:
 	cross build --target armv7-unknown-linux-gnueabihf
 cross-arm-musl:
-	cross build --target armv7-unknown-linux-musleabihf --release
+	cross build --target armv7-unknown-linux-musleabihf
 arm64:
 	cargo build --target aarch64-unknown-linux-gnu
 train:
