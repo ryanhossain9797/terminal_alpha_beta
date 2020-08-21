@@ -27,7 +27,7 @@ impl Note {
 pub async fn get_by_user(user_id: &str) -> anyhow::Result<Vec<Note>> {
     Ok(
         //Using fold to convert the cursor into a vector of Note objects
-        database::get_mongo()
+        database::mongo::get_mongo()
             .await
             .ok_or_else(|| anyhow::anyhow!("Couldn't fetch db connection"))?
             //If db connection is successful
@@ -66,7 +66,7 @@ pub async fn add(user_id: &str, note: String) -> anyhow::Result<()> {
     let info = util::logger::make_info(source);
     let error = util::logger::make_error(source);
 
-    let notes = database::get_mongo()
+    let notes = database::mongo::get_mongo()
         .await
         .ok_or_else(|| anyhow::anyhow!("Couldn't fetch db connection"))?
         .collection("notes");
@@ -91,7 +91,7 @@ pub async fn delete_note(user_id: &str, note_id: &str) -> anyhow::Result<()> {
     let info = util::logger::make_info(source);
     let error = util::logger::make_error(source);
 
-    let notes = database::get_mongo()
+    let notes = database::mongo::get_mongo()
         .await
         .ok_or_else(|| anyhow::anyhow!("Couldn't fetch db connection"))?
         .collection("notes");

@@ -24,29 +24,25 @@ pub fn show_status(msg: &str) {
 }
 ///Logs the provided text to the action_log.txt file.  
 ///Used for when a message is unknown.
-pub fn log_message(processed_text: &str) {
+pub fn log_message(processed_text: &str) -> anyhow::Result<()> {
     let source = "LOG_MESSAGE";
-    let info = make_info(source);
     let error = make_error(source);
 
-    //Open/Create the action_log.txt file with read, append, create options
-    if let Ok(mut file) = OpenOptions::new()
+    Ok(OpenOptions::new()
         .read(true)
         .append(true)
         .create(true)
+        //Open/Create the action_log.txt file with read, append, create options
         .open("action_log.txt")
-    {
+        .map_err(|err| {
+            error(&format!("{}", err));
+            anyhow::anyhow!(err)
+        })?
         //Attempt to write to file
-        if file
-            .write((&(format!("{}{}", processed_text, "\n"))).as_bytes())
-            .is_ok()
-        {
-            info("Successfully logged unknown action");
-        } else {
-            error("Failed to log unknown action");
-        }
-    } else {
-        //If file opening fails
-        error("Failed to open file for logging unknown action");
-    }
+        .write((&(format!("{}{}", processed_text, "\n"))).as_bytes())
+        .map(|_| ())
+        .map_err(|err| {
+            error(&format!("{}", err));
+            anyhow::anyhow!(err)
+        })?)
 }

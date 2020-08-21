@@ -12,7 +12,7 @@ fn main() {
             println!("{}COMPILED_AT={}", CARGOENV, time);
         }
         Err(_) => {
-            println!("{}COMPILED_AT={}", CARGOENV, "Date time fetch failed");
+            println!("{}COMPILED_AT=Date time fetch failed", CARGOENV);
         }
     }
 }

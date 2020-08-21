@@ -3,7 +3,7 @@ use mongodb::bson::{doc, Bson};
 
 pub async fn get(title: String, pass: String) -> anyhow::Result<Option<String>> {
     Ok(
-        if let Some(doc) = database::get_mongo()
+        match database::mongo::get_mongo()
             .await
             .ok_or_else(|| anyhow::anyhow!("Couldn't fetch db connection"))?
             //If db connection is successful
@@ -19,16 +19,17 @@ pub async fn get(title: String, pass: String) -> anyhow::Result<Option<String>> 
             .await?
         {
             //If a valid document is found
-            Some(
-                //Get info data
+            Some(doc) =>
+            //Get info data
+            {
                 doc.get("info")
                     .and_then(Bson::as_str)
                     .ok_or_else(|| anyhow::anyhow!("Couldn't fetch info"))?
-                    .to_string(),
-            )
-        } else {
+                    .to_string()
+                    .into()
+            }
             //If no valid document is found
-            None
+            _ => None,
         },
     )
 }

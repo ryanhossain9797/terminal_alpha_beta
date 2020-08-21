@@ -12,9 +12,9 @@ use state::userstate::*;
 
 use std::{fs::*, sync::Arc, time::Duration};
 
+use async_std::task;
 use async_trait::async_trait;
 use once_cell::sync::Lazy;
-use async_std::task;
 use snips_nlu_lib::SnipsNluEngine;
 
 ///Long wait time, Used in runing system
@@ -74,7 +74,9 @@ impl From<Option<String>> for MsgCount {
     fn from(s: Option<String>) -> Self {
         match s {
             Some(msg) => MsgCount::SingleMsg(Msg::Text(msg)),
-            None => MsgCount::SingleMsg(Msg::Text("response unavailable error".to_string())),
+            None => MsgCount::SingleMsg(Msg::Text(
+                "ForgiVE uS... We SEEM t0 B3... hAVInG i55UEs".to_string(),
+            )),
         }
     }
 }
@@ -94,7 +96,7 @@ impl From<Option<String>> for Msg {
     fn from(s: Option<String>) -> Self {
         match s {
             Some(msg) => Msg::Text(msg),
-            None => Msg::Text("response unavailable error".to_string()),
+            None => Msg::Text("ForgiVE uS... We SEEM t0 B3... hAVInG i55UEs".to_string()),
         }
     }
 }
@@ -277,21 +279,27 @@ async fn natural_understanding(bot_message: impl BotMessage + 'static, processed
                 //If failed to parse the intent result as json
                 else {
                     error("couldn't convert intent data to JSON");
-                    util::logger::log_message(&processed_text);
+                    let _ = util::logger::log_message(&processed_text).map_err(|err| {
+                        error(&format!("{}", err));
+                    });
                     extra::unsupported_notice(bot_message).await
                 }
             }
             //Unsure intent if cannot match to any intent confidently
             else {
                 warning("couldn't match an intent confidently");
-                util::logger::log_message(&processed_text);
+                let _ = util::logger::log_message(&processed_text).map_err(|err| {
+                    error(&format!("{}", err));
+                });
                 extra::unsupported_notice(bot_message).await
             }
         }
         //Unknown intent if can't match intent at all
         else {
             warning("unknown intent");
-            util::logger::log_message(&processed_text);
+            let _ = util::logger::log_message(&processed_text).map_err(|err| {
+                error(&format!("{}", err));
+            });
             extra::unsupported_notice(bot_message).await
         };
     } else {

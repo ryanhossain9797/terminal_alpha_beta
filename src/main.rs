@@ -17,6 +17,7 @@ async fn main() {
     let source = "MAIN";
     let error = util::logger::make_error(source);
     let status = util::logger::make_status();
+
     {
         //---Load up all the ENV variables from .env file
         dotenv().expect("Couldn't load environment variables");
