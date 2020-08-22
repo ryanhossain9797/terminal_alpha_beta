@@ -30,24 +30,35 @@ pub async fn continue_search(bot_message: impl BotMessage + 'static, processed_t
     let search_result =
         services::search_service::get_search_results_by_query(&processed_text).await;
 
-    let response = match search_result {
+    match search_result {
         Ok(results) => {
-            let mut msgs: Vec<Msg> = vec![responses::load("search-success").into()];
+            arc_message
+                .send_message(responses::load("search-success").into())
+                .await;
+            task::sleep(Duration::from_secs(1)).await;
             //Load template for search results
             let search_template = responses::load_text("search-content")
                 .unwrap_or_else(|| "{description}\nURL: {url}".to_string());
-            for result in results {
-                msgs.push(
-                    search_template
-                        .replace("{description}", &result.description)
-                        .replace("{url}", &result.link)
+            info("Sending search results");
+            arc_message
+                .send_message(
+                    results
+                        .into_iter()
+                        .map(|result| {
+                            search_template
+                                .replace("{description}", &result.description)
+                                .replace("{url}", &result.link)
+                                .into()
+                        })
+                        .collect::<Vec<Msg>>()
                         .into(),
-                );
-            }
-            MsgCount::MultiMsg(msgs)
+                )
+                .await;
         }
-        _ => responses::load("search-fail").into(),
+        _ => {
+            arc_message
+                .send_message(responses::load("search-fail").into())
+                .await
+        }
     };
-    info("Sending search results");
-    arc_message.send_message(response).await;
 }

@@ -33,7 +33,7 @@ pub async fn continue_identify(bot_message: impl BotMessage + 'static, name: Str
         _ => {
             info("No direct match, trying closest match");
             arc_message.send_message(responses::load("identify-nodirect").into()).await;
-            task::sleep(Duration::from_secs(1)).await;
+            task::sleep(Duration::from_secs(2)).await;
             let partial_match = match people_service::get_people().await {
                 Ok(people) => {
                     let mut names: Vec<String> = vec![];

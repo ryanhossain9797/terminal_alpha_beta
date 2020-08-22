@@ -45,12 +45,12 @@ async fn main() {
         //Spawn a task for telegram
         task::spawn(async {
             run_telegram().await;
-            return Result::Err::<!, &str>("Telegram failed");
+            Err::<!, &str>("Telegram failed")
         }),
         //Spawn a task for discord
         task::spawn(async {
             run_discord().await;
-            return Result::Err::<!, &str>("Discord failed");
+            Err::<!, &str>("Discord failed")
         }),
     ])
     .await;

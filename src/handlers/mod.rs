@@ -81,6 +81,22 @@ impl From<Option<String>> for MsgCount {
     }
 }
 
+///When passed an Vex<String>
+///Turns into MsgCount::MultiMsg(Vec<Msg::Text()>)  
+impl From<Vec<String>> for MsgCount {
+    fn from(s: Vec<String>) -> Self {
+        MsgCount::MultiMsg(s.into_iter().map(|s| s.into()).collect())
+    }
+}
+
+///When passed an Vex<Msg>
+///Turns into MsgCount::MultiMsg(Vec<Msg>)  
+impl From<Vec<Msg>> for MsgCount {
+    fn from(s: Vec<Msg>) -> Self {
+        MsgCount::MultiMsg(s)
+    }
+}
+
 ///ENUM, Represents Message type
 ///- Text - Contains String text
 ///- File - Contains String url for file
