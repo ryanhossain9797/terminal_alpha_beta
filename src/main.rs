@@ -17,7 +17,6 @@ async fn main() {
     let source = "MAIN";
     let error = util::logger::make_error(source);
     let status = util::logger::make_status();
-
     {
         //---Load up all the ENV variables from .env file
         dotenv().expect("Couldn't load environment variables");
@@ -33,7 +32,7 @@ async fn main() {
         status("Initializing everything");
 
         clients::initialize();
-        handlers::initialize();
+        handlers::initialize().await;
         database::initialize().await;
 
         status("\nInitialized Everything\n");

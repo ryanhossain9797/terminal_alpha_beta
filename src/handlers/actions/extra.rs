@@ -1,7 +1,7 @@
 use super::*;
 
 //Tests any unknown intent
-pub async fn start_unknown(bot_message: Box<dyn BotMessage>) {
+pub async fn start(bot_message: Box<dyn BotMessage>) {
     let source = "START_UNKNOWN";
     let info = util::logger::make_info(source);
     info("Unknown state initiated");

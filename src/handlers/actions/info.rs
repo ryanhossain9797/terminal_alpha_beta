@@ -1,7 +1,7 @@
 use super::*;
 use serde_json::Value;
 
-pub async fn start_info(bot_message: Box<dyn BotMessage>, json: String) {
+pub async fn start(bot_message: Box<dyn BotMessage>, json: String) {
     let source = "START_INFO";
     let info = util::logger::make_info(source);
     let title_pass = title_pass_retriever(&json);

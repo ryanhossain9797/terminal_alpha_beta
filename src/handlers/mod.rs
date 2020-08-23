@@ -1,6 +1,3 @@
-//----------------------mod.rs name is mandatory as it is the main file for the handlers module
-//----------------------'handlers/mod.rs' means handlers module
-
 mod actions;
 mod responses;
 mod state;
@@ -12,7 +9,10 @@ use state::userstate::*;
 
 use std::{fs::*, sync::Arc, time::Duration};
 
-use async_std::task;
+use async_std::{
+    sync::{channel, Mutex, Sender},
+    task,
+};
 use async_trait::async_trait;
 use once_cell::sync::Lazy;
 use snips_nlu_lib::SnipsNluEngine;
@@ -38,11 +38,14 @@ static CLIENT: Lazy<reqwest::Client> = Lazy::new(|| {
     reqwest::Client::new()
 });
 
+type StaticSender = Lazy<Mutex<Option<Sender<Arc<Box<dyn BotMessage>>>>>>;
+static SENDER: StaticSender = Lazy::new(|| Mutex::new(None));
+
 ///Initializes a variety of things
 ///- State management system
 ///- NLU engine
 ///- Responses JSON
-pub fn initialize() {
+pub async fn initialize() {
     initialize_state();
     Lazy::force(&NLUENGINE);
     Lazy::force(&CLIENT);
@@ -178,7 +181,7 @@ pub fn distributor(bot_message: impl BotMessage + 'static, processed_text: Strin
     let source = "DISTRIBUTOR";
     let info = util::logger::make_info(source);
     //Spawn a new task to handle the message
-    let _ = task::spawn(async move { handler(bot_message.dyn_clone(), processed_text).await });
+    // let _ = task::spawn(async move { handler(bot_message.dyn_clone(), processed_text).await });
     info("Handler Thread Spawned");
 }
 
@@ -196,29 +199,16 @@ async fn handler(bot_message: Box<dyn BotMessage>, processed_text: String) {
         //---"cancel last will shut off the conversation"
         if processed_text == "cancel last" {
             purge_state(bot_message).await;
-        } else if let UserState::Search = record.state {
-            info("continuing search");
-            search::continue_search(bot_message, processed_text.clone()).await;
-        }
-        //---"if state is identify"
-        else if let UserState::Identify = record.state {
-            info("continuing identify");
-            identify::continue_identify(bot_message, processed_text.clone()).await;
-        }
-        //---"if state is animatios"
-        else if let UserState::Animation = record.state {
-            info("continuing animation");
-            animation::continue_gif(bot_message, processed_text.clone()).await;
-        }
-        //---"if state is animatios"
-        else if let UserState::Notes(data) = record.state {
-            info("continuing notes");
-            notes::continue_notes(bot_message, processed_text.clone(), data).await;
-        }
-        //---"if state is unknown"
-        else {
-            info("some unknown state");
-            extra::unknown_state_notice(bot_message).await;
+        } else {
+            use UserState::*;
+            info(&format!("Saved state is {}", record.state));
+            match record.state {
+                Search => search::resume(bot_message, processed_text.clone()).await,
+                Identify => identify::resume(bot_message, processed_text.clone()).await,
+                Animation => animation::resume(bot_message, processed_text.clone()).await,
+                Notes(data) => notes::resume(bot_message, processed_text.clone(), data).await,
+                _ => extra::unknown_state_notice(bot_message).await,
+            }
         }
     }
     //---if record from user doesn't exist, but is either IN A PRIVATE CHAT or MENTIONED IN A GROUP CHAT
@@ -272,14 +262,14 @@ async fn natural_understanding(bot_message: Box<dyn BotMessage>, processed_text:
                     let intent_str: &str = &intent;
                     info(&format!("intent is {}", intent_str));
                     match intent_str {
-                        "chat" => chat::start_chat(bot_message).await,
-                        "search" => search::start_search(bot_message).await,
-                        "identify" => identify::start_identify(bot_message).await,
-                        "animation" => animation::start_gif(bot_message).await,
-                        "info" => info::start_info(bot_message, json).await,
-                        "notes" => notes::start_notes(bot_message).await,
-                        "corona" => corona::start_corona(bot_message).await,
-                        "unknown" => extra::start_unknown(bot_message).await,
+                        "chat" => chat::start(bot_message).await,
+                        "search" => search::start(bot_message).await,
+                        "identify" => identify::start(bot_message).await,
+                        "animation" => animation::start(bot_message).await,
+                        "info" => info::start(bot_message, json).await,
+                        "notes" => notes::start(bot_message).await,
+                        "corona" => corona::start(bot_message).await,
+                        "unknown" => extra::start(bot_message).await,
                         _ => {
                             //Forward to chat for more intents
                             info("forwarding to chat");

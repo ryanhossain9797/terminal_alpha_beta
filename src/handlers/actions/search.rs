@@ -2,7 +2,7 @@ use super::*;
 
 ///Adds a userstate record with search state to userstate records map.  
 ///Fires wipe history command for search state.
-pub async fn start_search(bot_message: Box<dyn BotMessage>) {
+pub async fn start(bot_message: Box<dyn BotMessage>) {
     let source = "START_SEARCH";
 
     let info = util::logger::make_info(source);
@@ -20,7 +20,7 @@ pub async fn start_search(bot_message: Box<dyn BotMessage>) {
 
 ///Finishes search
 ///Fires immediate purge history command for search state
-pub async fn continue_search(bot_message: Box<dyn BotMessage>, processed_text: String) {
+pub async fn resume(bot_message: Box<dyn BotMessage>, processed_text: String) {
     let source = "CONTINUE_SEARCH";
     let info = util::logger::make_info(source);
     let arc_message = Arc::new(bot_message);

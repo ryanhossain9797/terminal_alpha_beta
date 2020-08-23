@@ -3,7 +3,7 @@ use closestmatch::*;
 
 ///Adds a userstate record with identify state to userstate records map.  
 ///Fires wipe history command for identify state.
-pub async fn start_identify(bot_message: Box<dyn BotMessage>) {
+pub async fn start(bot_message: Box<dyn BotMessage>) {
     let source = "START_IDENTIFY";
     let info = util::logger::make_info(source);
     info("identify initiated");
@@ -16,7 +16,7 @@ pub async fn start_identify(bot_message: Box<dyn BotMessage>) {
 
 ///Finishes identify.  
 ///Fires immediate purge history command for identify state.
-pub async fn continue_identify(bot_message: Box<dyn BotMessage>, name: String) {
+pub async fn resume(bot_message: Box<dyn BotMessage>, name: String) {
     let source = "CONTINUE_IDENTIFY";
     let info = util::logger::make_info(source);
     let arc_message = Arc::new(bot_message);

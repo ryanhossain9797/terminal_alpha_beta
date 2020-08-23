@@ -1,7 +1,7 @@
 use super::*;
 
 ///Start chat intent, Only provides a single response without any state
-pub async fn start_chat(bot_message: Box<dyn BotMessage>) {
+pub async fn start(bot_message: Box<dyn BotMessage>) {
     let source = "START_CHAT";
     let info = util::logger::make_info(source);
     info("Chat initiated");
