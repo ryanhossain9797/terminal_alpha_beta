@@ -6,6 +6,7 @@ use futures::StreamExt;
 use once_cell::sync::Lazy;
 use regex::Regex;
 use std::env;
+use std::sync::Arc;
 use std::time::Duration;
 use telegram_bot::Message as TMessage;
 use telegram_bot::{
@@ -21,7 +22,7 @@ pub static API: Lazy<Api> = Lazy::new(|| {
 });
 
 ///Main Starting point for the telegram api.
-pub(crate) async fn telegram_main() {
+pub(crate) async fn telegram_main(_sender: Sender<(Arc<Box<dyn handlers::BotMessage>>, String)>) {
     let source = "TELEGRAM_CLIENT";
     let error = util::logger::make_error(source);
     let mut stream = API.stream();
@@ -40,7 +41,17 @@ pub(crate) async fn telegram_main() {
                         ));
                         // Spawn a handler for the message.
 
-                        filter(message).await;
+                        if let Some((msg, start_conversation)) = filter(&message).await {
+                            _sender
+                                .send((
+                                    Arc::new(Box::new(TelegramMessage {
+                                        message,
+                                        start_conversation,
+                                    })),
+                                    msg,
+                                ))
+                                .await;
+                        }
                     }
                 }
             }
@@ -62,7 +73,7 @@ pub(crate) async fn telegram_main() {
 /// - removes / from start if it's there ("/hellow    @machinelifeformbot   world" becomes "hellow    @machinelifeformbot   world").
 /// - removes mentions of the bot from the message ("hellow    @machinelifeformbot   world" becomes "hellow      world").
 /// - replaces redundant spaces with single spaces using regex ("hellow      world" becomes "hellow world").
-async fn filter(message: TMessage) {
+async fn filter(message: &TMessage) -> Option<(String, bool)> {
     if let MessageKind::Text { ref data, .. } = message.kind {
         let myname_result = API.send(GetMe).await;
         if let Ok(myname) = myname_result {
@@ -81,30 +92,32 @@ async fn filter(message: TMessage) {
                     if data.contains(&handle) {
                         //---true means message is to be processed even if no conversation is in progress
                         //---if bot is mentioned new convo can start
-                        sender(&message, msg, true).await
+                        return Some((msg, true));
                     } else {
                         //---false means message won't start a new conversation
                         //---required because ongoing conversation will continue regardless of true or false
-                        sender(&message, msg, false).await
+                        return Some((msg, false));
                     }
                 } else {
                     //---if not in group chat mentions aren't necessary and any message will be replied by the bot
-                    sender(&message, msg, true).await
+                    return Some((msg, true));
                 };
             }
         }
     }
+    None
 }
 
-///Sender handles forwarding the message.
-async fn sender(message: &TMessage, processed_text: String, start_conversation: bool) {
-    //---Create a TelegramMessage object, which implements the BotMessage trait.
-    let tele_msg = TelegramMessage {
-        message: message.clone(),
-        start_conversation,
-    };
-    handlers::distributor(tele_msg, processed_text);
-}
+// ///Sender handles forwarding the message.
+// async fn sender(message: &TMessage, processed_text: String, start_conversation: bool) -> (String, bool){
+//     //---Create a TelegramMessage object, which implements the BotMessage trait.
+// let tele_msg = TelegramMessage {
+//     message: message.clone(),
+//     start_conversation,
+// };
+//     handlers::distributor(tele_msg, processed_text);
+//     (processed_text.clone(), start_conversation)
+// }
 
 #[derive(Clone)]
 struct TelegramMessage {

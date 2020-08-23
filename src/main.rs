@@ -38,17 +38,25 @@ async fn main() {
         status("\nInitialized Everything\n");
     }
 
+    let (sender, receiver) = handlers::init_sender().await;
+
+    let telegram_sender = sender.clone();
+    let discord_sender = sender;
     //Wait for tasks to finish,
     //Which is hopefully never, because that would mean it crashed.
     let clients_result = futures::future::try_join_all(vec![
+        task::spawn(async {
+            handlers::receiver(receiver).await;
+            Err::<!, &str>("Distributor Failed")
+        }),
         //Spawn a task for telegram
         task::spawn(async {
-            run_telegram().await;
+            run_telegram(telegram_sender).await;
             Err::<!, &str>("Telegram failed")
         }),
         //Spawn a task for discord
         task::spawn(async {
-            run_discord().await;
+            run_discord(discord_sender).await;
             Err::<!, &str>("Discord failed")
         }),
     ])

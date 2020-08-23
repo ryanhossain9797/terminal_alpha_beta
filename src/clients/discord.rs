@@ -10,13 +10,13 @@ use std::env;
 use std::time::Duration;
 
 ///Main Starting point for the Discord api.
-pub(crate) async fn discord_main() {
+pub(crate) async fn discord_main(_sender: Sender<(Arc<Box<dyn handlers::BotMessage>>, String)>) {
     // Configure the client with your Discord bot token in the environment.
     let token = env::var("DISCORD_TOKEN").expect("Expected a token in the environment");
 
     // Create a new instance of the Client, logging in as a bot. This will
     let mut client = Client::new(&token)
-        .event_handler(Handler)
+        .event_handler(Handler { sender: _sender })
         .await
         .expect("Err creating client");
 
@@ -28,7 +28,9 @@ pub(crate) async fn discord_main() {
     }
 }
 
-struct Handler;
+struct Handler {
+    sender: Sender<(Arc<Box<dyn handlers::BotMessage>>, String)>,
+}
 
 #[async_trait]
 impl EventHandler for Handler {
@@ -40,7 +42,18 @@ impl EventHandler for Handler {
             message.author.name, message.content
         ));
         if !message.author.bot {
-            filter(message, ctx).await;
+            if let Some((msg, start_conversation)) = filter(&message, &ctx).await {
+                self.sender
+                    .send((
+                        Arc::new(Box::new(DiscordMessage {
+                            message,
+                            ctx,
+                            start_conversation,
+                        })),
+                        msg,
+                    ))
+                    .await;
+            }
         }
     }
 
@@ -56,7 +69,7 @@ impl EventHandler for Handler {
 /// - removes / from start if it's there ("/hellow    @machinelifeformbot   world" becomes "hellow    @machinelifeformbot   world").
 /// - removes mentions of the bot from the message ("hellow    @machinelifeformbot   world" becomes "hellow      world").
 /// - replaces redundant spaces with single spaces using regex ("hellow      world" becomes "hellow world").
-async fn filter(message: DMessage, ctx: Context) {
+async fn filter(message: &DMessage, ctx: &Context) -> Option<(String, bool)> {
     let source = "DISCORD";
     let error = util::logger::make_error(source);
     if let Ok(info) = ctx.http.get_current_application_info().await {
@@ -75,32 +88,21 @@ async fn filter(message: DMessage, ctx: Context) {
             if message.content.contains(&handle) {
                 //---true means message is to be processed even if no conversation is in progress
                 //---if bot is mentioned new convo can start
-                sender(message, ctx, msg, true).await
+                return Some((msg, true));
             } else {
                 //---false means message won't start a new conversation
                 //---required because ongoing conversation will continue regardless of true or false
-                sender(message, ctx, msg, false).await
+                return Some((msg, false));
             }
         } else {
             //---if not in group chat mentions aren't necessary and any message will be replied by the bot
-            sender(message, ctx, msg, true).await
+            return Some((msg, true));
         };
     } else {
         error("Problem occurred while fetching self ID");
     }
+    None
 }
-
-///Sender handles forwarding the message.
-async fn sender(message: DMessage, ctx: Context, processed_text: String, start_conversation: bool) {
-    let disc_msg = DiscordMessage {
-        message,
-        ctx,
-        start_conversation,
-    };
-    handlers::distributor(disc_msg, processed_text);
-}
-
-//---These will be used to generalize telegram messages with other platforms
 
 #[derive(Clone)]
 struct DiscordMessage {

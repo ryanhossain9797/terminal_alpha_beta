@@ -78,11 +78,6 @@ pub async fn set_timed_state(bot_message: Arc<Box<dyn BotMessage>>, state: UserS
                     bot_message
                         .send_message(responses::load("delay-notice").into())
                         .await;
-                    {
-                        if let Some(sender) = &*SENDER.lock().await {
-                            sender.send(Arc::clone(&bot_message)).await;
-                        }
-                    }
 
                 //If the current state is not older than threshold wait time
                 } else {

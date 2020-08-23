@@ -10,7 +10,7 @@ use state::userstate::*;
 use std::{fs::*, sync::Arc, time::Duration};
 
 use async_std::{
-    sync::{channel, Mutex, Sender},
+    sync::{channel, Receiver, Sender},
     task,
 };
 use async_trait::async_trait;
@@ -38,9 +38,6 @@ static CLIENT: Lazy<reqwest::Client> = Lazy::new(|| {
     reqwest::Client::new()
 });
 
-type StaticSender = Lazy<Mutex<Option<Sender<Arc<Box<dyn BotMessage>>>>>>;
-static SENDER: StaticSender = Lazy::new(|| Mutex::new(None));
-
 ///Initializes a variety of things
 ///- State management system
 ///- NLU engine
@@ -50,14 +47,6 @@ pub async fn initialize() {
     Lazy::force(&NLUENGINE);
     Lazy::force(&CLIENT);
     initialize_responses();
-    let (s, r) = channel::<Arc<Box<dyn BotMessage>>>(10);
-    let mut sender = SENDER.lock().await;
-    *sender = Some(s);
-    task::spawn(async move {
-        while let Ok(message) = r.recv().await {
-            message.send_message("hellow".to_string().into()).await;
-        }
-    });
 }
 
 ///ENUM, Represents Message count
@@ -184,13 +173,23 @@ impl BotMessage for Box<dyn BotMessage> {
     }
 }
 
+pub async fn init_sender() -> (
+    Sender<(Arc<Box<dyn BotMessage>>, String)>,
+    Receiver<(Arc<Box<dyn BotMessage>>, String)>,
+) {
+    let (sender, receiver) = channel(10);
+    (sender, receiver)
+}
+
 ///Distributes incoming requests to separate threads
-pub fn distributor(bot_message: impl BotMessage + 'static, processed_text: String) {
+pub async fn receiver(r: Receiver<(Arc<Box<dyn BotMessage>>, String)>) {
     let source = "DISTRIBUTOR";
     let info = util::logger::make_info(source);
-    //Spawn a new task to handle the message
-    let _ = task::spawn(async move { handler(bot_message.dyn_clone(), processed_text).await });
-    info("Handler Thread Spawned");
+    while let Ok((message, text)) = r.recv().await {
+        //Spawn a new task to handle the message
+        let _ = task::spawn(async move { handler(message.dyn_clone(), text).await });
+        info("Handler Thread Spawned");
+    }
 }
 
 ///First place to handle messages after distribution
