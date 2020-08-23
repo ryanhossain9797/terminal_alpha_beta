@@ -181,7 +181,7 @@ pub fn distributor(bot_message: impl BotMessage + 'static, processed_text: Strin
     let source = "DISTRIBUTOR";
     let info = util::logger::make_info(source);
     //Spawn a new task to handle the message
-    // let _ = task::spawn(async move { handler(bot_message.dyn_clone(), processed_text).await });
+    let _ = task::spawn(async move { handler(bot_message.dyn_clone(), processed_text).await });
     info("Handler Thread Spawned");
 }
 
