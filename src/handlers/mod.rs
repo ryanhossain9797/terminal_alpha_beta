@@ -50,6 +50,14 @@ pub async fn initialize() {
     Lazy::force(&NLUENGINE);
     Lazy::force(&CLIENT);
     initialize_responses();
+    let (s, r) = channel::<Arc<Box<dyn BotMessage>>>(10);
+    let mut sender = SENDER.lock().await;
+    *sender = Some(s);
+    task::spawn(async move {
+        while let Ok(message) = r.recv().await {
+            message.send_message("hellow".to_string().into()).await;
+        }
+    });
 }
 
 ///ENUM, Represents Message count
