@@ -47,7 +47,7 @@ impl fmt::Display for UserState {
 ///Removes current state with a cancellation message.  
 ///Doesn't care about state.  
 ///Used with the cancel last command.
-pub async fn purge_state(bot_message: impl BotMessage + 'static) {
+pub async fn purge_state(bot_message: Box<dyn BotMessage>) {
     delete_state(&bot_message.get_id()).await;
     bot_message
         .send_message(responses::load("cancel-state").into())
@@ -58,7 +58,7 @@ pub async fn purge_state(bot_message: impl BotMessage + 'static) {
 ///Removes state after 30 seconds, unless it's updated with a new time    
 ///or the recorded state doesn't match provided state.  
 ///Notice Message is provided to user.
-pub async fn set_timed_state(bot_message: Arc<impl BotMessage + 'static>, state: UserState) {
+pub async fn set_timed_state(bot_message: Arc<Box<dyn BotMessage>>, state: UserState) {
     let source = "SET_TIMED_STATE";
     let info = util::logger::make_info(source);
 
@@ -103,7 +103,7 @@ pub async fn set_timed_state(bot_message: Arc<impl BotMessage + 'static>, state:
 ///Immediately cancel's the state IF provided state matches current state.  
 ///Used to remove state after state action is completed.  
 ///No notice provided.
-pub async fn cancel_matching_state(bot_message: Arc<impl BotMessage + 'static>, state: UserState) {
+pub async fn cancel_matching_state(bot_message: Arc<Box<dyn BotMessage>>, state: UserState) {
     let source = "PURGE_HISTORY";
     let info = util::logger::make_info(source);
 

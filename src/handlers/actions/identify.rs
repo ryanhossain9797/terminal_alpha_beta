@@ -3,7 +3,7 @@ use closestmatch::*;
 
 ///Adds a userstate record with identify state to userstate records map.  
 ///Fires wipe history command for identify state.
-pub async fn start_identify(bot_message: impl BotMessage + 'static) {
+pub async fn start_identify(bot_message: Box<dyn BotMessage>) {
     let source = "START_IDENTIFY";
     let info = util::logger::make_info(source);
     info("identify initiated");
@@ -16,7 +16,7 @@ pub async fn start_identify(bot_message: impl BotMessage + 'static) {
 
 ///Finishes identify.  
 ///Fires immediate purge history command for identify state.
-pub async fn continue_identify(bot_message: impl BotMessage + 'static, name: String) {
+pub async fn continue_identify(bot_message: Box<dyn BotMessage>, name: String) {
     let source = "CONTINUE_IDENTIFY";
     let info = util::logger::make_info(source);
     let arc_message = Arc::new(bot_message);
@@ -32,7 +32,9 @@ pub async fn continue_identify(bot_message: impl BotMessage + 'static, name: Str
         //---Else, try to get closes match
         _ => {
             info("No direct match, trying closest match");
-            arc_message.send_message(responses::load("identify-nodirect").into()).await;
+            arc_message
+                .send_message(responses::load("identify-nodirect").into())
+                .await;
             task::sleep(Duration::from_secs(2)).await;
             let partial_match = match people_service::get_people().await {
                 Ok(people) => {

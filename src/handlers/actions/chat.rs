@@ -1,7 +1,7 @@
 use super::*;
 
 ///Start chat intent, Only provides a single response without any state
-pub async fn start_chat(bot_message: impl BotMessage) {
+pub async fn start_chat(bot_message: Box<dyn BotMessage>) {
     let source = "START_CHAT";
     let info = util::logger::make_info(source);
     info("Chat initiated");
@@ -12,7 +12,11 @@ pub async fn start_chat(bot_message: impl BotMessage) {
 ///Continues chat.  
 ///Updates userstate record map with Chat intent and New time.  
 ///Fires wipe history command for Chat state.
-pub async fn continue_chat(bot_message: impl BotMessage, _processed_text: String, intent: &str) {
+pub async fn continue_chat(
+    bot_message: Box<dyn BotMessage>,
+    _processed_text: String,
+    intent: &str,
+) {
     let source = "CONTINUE_CHAT";
     let info = util::logger::make_info(source);
 

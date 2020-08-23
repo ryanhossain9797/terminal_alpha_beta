@@ -1,6 +1,6 @@
 use super::*;
 
-pub async fn start_corona(bot_message: impl BotMessage) {
+pub async fn start_corona(bot_message: Box<dyn BotMessage>) {
     let source = "CORONA";
     let error = util::logger::make_error(source);
 

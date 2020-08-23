@@ -59,17 +59,17 @@ pub enum MsgCount {
     // NoMsg,
 }
 
-///When passed an String
-///Uses the value as a MsgCount::SingleMsg(Msg::Text)  
+//When passed an String
+//Uses the value as a MsgCount::SingleMsg(Msg::Text)
 impl From<String> for MsgCount {
     fn from(s: String) -> Self {
         MsgCount::SingleMsg(Msg::Text(s))
     }
 }
 
-///When passed an Option<String>  
-///Uses the Some value as a MsgCount::SingleMsg(Msg::Text)  
-///Uses the 'response unavailable...' message in case of None as MsgCount::SingleMsg(Msg::Text)  
+//When passed an Option<String>
+//Uses the Some value as a MsgCount::SingleMsg(Msg::Text)
+//Uses the 'response unavailable...' message in case of None as MsgCount::SingleMsg(Msg::Text)
 impl From<Option<String>> for MsgCount {
     fn from(s: Option<String>) -> Self {
         match s {
@@ -81,33 +81,33 @@ impl From<Option<String>> for MsgCount {
     }
 }
 
-///When passed an Vex<String>
-///Turns into MsgCount::MultiMsg(Vec<Msg::Text()>)  
+//When passed an Vex<String>
+//Turns into MsgCount::MultiMsg(Vec<Msg::Text()>)
 impl From<Vec<String>> for MsgCount {
     fn from(s: Vec<String>) -> Self {
         MsgCount::MultiMsg(s.into_iter().map(|s| s.into()).collect())
     }
 }
 
-///When passed an Vex<Msg>
-///Turns into MsgCount::MultiMsg(Vec<Msg>)  
+//When passed an Vex<Msg>
+//Turns into MsgCount::MultiMsg(Vec<Msg>)
 impl From<Vec<Msg>> for MsgCount {
     fn from(s: Vec<Msg>) -> Self {
         MsgCount::MultiMsg(s)
     }
 }
 
-///ENUM, Represents Message type
-///- Text - Contains String text
-///- File - Contains String url for file
+//ENUM, Represents Message type
+//- Text - Contains String text
+//- File - Contains String url for file
 pub enum Msg {
     Text(String),
     File(String),
 }
 
-///When passed an Option<String>  
-///Uses the Some value as a Msg::Text  
-///Uses the 'response unavailable...' message in case of None as Msg::Text  
+//When passed an Option<String>
+//Uses the Some value as a Msg::Text
+//Uses the 'response unavailable...' message in case of None as Msg::Text
 impl From<Option<String>> for Msg {
     fn from(s: Option<String>) -> Self {
         match s {
@@ -117,8 +117,8 @@ impl From<Option<String>> for Msg {
     }
 }
 
-///When passed an String
-///Uses the value as a Msg::Text  
+//When passed an String
+//Uses the value as a Msg::Text
 impl From<String> for Msg {
     fn from(s: String) -> Self {
         Msg::Text(s)
@@ -132,6 +132,7 @@ impl From<String> for Msg {
 ///- `fn get_id() -> String` Return unique id for user
 ///- `async fn send_message(message: MsgCount)` Sends message to user
 ///- `fn start_conversation() -> bool` Returns bool indicating whether to start a new conversation
+///- `fn dyn_clone() -> Box<dyn BotMessage>` Returns a `Box<dyn >` clone of self
 #[async_trait]
 pub trait BotMessage: Send + Sync {
     ///This is used to make cloneable box<T> version of itself.
@@ -151,9 +152,25 @@ pub trait BotMessage: Send + Sync {
     fn dyn_clone(&self) -> Box<dyn BotMessage>;
 }
 
-#[allow(dead_code)]
-fn into_msg(msg: impl Into<MsgCount>) -> MsgCount {
-    msg.into()
+//Implementation of `BotMessage` for `Box<dyn Botmessage>`
+//Mainly to use it where `impl BotMessage` is required but `Box<dyn Botmessage>`  is available
+#[async_trait]
+impl BotMessage for Box<dyn BotMessage> {
+    fn get_name(&self) -> &str {
+        (**self).get_name()
+    }
+    fn get_id(&self) -> String {
+        (**self).get_id()
+    }
+    async fn send_message(&self, message: MsgCount) {
+        let _ = (**self).send_message(message).await;
+    }
+    fn start_conversation(&self) -> bool {
+        (**self).start_conversation()
+    }
+    fn dyn_clone(&self) -> Box<dyn BotMessage> {
+        (**self).dyn_clone()
+    }
 }
 
 ///Distributes incoming requests to separate threads
@@ -161,12 +178,12 @@ pub fn distributor(bot_message: impl BotMessage + 'static, processed_text: Strin
     let source = "DISTRIBUTOR";
     let info = util::logger::make_info(source);
     //Spawn a new task to handle the message
-    let _ = task::spawn(async move { handler(bot_message, processed_text).await });
+    let _ = task::spawn(async move { handler(bot_message.dyn_clone(), processed_text).await });
     info("Handler Thread Spawned");
 }
 
 ///First place to handle messages after distribution
-async fn handler(bot_message: impl BotMessage + 'static, processed_text: String) {
+async fn handler(bot_message: Box<dyn BotMessage>, processed_text: String) {
     let source = "HANDLER";
     let info = util::logger::make_info(source);
     info(&format!("Processed text is {}", processed_text));
@@ -221,7 +238,7 @@ async fn handler(bot_message: impl BotMessage + 'static, processed_text: String)
 }
 
 ///Uses natural understanding to determine intent if no state is found
-async fn natural_understanding(bot_message: impl BotMessage + 'static, processed_text: String) {
+async fn natural_understanding(bot_message: Box<dyn BotMessage>, processed_text: String) {
     let source = "NATURAL_ACTION_PICKER";
 
     let info = util::logger::make_info(source);
@@ -252,39 +269,17 @@ async fn natural_understanding(bot_message: impl BotMessage + 'static, processed
                 //---Convert result to json string
                 if let Ok(json) = serde_json::to_string(&result) {
                     info("ACTION_PICKER: intent json is valid");
-                    match &*intent {
-                        "chat" => {
-                            info("starting chat");
-                            chat::start_chat(bot_message).await
-                        }
-                        "search" => {
-                            info("starting search");
-                            search::start_search(bot_message).await
-                        }
-                        "identify" => {
-                            info("starting identify");
-                            identify::start_identify(bot_message).await
-                        }
-                        "animation" => {
-                            info("starting animation");
-                            animation::start_gif(bot_message).await
-                        }
-                        "info" => {
-                            info("starting info");
-                            info::start_info(bot_message, json).await
-                        }
-                        "notes" => {
-                            info("starting notes");
-                            notes::start_notes(bot_message).await
-                        }
-                        "corona" => {
-                            info("starting corona");
-                            corona::start_corona(bot_message).await
-                        }
-                        "unknown" => {
-                            info("starting unknown state test");
-                            extra::start_unknown(bot_message).await
-                        }
+                    let intent_str: &str = &intent;
+                    info(&format!("intent is {}", intent_str));
+                    match intent_str {
+                        "chat" => chat::start_chat(bot_message).await,
+                        "search" => search::start_search(bot_message).await,
+                        "identify" => identify::start_identify(bot_message).await,
+                        "animation" => animation::start_gif(bot_message).await,
+                        "info" => info::start_info(bot_message, json).await,
+                        "notes" => notes::start_notes(bot_message).await,
+                        "corona" => corona::start_corona(bot_message).await,
+                        "unknown" => extra::start_unknown(bot_message).await,
                         _ => {
                             //Forward to chat for more intents
                             info("forwarding to chat");

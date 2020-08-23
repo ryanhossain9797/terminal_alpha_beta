@@ -2,7 +2,7 @@ use super::*;
 
 ///Adds a userstate record with animation state to userstate records map.  
 ///Fires wipe history command for animation state.
-pub async fn start_gif(bot_message: impl BotMessage + 'static) {
+pub async fn start_gif(bot_message: Box<dyn BotMessage>) {
     let source = "START_ANIMATION";
     let info = util::logger::make_info(source);
 
@@ -19,7 +19,7 @@ pub async fn start_gif(bot_message: impl BotMessage + 'static) {
 
 ///Finishes animation fetching.  
 ///Fires immediate purge history command for animation state.
-pub async fn continue_gif(bot_message: impl BotMessage + 'static, processed_text: String) {
+pub async fn continue_gif(bot_message: Box<dyn BotMessage>, processed_text: String) {
     let source = "CONTINUE_ANIMATION";
     let info = util::logger::make_info(source);
     info("Animation response");

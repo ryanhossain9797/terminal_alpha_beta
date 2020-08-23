@@ -1,6 +1,6 @@
 use super::*;
 
-pub async fn start_notes(bot_message: impl BotMessage + 'static) {
+pub async fn start_notes(bot_message: Box<dyn BotMessage>) {
     let source = "START_NOTES";
     let info = util::logger::make_info(source);
     let error = util::logger::make_error(source);
@@ -54,7 +54,7 @@ pub async fn start_notes(bot_message: impl BotMessage + 'static) {
 ///Continues Notes state.  
 ///Updates timeout.
 pub async fn continue_notes(
-    bot_message: impl BotMessage + 'static,
+    bot_message: Box<dyn BotMessage>,
     command: String,
     note_ids: Vec<String>,
 ) {
