@@ -46,7 +46,7 @@ pub async fn initialize() {
     initialize_state();
     Lazy::force(&NLUENGINE);
     Lazy::force(&CLIENT);
-    initialize_responses();
+    initialize_responses().await;
 }
 
 ///ENUM, Represents Message count

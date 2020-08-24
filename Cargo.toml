@@ -16,7 +16,7 @@ panic = 'abort'
 futures = "0.3"
 async-std = { version = "1.6", features = ["tokio02", "attributes", "unstable"]}
 telegram-bot = {git = "https://github.com/telegram-rs/telegram-bot"}
-serenity = { git = "https://github.com/Lakelezz/serenity", branch = "await", default-features = false, features = ["client", "gateway", "rustls_backend", "model", "utils", "cache"]}
+serenity = { version = "0.9.0-rc.0", default-features = false, features = ["client", "gateway", "rustls_backend", "model", "utils", "cache"]}
 snips-nlu-lib = { git = "https://github.com/snipsco/snips-nlu-rs", branch = "master" }
 anyhow = "1.0"
 futures-intrusive = "0.3"

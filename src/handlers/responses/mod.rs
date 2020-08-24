@@ -11,7 +11,7 @@ static RESPONSES: Lazy<Option<serde_json::Value>> = Lazy::new(|| {
     serde_json::from_str(&(read_to_string("data/responses.json").ok()?)).ok()?
 });
 
-pub fn initialize_responses() {
+pub async fn initialize_responses() {
     Lazy::force(&RESPONSES);
 }
 
