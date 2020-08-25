@@ -135,20 +135,22 @@ impl From<String> for Msg {
 ///- `fn dyn_clone() -> Box<dyn BotMessage>` Returns a `Box<dyn >` clone of self
 #[async_trait]
 pub trait BotMessage: Send + Sync {
-    ///This is used to make cloneable box<T> version of itself.
-    // fn dynamic_clone(&self) -> Box<dyn BotMessage>;
     ///Returns the user's user readable name. Not the same as id.
     fn get_name(&self) -> &str;
+
     ///Returns the user's unique id. This is needed to uniquely identify users.
     fn get_id(&self) -> String;
+
     ///Used to send messages to the sender (user) of this message.
     async fn send_message(&self, message: MsgCount);
+
     ///Used to check whether a new conversation should be started.  
     ///Sometimes if the user is in a state, Bot will always respond.  
     ///However if not in a state, bot needs to know when it should or should not respond.  
     ///Ex. Won't respond if message is in a group and bot wasn't mentioned.
     fn start_conversation(&self) -> bool;
-    ///Returns a Box\<dyn BotMessage\> clone of self
+
+    ///Returns a `Box<dyn BotMessage>` clone of self
     fn dyn_clone(&self) -> Box<dyn BotMessage>;
 }
 
@@ -173,6 +175,7 @@ impl BotMessage for Box<dyn BotMessage> {
     }
 }
 
+///Returns a sender and receiver channel of `Box<dyn BotMessage>`
 pub async fn init_sender() -> (
     Sender<(Arc<Box<dyn BotMessage>>, String)>,
     Receiver<(Arc<Box<dyn BotMessage>>, String)>,
@@ -184,7 +187,7 @@ pub async fn init_sender() -> (
 ///Distributes incoming requests to separate threads
 pub async fn receiver(r: Receiver<(Arc<Box<dyn BotMessage>>, String)>) {
     let source = "DISTRIBUTOR";
-    let info = util::logger::make_info(source);
+    let info = util::logger::info_logger(source);
     while let Ok((message, text)) = r.recv().await {
         //Spawn a new task to handle the message
         let _ = task::spawn(async move { handler(message.dyn_clone(), text).await });
@@ -195,15 +198,15 @@ pub async fn receiver(r: Receiver<(Arc<Box<dyn BotMessage>>, String)>) {
 ///First place to handle messages after distribution
 async fn handler(bot_message: Box<dyn BotMessage>, processed_text: String) {
     let source = "HANDLER";
-    let info = util::logger::make_info(source);
+    let info = util::logger::info_logger(source);
     info(&format!("Processed text is {}", processed_text));
 
-    //---If record from user exists (A Some(record)), some conversation is ongoing
-    //---So will be replied regardless of groups or mentions and stuff ('will_respond' is ignored)
+    //If record from user exists (A Some(record)), some conversation is ongoing
+    //So will be replied regardless of groups or mentions and stuff ('will_respond' is ignored)
     if let Some(stored_record) = retrieve_state(&bot_message.get_id()).await {
         let record = stored_record.clone();
 
-        //---"cancel last will shut off the conversation"
+        //"cancel last" will shut off the conversation
         if processed_text == "cancel last" {
             purge_state(bot_message).await;
         } else {
@@ -238,9 +241,9 @@ async fn handler(bot_message: Box<dyn BotMessage>, processed_text: String) {
 async fn natural_understanding(bot_message: Box<dyn BotMessage>, processed_text: String) {
     let source = "NATURAL_ACTION_PICKER";
 
-    let info = util::logger::make_info(source);
-    let warning = util::logger::make_warning(source);
-    let error = util::logger::make_error(source);
+    let info = util::logger::info_logger(source);
+    let warning = util::logger::warning_logger(source);
+    let error = util::logger::error_logger(source);
     //---Stuff required to run the NLU engine to get an intent
     if let Some(engine) = &*NLUENGINE {
         let intents_alternatives = 1;

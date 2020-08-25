@@ -4,7 +4,7 @@ use super::*;
 ///Fires wipe history command for animation state.
 pub async fn start(bot_message: Box<dyn BotMessage>) {
     let source = "START_ANIMATION";
-    let info = util::logger::make_info(source);
+    let info = util::logger::info_logger(source);
 
     info("animation initiated");
     info(&format!("record added for id {}", bot_message.get_id()));
@@ -21,7 +21,7 @@ pub async fn start(bot_message: Box<dyn BotMessage>) {
 ///Fires immediate purge history command for animation state.
 pub async fn resume(bot_message: Box<dyn BotMessage>, processed_text: String) {
     let source = "CONTINUE_ANIMATION";
-    let info = util::logger::make_info(source);
+    let info = util::logger::info_logger(source);
     info("Animation response");
     // Arc cloneable message
     let arc_message = Arc::new(bot_message);

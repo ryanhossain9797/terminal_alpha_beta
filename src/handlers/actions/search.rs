@@ -5,7 +5,7 @@ use super::*;
 pub async fn start(bot_message: Box<dyn BotMessage>) {
     let source = "START_SEARCH";
 
-    let info = util::logger::make_info(source);
+    let info = util::logger::info_logger(source);
     info("search initiated");
 
     //---Make a cloneable ARC version of the Message
@@ -22,7 +22,7 @@ pub async fn start(bot_message: Box<dyn BotMessage>) {
 ///Fires immediate purge history command for search state
 pub async fn resume(bot_message: Box<dyn BotMessage>, processed_text: String) {
     let source = "CONTINUE_SEARCH";
-    let info = util::logger::make_info(source);
+    let info = util::logger::info_logger(source);
     let arc_message = Arc::new(bot_message);
     //---Delete the UserState Record
     cancel_matching_state(Arc::clone(&arc_message), UserState::Search).await;

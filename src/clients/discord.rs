@@ -71,7 +71,7 @@ impl EventHandler for Handler {
 /// - replaces redundant spaces with single spaces using regex ("hellow      world" becomes "hellow world").
 async fn filter(message: &DMessage, ctx: &Context) -> Option<(String, bool)> {
     let source = "DISCORD";
-    let error = util::logger::make_error(source);
+    let error = util::logger::error_logger(source);
     if let Ok(info) = ctx.http.get_current_application_info().await {
         let id: i64 = info.id.into();
         //-----------------------remove self mention from message
@@ -131,7 +131,7 @@ impl handlers::BotMessage for DiscordMessage {
     }
     async fn send_message(&self, message: handlers::MsgCount) {
         let source = "DISCORD_SEND";
-        let error = util::logger::make_error(source);
+        let error = util::logger::error_logger(source);
         match message {
             handlers::MsgCount::SingleMsg(msg) => match msg {
                 handlers::Msg::Text(text) => {

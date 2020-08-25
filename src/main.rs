@@ -15,8 +15,8 @@ use services::*;
 #[async_std::main]
 async fn main() {
     let source = "MAIN";
-    let error = util::logger::make_error(source);
-    let status = util::logger::make_status();
+    let error = util::logger::error_logger(source);
+    let status = util::logger::status_logger();
     {
         //---Load up all the ENV variables from .env file
         dotenv().expect("Couldn't load environment variables");
@@ -45,6 +45,7 @@ async fn main() {
     //Wait for tasks to finish,
     //Which is hopefully never, because that would mean it crashed.
     let clients_result = futures::future::try_join_all(vec![
+        //Spawn task to handle inbound Updates from clients
         task::spawn(async {
             handlers::receiver(receiver).await;
             Err::<!, &str>("Distributor Failed")

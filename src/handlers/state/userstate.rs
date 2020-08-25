@@ -60,7 +60,7 @@ pub async fn purge_state(bot_message: Box<dyn BotMessage>) {
 ///Notice Message is provided to user.
 pub async fn set_timed_state(bot_message: Arc<Box<dyn BotMessage>>, state: UserState) {
     let source = "SET_TIMED_STATE";
-    let info = util::logger::make_info(source);
+    let info = util::logger::info_logger(source);
 
     //---Insert the intent
     set_state(bot_message.get_id(), state.clone()).await;
@@ -106,7 +106,7 @@ pub async fn set_timed_state(bot_message: Arc<Box<dyn BotMessage>>, state: UserS
 ///No notice provided.
 pub async fn cancel_matching_state(bot_message: Arc<Box<dyn BotMessage>>, state: UserState) {
     let source = "PURGE_HISTORY";
-    let info = util::logger::make_info(source);
+    let info = util::logger::info_logger(source);
 
     if let Some(r) = get_state(&bot_message.get_id()).await {
         if r.state == state {

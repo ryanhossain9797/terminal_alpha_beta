@@ -3,7 +3,7 @@ use super::*;
 ///Start chat intent, Only provides a single response without any state
 pub async fn start(bot_message: Box<dyn BotMessage>) {
     let source = "START_CHAT";
-    let info = util::logger::make_info(source);
+    let info = util::logger::info_logger(source);
     info("Chat initiated");
 
     extra::custom_response(bot_message, "chat-start").await;
@@ -18,7 +18,7 @@ pub async fn continue_chat(
     intent: &str,
 ) {
     let source = "CONTINUE_CHAT";
-    let info = util::logger::make_info(source);
+    let info = util::logger::info_logger(source);
 
     use extra::custom_response as response;
 

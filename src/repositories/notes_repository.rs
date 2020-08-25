@@ -63,8 +63,8 @@ pub async fn get_by_user(user_id: &str) -> anyhow::Result<Vec<Note>> {
 ///Adds a new note for the provided note string.
 pub async fn add(user_id: &str, note: String) -> anyhow::Result<()> {
     let source = "NOTE_ADD";
-    let info = util::logger::make_info(source);
-    let error = util::logger::make_error(source);
+    let info = util::logger::info_logger(source);
+    let error = util::logger::error_logger(source);
 
     let notes = database::mongo::get_mongo()
         .await
@@ -88,8 +88,8 @@ pub async fn add(user_id: &str, note: String) -> anyhow::Result<()> {
 ///Removes the note for the provided user and the provided note id.
 pub async fn delete_note(user_id: &str, note_id: &str) -> anyhow::Result<()> {
     let source = "NOTE_DELETE";
-    let info = util::logger::make_info(source);
-    let error = util::logger::make_error(source);
+    let info = util::logger::info_logger(source);
+    let error = util::logger::error_logger(source);
 
     let notes = database::mongo::get_mongo()
         .await

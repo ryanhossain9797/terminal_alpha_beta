@@ -3,7 +3,7 @@ use super::*;
 //Tests any unknown intent
 pub async fn start(bot_message: Box<dyn BotMessage>) {
     let source = "START_UNKNOWN";
-    let info = util::logger::make_info(source);
+    let info = util::logger::info_logger(source);
     info("Unknown state initiated");
     let arc_message = Arc::new(bot_message);
 
