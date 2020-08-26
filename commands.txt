@@ -13,3 +13,16 @@ scp -P 5914 target/armv7-unknown-linux-musleabihf/release/terminal_alpha_beta al
 scp -P 5914 data/responses.json  alarm@192.168.0.104:responses.json
 
 scp -P 5914 -r data/rootengine  alarm@192.168.0.104:rootengine
+
+
+dependencies on arch/manjaro for
+------
+arm-musl-release:
+	 CARGO_TARGET_ARMV7_UNKNOWN_LINUX_MUSLEABIHF_LINKER=arm-linux-gnueabihf-gcc CC_armv7_unknown_linux_musleabihf=arm-linux-gnueabihf-gcc cargo build --target armv7-unknown-linux-musleabihf --release
+------
+
+> arm-linux-gnueabihf-gcc
+> clang
+> openssl (? was already installed, shouldn't risk uninstall testing, prolly important to OS itself)
+> arm-linux-gnueabihf-musl (unsure - test by removing)
+> crfsuite (unsure - test by removing)
