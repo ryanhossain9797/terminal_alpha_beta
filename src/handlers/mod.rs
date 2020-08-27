@@ -290,27 +290,33 @@ async fn natural_understanding(bot_message: Box<dyn BotMessage>, processed_text:
                 //If failed to parse the intent result as json
                 else {
                     error("couldn't convert intent data to JSON");
-                    let _ = util::logger::log_message(&processed_text).map_err(|err| {
-                        error(&format!("{}", err));
-                    });
+                    let _ = util::logger::log_message(&processed_text)
+                        .await
+                        .map_err(|err| {
+                            error(&format!("{}", err));
+                        });
                     extra::unsupported_notice(bot_message).await
                 }
             }
             //Unsure intent if cannot match to any intent confidently
             else {
                 warning("couldn't match an intent confidently");
-                let _ = util::logger::log_message(&processed_text).map_err(|err| {
-                    error(&format!("{}", err));
-                });
+                let _ = util::logger::log_message(&processed_text)
+                    .await
+                    .map_err(|err| {
+                        error(&format!("{}", err));
+                    });
                 extra::unsupported_notice(bot_message).await
             }
         }
         //Unknown intent if can't match intent at all
         else {
             warning("unknown intent");
-            let _ = util::logger::log_message(&processed_text).map_err(|err| {
-                error(&format!("{}", err));
-            });
+            let _ = util::logger::log_message(&processed_text)
+                .await
+                .map_err(|err| {
+                    error(&format!("{}", err));
+                });
             extra::unsupported_notice(bot_message).await
         };
     } else {

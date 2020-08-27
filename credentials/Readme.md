@@ -1,1 +1,1 @@
-all your credentials like firebase passwords go here
+## all your credentials like firebase passwords go here

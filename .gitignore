@@ -3,6 +3,6 @@
 /.env
 /lib
 /action_log.txt
-/Cargo.lock
 /credentials/*
 !/credentials/Readme.md
+**/*.rs.bk

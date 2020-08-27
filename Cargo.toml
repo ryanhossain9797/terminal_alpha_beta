@@ -30,6 +30,7 @@ reqwest = "0.10"
 openssl = { version = "0.10", features = ["vendored"] }
 openssl-probe = "0.1"
 closestmatch = "0.1"
+gluesql = { version = "0.1", features = ["sled-storage"] }
 mongodb = "1.1"
 serde = "1.0"
 serde_json = "1.0"
