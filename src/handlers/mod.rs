@@ -81,7 +81,7 @@ impl From<Option<String>> for MsgCount {
     }
 }
 
-//When passed an Vex<String>
+//When passed an Vec<String>
 //Turns into MsgCount::MultiMsg(Vec<Msg::Text()>)
 impl From<Vec<String>> for MsgCount {
     fn from(s: Vec<String>) -> Self {
@@ -89,7 +89,7 @@ impl From<Vec<String>> for MsgCount {
     }
 }
 
-//When passed an Vex<Msg>
+//When passed an Vec<Msg>
 //Turns into MsgCount::MultiMsg(Vec<Msg>)
 impl From<Vec<Msg>> for MsgCount {
     fn from(s: Vec<Msg>) -> Self {
@@ -125,7 +125,7 @@ impl From<String> for Msg {
     }
 }
 
-///# Used to generalize Message Updates for various platforms
+///## Used to generalize Message Updates for various platforms
 ///All clients sending message updates must implement this
 ///## functions
 ///- `fn get_name() -> String` Return user readable name

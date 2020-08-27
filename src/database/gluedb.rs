@@ -8,7 +8,6 @@ pub static GLUE: Lazy<Mutex<Option<RefCell<Glue>>>> = Lazy::new(|| Mutex::new(No
 
 pub async fn initialize_glue() {
     let source = "GLUESQL_INIT";
-    let info = util::logger::info_logger(source);
     let error = util::logger::error_logger(source);
     match SledStorage::new("data/gluedb") {
         Ok(storage) => {
@@ -19,6 +18,7 @@ pub async fn initialize_glue() {
     }
 }
 
+#[allow(dead_code)]
 pub async fn log_message(message: &str) -> anyhow::Result<()> {
     let source = "GLUESQL_LOG";
     let error = util::logger::error_logger(source);

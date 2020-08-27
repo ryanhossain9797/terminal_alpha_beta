@@ -48,6 +48,7 @@ pub async fn log_message(processed_text: &str) -> anyhow::Result<()> {
         })?)
 }
 
+#[allow(dead_code)]
 pub async fn log_message_db(message: &str) -> anyhow::Result<()> {
     let source = "GLUESQL_LOG";
     let error = error_logger(source);
