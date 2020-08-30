@@ -7,7 +7,7 @@ pub async fn get_gfycat_by_keyword(keyword: &str) -> anyhow::Result<String> {
         keyword
     );
     // Get json value from request
-    if let Value::Object(map) = api::get_request_json(&url).await? {
+    if let Value::Object(map) = api::get_request_json(url.as_str()).await? {
         // Get desired stuff from json
         if let Value::Array(gfycats) = map
             .get("gfycats")

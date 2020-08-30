@@ -11,8 +11,8 @@ pub async fn get(title: String, pass: String) -> anyhow::Result<Option<String>> 
             //Search for required info with title and pass
             .find_one(
                 doc! {
-                    "title": &title,
-                    "pass": &pass,
+                    "title": title.as_str(),
+                    "pass": pass.as_str(),
                 },
                 None,
             )

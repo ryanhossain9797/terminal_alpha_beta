@@ -7,7 +7,7 @@ pub async fn start(bot_message: Box<dyn BotMessage>) {
     let info = util::logger::info(source);
 
     info("animation initiated");
-    info(&format!("record added for id {}", bot_message.get_id()));
+    info(format!("record added for id {}", bot_message.get_id()).as_str());
     // Arc cloneable message
     let arc_message = Arc::new(bot_message);
     // And fire off wipe history
@@ -30,7 +30,7 @@ pub async fn resume(bot_message: Box<dyn BotMessage>, processed_text: String) {
 
     arc_message
         .send_message(
-            match gfycat_service::get_by_keyword(&processed_text).await {
+            match gfycat_service::get_by_keyword(processed_text.as_str()).await {
                 // If retrieving gif succeeds
                 Ok(url) => MsgCount::SingleMsg(Msg::File(url)),
                 // If retrieving fails

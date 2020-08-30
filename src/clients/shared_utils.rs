@@ -15,7 +15,7 @@ pub async fn _download_file(url: &str, name: &str) -> Option<String> {
                     }
                 }
             }
-            Err(err) => error(&format!("couldn't open file because: {}", err)),
+            Err(err) => error(format!("couldn't open file because: {}", err).as_str()),
         }
     }
     None

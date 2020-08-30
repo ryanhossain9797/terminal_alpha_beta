@@ -48,7 +48,7 @@ impl fmt::Display for UserState {
 ///Doesn't care about state.  
 ///Used with the cancel last command.
 pub async fn purge_state(bot_message: Box<dyn BotMessage>) {
-    delete_state(&bot_message.get_id()).await;
+    delete_state(bot_message.get_id().as_str()).await;
     bot_message
         .send_message(responses::load("cancel-state").into())
         .await;
@@ -68,13 +68,13 @@ pub async fn set_timed_state(bot_message: Arc<Box<dyn BotMessage>>, state: UserS
     let _ = task::spawn(async move {
         //Wait a specified amount of time before deleting user state
         task::sleep(Duration::from_secs(WAITTIME)).await;
-        if let Some(record) = get_state(&bot_message.get_id()).await {
+        if let Some(record) = get_state(bot_message.get_id().as_str()).await {
             //If the current state matches pending deletion state
             if format!("{}", record.state) == format!("{}", state) {
                 //If the current state is older than threshold wait time
                 if record.last.elapsed() > Duration::from_secs(WAITTIME) {
-                    delete_state(&bot_message.get_id()).await;
-                    info(&format!("deleted state record '{}'", state));
+                    delete_state(bot_message.get_id().as_str()).await;
+                    info(format!("deleted state record '{}'", state).as_str());
                     bot_message
                         .send_message(responses::load("delay-notice").into())
                         .await;
@@ -85,18 +85,24 @@ pub async fn set_timed_state(bot_message: Arc<Box<dyn BotMessage>>, state: UserS
                 }
             //If the current state doesn't match pending deletion state
             } else {
-                info(&format!(
-                    "aborted record delete for '{}' because current state is '{}'",
-                    state, record.state
-                ));
+                info(
+                    format!(
+                        "aborted record delete for '{}' because current state is '{}'",
+                        state, record.state
+                    )
+                    .as_str(),
+                );
             }
         //If user has no pending state
         } else {
-            info(&format!(
-                "aborted record delete for '{}', there is no recorded state for '{}'",
-                state,
-                bot_message.get_id()
-            ))
+            info(
+                format!(
+                    "aborted record delete for '{}', there is no recorded state for '{}'",
+                    state,
+                    bot_message.get_id()
+                )
+                .as_str(),
+            )
         }
     });
 }
@@ -108,10 +114,10 @@ pub async fn cancel_matching_state(bot_message: Arc<Box<dyn BotMessage>>, state:
     let source = "PURGE_HISTORY";
     let info = util::logger::info(source);
 
-    if let Some(r) = get_state(&bot_message.get_id()).await {
+    if let Some(r) = get_state(bot_message.get_id().as_str()).await {
         if r.state == state {
-            delete_state(&bot_message.get_id()).await;
-            info(&format!("deleted state record for {}", state));
+            delete_state(bot_message.get_id().as_str()).await;
+            info(format!("deleted state record for {}", state).as_str());
         }
     }
 }

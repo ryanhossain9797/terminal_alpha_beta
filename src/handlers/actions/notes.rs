@@ -10,7 +10,7 @@ pub async fn start(bot_message: Box<dyn BotMessage>) {
     let arc_message = Arc::new(bot_message);
 
     // Fetch the notes
-    match notes_service::get_notes(&id).await {
+    match notes_service::get_notes(id.as_str()).await {
         // If successful in fetching notes
         Ok(notes) => {
             // Load the notes template from responses json, or use default if failed
@@ -24,15 +24,16 @@ pub async fn start(bot_message: Box<dyn BotMessage>) {
                 // Also push ids to note_ids simultaneously
                 note_ids.push(note.id);
                 notes_string.push_str(
-                    &(note_template
-                        .replace("{num}", &format!("{}", note.position))
-                        .replace("{note}", &note.note)),
+                    note_template
+                        .replace("{num}", format!("{}", note.position).as_str())
+                        .replace("{note}", note.note.as_str())
+                        .as_str(),
                 );
             });
             // Only update state on successful notes retrieval
             // And of course the history cleaner
             set_timed_state(Arc::clone(&arc_message), UserState::Notes(note_ids)).await;
-            info(&format!("record added for id {}", id));
+            info(format!("record added for id {}", id).as_str());
             arc_message
                 .send_message(MsgCount::MultiMsg(vec![
                     responses::load("notes-start").into(),
@@ -42,7 +43,7 @@ pub async fn start(bot_message: Box<dyn BotMessage>) {
         }
         // If not successful in fetching notes
         Err(err) => {
-            error(&format!("{}", err));
+            error(format!("{}", err).as_str());
             arc_message
                 .send_message(responses::load("notes-fail").into())
                 .await;
@@ -57,7 +58,7 @@ pub async fn resume(bot_message: Box<dyn BotMessage>, command: String, note_ids:
     let source = "CONTINUE_NOTES";
 
     let info = util::logger::info(source);
-    info(&format!("continuing with notes '{}'", command));
+    info(format!("continuing with notes '{}'", command).as_str());
     let id = bot_message.get_id();
 
     // New Arc cloneable version of message
@@ -85,7 +86,8 @@ pub async fn resume(bot_message: Box<dyn BotMessage>, command: String, note_ids:
     if command.starts_with("add ") {
         // add he new note (trim add keyword from the front)
         let notes_option =
-            notes_service::add_note(&id, command.trim_start_matches("add ").to_string()).await;
+            notes_service::add_note(id.as_str(), command.trim_start_matches("add ").to_string())
+                .await;
         // Notify user of Add action
         static_sender("notes-add").await;
         // If it succeeds we'll get an updated list of the current notes
@@ -100,9 +102,10 @@ pub async fn resume(bot_message: Box<dyn BotMessage>, command: String, note_ids:
                     new_note_ids.push(note.id);
 
                     notes_string
-                        + &(note_template
-                            .replace("{num}", &format!("{}", note.position))
-                            .replace("{note}", &note.note))
+                        + note_template
+                            .replace("{num}", format!("{}", note.position).as_str())
+                            .replace("{note}", note.note.as_str())
+                            .as_str()
                 });
 
             arc_message.send_message(notes_string.into()).await;
@@ -119,7 +122,7 @@ pub async fn resume(bot_message: Box<dyn BotMessage>, command: String, note_ids:
             // (may fail if note number is higher than number of notes i.e Index out of bound)
             if let Some(note_id) = note_ids.get(number - 1) {
                 // Deleting will return updated list of notes
-                let notes_option = notes_service::delete_note(&id, note_id).await;
+                let notes_option = notes_service::delete_note(id.as_str(), note_id).await;
 
                 // Notify of note deletion
                 static_sender("notes-delete").await;
@@ -137,9 +140,10 @@ pub async fn resume(bot_message: Box<dyn BotMessage>, command: String, note_ids:
                             .fold("".to_string(), |notes_string, note| {
                                 new_note_ids.push(note.id);
                                 notes_string
-                                    + &(note_template
-                                        .replace("{num}", &format!("{}", note.position))
-                                        .replace("{note}", &note.note))
+                                    + note_template
+                                        .replace("{num}", format!("{}", note.position).as_str())
+                                        .replace("{note}", note.note.as_str())
+                                        .as_str()
                             });
 
                     // Send new notes

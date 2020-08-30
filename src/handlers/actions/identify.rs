@@ -45,15 +45,15 @@ pub async fn resume(bot_message: Box<dyn BotMessage>, name: String) {
                 let closest_name = cm.get_closest(name.to_string());
                 match closest_name {
                     Some(name) => {
-                        info(&format!("closest name is {}", name));
+                        info(format!("closest name is {}", name).as_str());
                         let mut matched_option: Option<String> = None;
                         people.iter().for_each(|person| {
                             if person.name == name {
                                 matched_option =
                                     responses::load("identify-partialmatch").map(|response| {
                                         response
-                                            .replace("{name}", &person.name)
-                                            .replace("{description}", &person.description)
+                                            .replace("{name}", person.name.as_str())
+                                            .replace("{description}", person.description.as_str())
                                     });
                             }
                         });

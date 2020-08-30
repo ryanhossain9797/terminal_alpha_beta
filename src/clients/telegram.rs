@@ -35,11 +35,10 @@ pub(crate) async fn telegram_main(sender: Sender<(Arc<Box<dyn handlers::BotMessa
                 if let UpdateKind::Message(message) = update.kind {
                     if let MessageKind::Text { ref data, .. } = message.kind {
                         // Print received text message to stdout.
-                        util::logger::show_status(&format!(
-                            "TELEGRAM: <{}>: {}",
-                            &message.from.first_name, data
-                        ));
-                        // Spawn a handler for the message.
+                        util::logger::show_status(
+                            format!("TELEGRAM: <{}>: {}", message.from.first_name.as_str(), data)
+                                .as_str(),
+                        );
 
                         if let Some((msg, start_conversation)) = filter(&message).await {
                             sender
@@ -56,10 +55,13 @@ pub(crate) async fn telegram_main(sender: Sender<(Arc<Box<dyn handlers::BotMessa
                 }
             }
             Err(err) => {
-                error(&format!(
-                    "Hit problems fetching updates, stopping for {} seconds. error is {}",
-                    WAITTIME, err
-                ));
+                error(
+                    format!(
+                        "Hit problems fetching updates, stopping for {} seconds. error is {}",
+                        WAITTIME, err
+                    )
+                    .as_str(),
+                );
                 task::sleep(Duration::from_secs(WAITTIME)).await;
                 error("Resuming");
             }
@@ -79,8 +81,8 @@ async fn filter(message: &TMessage) -> Option<(String, bool)> {
         if let Ok(myname) = myname_result {
             if let Some(name) = myname.username {
                 //-----------------------remove self mention from message
-                let handle = format!("@{}", &name);
-                let mut msg: &str = &data.replace(&handle, "");
+                let handle = format!("@{}", name.as_str());
+                let mut msg: &str = &data.replace(handle.as_str(), "");
                 msg = msg.trim().trim_start_matches('/').trim();
                 let msg: &str = &msg.to_lowercase();
                 let space_trimmer = Regex::new(r"\s+").unwrap();
@@ -89,7 +91,7 @@ async fn filter(message: &TMessage) -> Option<(String, bool)> {
                 //-----------------------check if message is from a group chat.......
                 if let MessageChat::Group(_) = &message.chat {
                     //-----------------------......and check if handle is present if message IS from group chat
-                    if data.contains(&handle) {
+                    if data.contains(handle.as_str()) {
                         //---true means message is to be processed even if no conversation is in progress
                         //---if bot is mentioned new convo can start
                         return Some((msg, true));
@@ -108,17 +110,6 @@ async fn filter(message: &TMessage) -> Option<(String, bool)> {
     None
 }
 
-// ///Sender handles forwarding the message.
-// async fn sender(message: &TMessage, processed_text: String, start_conversation: bool) -> (String, bool){
-//     //---Create a TelegramMessage object, which implements the BotMessage trait.
-// let tele_msg = TelegramMessage {
-//     message: message.clone(),
-//     start_conversation,
-// };
-//     handlers::distributor(tele_msg, processed_text);
-//     (processed_text.clone(), start_conversation)
-// }
-
 #[derive(Clone)]
 struct TelegramMessage {
     message: TMessage,
@@ -127,11 +118,8 @@ struct TelegramMessage {
 
 #[async_trait]
 impl handlers::BotMessage for TelegramMessage {
-    // fn dynamic_clone(&self) -> Box<dyn handlers::BotMessage> {
-    //     Box::new(self.clone())
-    // }
     fn get_name(&self) -> &str {
-        &self.message.from.first_name
+        self.message.from.first_name.as_str()
     }
     fn get_id(&self) -> String {
         let id: i64 = self.message.from.id.into();

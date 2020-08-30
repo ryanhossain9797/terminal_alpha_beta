@@ -12,7 +12,7 @@ pub async fn initialize() {
 
     // no one else has initialized it yet, so
     if let Ok(token) = env::var("MONGO_AUTH") {
-        if let Ok(client_options) = ClientOptions::parse(&token).await {
+        if let Ok(client_options) = ClientOptions::parse(token.as_str()).await {
             if let Ok(client) = Client::with_options(client_options) {
                 *MONGO.lock().await = Some(client.database("terminal"));
             } else {

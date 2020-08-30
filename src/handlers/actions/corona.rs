@@ -29,10 +29,11 @@ pub async fn start(bot_message: Box<dyn BotMessage>) {
         });
         new_cases_message = top_new.iter().fold(new_cases_message, |message, country| {
             message
-                + &new_template
-                    .replace("{1}", &country.country)
-                    .replace("{2}", &format!("{}", country.new_confirmed))
-                    .replace("{3}", &format!("{}", country.new_deaths))
+                + new_template
+                    .replace("{1}", country.country.as_str())
+                    .replace("{2}", format!("{}", country.new_confirmed).as_str())
+                    .replace("{3}", format!("{}", country.new_deaths).as_str())
+                    .as_str()
         });
         bot_message.send_message(new_cases_message.into()).await;
     }
@@ -47,10 +48,11 @@ pub async fn start(bot_message: Box<dyn BotMessage>) {
             .iter()
             .fold(total_cases_message, |message, country| {
                 message
-                    + &total_template
-                        .replace("{1}", &country.country)
-                        .replace("{2}", &format!("{}", country.total_confirmed))
-                        .replace("{3}", &format!("{}", country.total_deaths))
+                    + total_template
+                        .replace("{1}", country.country.as_str())
+                        .replace("{2}", format!("{}", country.total_confirmed).as_str())
+                        .replace("{3}", format!("{}", country.total_deaths).as_str())
+                        .as_str()
             });
         bot_message.send_message(total_cases_message.into()).await;
     }
@@ -62,8 +64,8 @@ pub async fn start(bot_message: Box<dyn BotMessage>) {
                     responses::load("corona-body")
                         .map(|response| {
                             response
-                                .replace("{confirmed}", &format!("{}", confirmed))
-                                .replace("{deaths}", &format!("{}", deaths))
+                                .replace("{confirmed}", format!("{}", confirmed).as_str())
+                                .replace("{deaths}", format!("{}", deaths).as_str())
                         })
                         .into(),
                     responses::load("corona-footer").into(),

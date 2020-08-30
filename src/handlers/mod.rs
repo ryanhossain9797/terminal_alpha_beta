@@ -154,27 +154,6 @@ pub trait BotMessage: Send + Sync {
     fn dyn_clone(&self) -> Box<dyn BotMessage>;
 }
 
-//Implementation of `BotMessage` for `Box<dyn Botmessage>`
-//Mainly to use it where `impl BotMessage` is required but `Box<dyn Botmessage>`  is available
-#[async_trait]
-impl BotMessage for Box<dyn BotMessage> {
-    fn get_name(&self) -> &str {
-        (**self).get_name()
-    }
-    fn get_id(&self) -> String {
-        (**self).get_id()
-    }
-    async fn send_message(&self, message: MsgCount) {
-        (**self).send_message(message).await;
-    }
-    fn start_conversation(&self) -> bool {
-        (**self).start_conversation()
-    }
-    fn dyn_clone(&self) -> Box<dyn BotMessage> {
-        (**self).dyn_clone()
-    }
-}
-
 ///Returns a sender and receiver channel of `Box<dyn BotMessage>`
 pub async fn init_sender() -> (
     Sender<(Arc<Box<dyn BotMessage>>, String)>,
@@ -199,7 +178,7 @@ pub async fn receiver(r: Receiver<(Arc<Box<dyn BotMessage>>, String)>) {
 async fn handler(bot_message: Box<dyn BotMessage>, processed_text: String) {
     let source = "HANDLER";
     let info = util::logger::info(source);
-    info(&format!("Processed text is {}", processed_text));
+    info(format!("Processed text is {}", processed_text).as_str());
 
     //If record from user exists (A Some(record)), some conversation is ongoing
     //So will be replied regardless of groups or mentions and stuff ('will_respond' is ignored)
@@ -211,7 +190,7 @@ async fn handler(bot_message: Box<dyn BotMessage>, processed_text: String) {
             purge_state(bot_message).await;
         } else {
             use UserState::{Animation, Identify, Notes, Search, Unknown};
-            info(&format!("Saved state is {}", record.state));
+            info(format!("Saved state is {}", record.state).as_str());
             match record.state {
                 Search => search::resume(bot_message, processed_text.clone()).await,
                 Identify => identify::resume(bot_message, processed_text.clone()).await,
@@ -250,7 +229,7 @@ async fn natural_understanding(bot_message: Box<dyn BotMessage>, processed_text:
         let slots_alternatives = 1;
         let result = engine
             .parse_with_alternatives(
-                &processed_text,
+                processed_text.as_str(),
                 None,
                 None,
                 intents_alternatives,
@@ -259,18 +238,21 @@ async fn natural_understanding(bot_message: Box<dyn BotMessage>, processed_text:
             .unwrap();
 
         if let Some(intent) = result.intent.intent_name.clone() {
-            info(&format!(
-                "{} with confidence {}",
-                intent, result.intent.confidence_score
-            ));
+            info(
+                format!(
+                    "{} with confidence {}",
+                    intent, result.intent.confidence_score
+                )
+                .as_str(),
+            );
             //Tries to match against existing intents like chat, search etc
             //Only valid if confidence greater than 0.5
             if result.intent.confidence_score > 0.5 {
                 //---Convert result to json string
                 if let Ok(json) = serde_json::to_string(&result) {
                     info("ACTION_PICKER: intent json is valid");
-                    let intent_str: &str = &intent;
-                    info(&format!("intent is {}", intent_str));
+                    let intent_str: &str = intent.as_str();
+                    info(format!("intent is {}", intent_str).as_str());
                     match intent_str {
                         "chat" => chat::start(bot_message).await,
                         "search" => search::start(bot_message).await,
@@ -283,17 +265,17 @@ async fn natural_understanding(bot_message: Box<dyn BotMessage>, processed_text:
                         _ => {
                             //Forward to chat for more intents
                             info("forwarding to chat");
-                            chat::resume(bot_message, processed_text, &intent).await;
+                            chat::resume(bot_message, processed_text, intent.as_str()).await;
                         }
                     }
                 }
                 //If failed to parse the intent result as json
                 else {
                     error("couldn't convert intent data to JSON");
-                    let _ = util::logger::log_message(&processed_text)
+                    let _ = util::logger::log_message(processed_text.as_str())
                         .await
                         .map_err(|err| {
-                            error(&format!("{}", err));
+                            error(format!("{}", err).as_str());
                         });
                     extra::unsupported_notice(bot_message).await
                 }
@@ -301,10 +283,10 @@ async fn natural_understanding(bot_message: Box<dyn BotMessage>, processed_text:
             //Unsure intent if cannot match to any intent confidently
             else {
                 warning("couldn't match an intent confidently");
-                let _ = util::logger::log_message(&processed_text)
+                let _ = util::logger::log_message(processed_text.as_str())
                     .await
                     .map_err(|err| {
-                        error(&format!("{}", err));
+                        error(format!("{}", err).as_str());
                     });
                 extra::unsupported_notice(bot_message).await
             }
@@ -312,10 +294,10 @@ async fn natural_understanding(bot_message: Box<dyn BotMessage>, processed_text:
         //Unknown intent if can't match intent at all
         else {
             warning("unknown intent");
-            let _ = util::logger::log_message(&processed_text)
+            let _ = util::logger::log_message(processed_text.as_str())
                 .await
                 .map_err(|err| {
-                    error(&format!("{}", err));
+                    error(format!("{}", err).as_str());
                 });
             extra::unsupported_notice(bot_message).await
         };

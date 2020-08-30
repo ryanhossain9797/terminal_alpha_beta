@@ -36,14 +36,14 @@ pub async fn log_message(processed_text: &str) -> anyhow::Result<()> {
         //Open/Create the action_log.txt file with read, append, create options
         .open("action_log.txt")
         .map_err(|err| {
-            error(&format!("{}", err));
+            error(format!("{}", err).as_str());
             anyhow::anyhow!(err)
         })?
         //Attempt to write to file
-        .write((&(format!("{}{}", processed_text, "\n"))).as_bytes())
+        .write((format!("{}\n", processed_text).as_str()).as_bytes())
         .map(|_| ())
         .map_err(|err| {
-            error(&format!("{}", err));
+            error(format!("{}", err).as_str());
             anyhow::anyhow!(err)
         })?)
 }
@@ -53,7 +53,7 @@ pub async fn log_message_db(message: &str) -> anyhow::Result<()> {
     let source = "GLUESQL_LOG";
     let error = error(source);
     let info = info(source);
-    let sql = &format!(
+    let sql = format!(
         "
         CREATE TABLE IF NOT EXISTS unintelligible_log (log TEXT);
         INSERT INTO unintelligible_log VALUES (\"{}\");
@@ -61,7 +61,7 @@ pub async fn log_message_db(message: &str) -> anyhow::Result<()> {
         message
     );
 
-    let queries = parse(sql)?;
+    let queries = parse(sql.as_str())?;
     let glue_mutex = crate::database::gluedb::GLUE.lock().await;
     let glue = glue_mutex.as_ref().ok_or_else(|| anyhow::anyhow!(""))?;
 

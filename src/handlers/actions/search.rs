@@ -28,7 +28,7 @@ pub async fn resume(bot_message: Box<dyn BotMessage>, processed_text: String) {
     cancel_matching_state(Arc::clone(&arc_message), UserState::Search).await;
 
     let search_result =
-        services::search_service::get_search_results_by_query(&processed_text).await;
+        services::search_service::get_search_results_by_query(processed_text.as_str()).await;
 
     match search_result {
         Ok(results) => {
@@ -46,8 +46,8 @@ pub async fn resume(bot_message: Box<dyn BotMessage>, processed_text: String) {
                         .into_iter()
                         .map(|result| {
                             search_template
-                                .replace("{description}", &result.description)
-                                .replace("{url}", &result.link)
+                                .replace("{description}", result.description.as_str())
+                                .replace("{url}", result.link.as_str())
                                 .into()
                         })
                         .collect::<Vec<Msg>>()

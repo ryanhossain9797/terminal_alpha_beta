@@ -8,7 +8,7 @@ use serde_json::Value;
 ///Loaded at startup, Restart Bot to reload.
 static RESPONSES: Lazy<Option<serde_json::Value>> = Lazy::new(|| {
     util::logger::show_status("\nLoading JSON responses");
-    serde_json::from_str(&(read_to_string("data/responses.json").ok()?)).ok()?
+    serde_json::from_str((read_to_string("data/responses.json").ok()?).as_str()).ok()?
 });
 
 pub async fn initialize() {

@@ -17,7 +17,7 @@ pub async fn resume(bot_message: Box<dyn BotMessage>, _processed_text: String, i
     let source = "CONTINUE_CHAT";
     let info = util::logger::info(source);
 
-    info(&format!("starting {}", intent));
+    info(format!("starting {}", intent).as_str());
     match intent {
         "greet" => response(bot_message, "chat-greet").await,
         "about" => response(bot_message, "chat-about").await,

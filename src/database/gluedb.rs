@@ -14,7 +14,7 @@ pub async fn initialize() {
             let glue = Glue::new(storage);
             *GLUE.lock().await = Some(RefCell::new(glue));
         }
-        Err(err) => error(&format!("{}", err)),
+        Err(err) => error(format!("{}", err).as_str()),
     }
 }
 

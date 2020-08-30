@@ -40,7 +40,7 @@ impl Covid {
         let info = util::logger::info(source);
 
         let url = "https://api.covid19api.com/summary".to_string();
-        match api::get_request_json(&url).await {
+        match api::get_request_json(url.as_str()).await {
             //If Successful
             Ok(Value::Object(map)) => {
                 //Work through the json to get the country specific data
@@ -118,7 +118,7 @@ impl Covid {
                 }
             }
             Ok(_) => error("Fetched JSON doesn't match strcuture"),
-            Err(err) => error(&format!("Failed to fetch JSON response: {}", err)),
+            Err(err) => error(format!("Failed to fetch JSON response: {}", err).as_str()),
         }
         self.time = Instant::now();
     }

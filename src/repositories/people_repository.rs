@@ -25,7 +25,7 @@ pub async fn get(name: String) -> anyhow::Result<Option<Person>> {
         .await
         .ok_or_else(|| anyhow::anyhow!("Couldn't fetch db connection"))?
         .collection("people")
-        .find_one(doc! {"name": &name}, None)
+        .find_one(doc! {"name": name.as_str()}, None)
         .await?
     {
         let description = document

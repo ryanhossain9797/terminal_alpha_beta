@@ -71,7 +71,7 @@ pub async fn add(user_id: &str, note: String) -> anyhow::Result<()> {
         .ok_or_else(|| anyhow::anyhow!("Couldn't fetch db connection"))?
         .collection("notes");
     match notes
-        .insert_one(doc! {"id":user_id, "note": &note}, None)
+        .insert_one(doc! {"id":user_id, "note": note.as_str()}, None)
         .await
     {
         Ok(_) => {
@@ -79,7 +79,7 @@ pub async fn add(user_id: &str, note: String) -> anyhow::Result<()> {
             Ok(())
         }
         Err(err) => {
-            error(&format!("{}", err));
+            error(format!("{}", err).as_str());
             Err(err.into())
         }
     }
@@ -108,7 +108,7 @@ pub async fn delete_note(user_id: &str, note_id: &str) -> anyhow::Result<()> {
             Ok(())
         }
         Err(err) => {
-            error(&format!("{}", err));
+            error(format!("{}", err).as_str());
             Err(err.into())
         }
     }

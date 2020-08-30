@@ -15,7 +15,7 @@ pub(crate) async fn discord_main(sender: Sender<(Arc<Box<dyn handlers::BotMessag
     let token = env::var("DISCORD_TOKEN").expect("Expected a token in the environment");
 
     // Create a new instance of the Client, logging in as a bot. This will
-    let mut client = Client::new(&token)
+    let mut client = Client::new(token.as_str())
         .event_handler(Handler { sender })
         .await
         .expect("Err creating client");
@@ -24,7 +24,7 @@ pub(crate) async fn discord_main(sender: Sender<(Arc<Box<dyn handlers::BotMessag
     // Shards will automatically attempt to reconnect, and will perform
     // exponential backoff until it reconnects.
     if let Err(why) = client.start().await {
-        util::logger::show_status(&format!("Client error: {:?}", why));
+        util::logger::show_status(format!("Client error: {:?}", why).as_str());
     }
 }
 
@@ -37,10 +37,9 @@ impl EventHandler for Handler {
     // Set a handler for the `message` event - so that whenever a new message
     // is received - the closure (or function) passed will be called.
     async fn message(&self, ctx: Context, message: DMessage) {
-        util::logger::show_status(&format!(
-            "DISCORD: <{}>: {}",
-            message.author.name, message.content
-        ));
+        util::logger::show_status(
+            format!("DISCORD: <{}>: {}", message.author.name, message.content).as_str(),
+        );
         if !message.author.bot {
             if let Some((msg, start_conversation)) = filter(&message, &ctx).await {
                 self.sender
@@ -76,7 +75,7 @@ async fn filter(message: &DMessage, ctx: &Context) -> Option<(String, bool)> {
         let id: i64 = info.id.into();
         //-----------------------remove self mention from message
         let handle = format!("<@{}>", &id);
-        let mut msg: &str = &message.content.replace(&handle, "");
+        let mut msg: &str = &message.content.replace(handle.as_str(), "");
         msg = msg.trim().trim_start_matches('/').trim();
         let msg: &str = &msg.to_lowercase();
         let space_trimmer = Regex::new(r"\s+").unwrap();
@@ -88,7 +87,7 @@ async fn filter(message: &DMessage, ctx: &Context) -> Option<(String, bool)> {
             return Some((msg, true));
         } else {
             //-----------------------......and check if handle is present if message IS from group chat
-            if message.content.contains(&handle) {
+            if message.content.contains(handle.as_str()) {
                 //---true means message is to be processed even if no conversation is in progress
                 //---if bot is mentioned new convo can start
                 return Some((msg, true));
@@ -113,11 +112,8 @@ struct DiscordMessage {
 
 #[async_trait]
 impl handlers::BotMessage for DiscordMessage {
-    // fn dynamic_clone(&self) -> Box<dyn handlers::BotMessage> {
-    //     Box::new(self.clone())
-    // }
     fn get_name(&self) -> &str {
-        &self.message.author.name
+        self.message.author.name.as_str()
     }
     fn get_id(&self) -> String {
         let id: i64 = self.message.author.id.into();
@@ -135,13 +131,13 @@ impl handlers::BotMessage for DiscordMessage {
         match message {
             handlers::MsgCount::SingleMsg(msg) => match msg {
                 handlers::Msg::Text(text) => {
-                    if let Err(why) = &self.message.channel_id.say(&self.ctx.http, text).await {
-                        error(&format!("Error sending message: {:?}", why));
+                    if let Err(why) = self.message.channel_id.say(&self.ctx.http, text).await {
+                        error(format!("Error sending message: {:?}", why).as_str());
                     }
                 }
                 handlers::Msg::File(url) => {
-                    if let Err(why) = &self.message.channel_id.say(&self.ctx.http, url).await {
-                        error(&format!("Error sending message: {:?}", why));
+                    if let Err(why) = self.message.channel_id.say(&self.ctx.http, url).await {
+                        error(format!("Error sending message: {:?}", why).as_str());
                     }
                 }
             },
@@ -151,16 +147,15 @@ impl handlers::BotMessage for DiscordMessage {
                     match msg {
                         handlers::Msg::Text(text) => {
                             if let Err(why) =
-                                &self.message.channel_id.say(&self.ctx.http, text).await
+                                self.message.channel_id.say(&self.ctx.http, text).await
                             {
-                                error(&format!("Error sending message: {:?}", why));
+                                error(format!("Error sending message: {:?}", why).as_str());
                             }
                         }
                         handlers::Msg::File(url) => {
-                            if let Err(why) =
-                                &self.message.channel_id.say(&self.ctx.http, url).await
+                            if let Err(why) = self.message.channel_id.say(&self.ctx.http, url).await
                             {
-                                error(&format!("Error sending message: {:?}", why));
+                                error(format!("Error sending message: {:?}", why).as_str());
                             }
                         }
                     }

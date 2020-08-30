@@ -6,10 +6,7 @@ pub async fn start(bot_message: Box<dyn BotMessage>, json: String) {
     let info = util::logger::info(source);
     let title_pass = title_pass_retriever(&json);
 
-    info(&format!(
-        "Info title pass is {}, {}",
-        title_pass.0, title_pass.1
-    ));
+    info(format!("Info title pass is {}, {}", title_pass.0, title_pass.1).as_str());
 
     match info_service::get_info(title_pass.0, title_pass.1).await {
         Ok(Some(info)) => bot_message.send_message(info.into()).await,
