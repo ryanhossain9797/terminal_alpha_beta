@@ -101,9 +101,9 @@ dependencies = [
 
 [[package]]
 name = "async-mutex"
-version = "1.1.5"
+version = "1.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "20e85981fc34e84cdff3fc2c9219189752633fdc538a06df8b5ac45b68a4f3a9"
+checksum = "065de1ccf10280d0d75c2f3a71a970ee1007c85c51aa3e7deee1df100f1dfadb"
 dependencies = [
  "event-listener",
 ]
@@ -158,9 +158,9 @@ dependencies = [
 
 [[package]]
 name = "async-trait"
-version = "0.1.38"
+version = "0.1.40"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6e1a4a2f97ce50c9d0282c1468816208588441492b40d813b2e0419c22c05e7f"
+checksum = "687c230d85c0a52504709705fc8a53e4a692b83a2184f03dae73e38e1e93a783"
 dependencies = [
  "proc-macro2 1.0.19",
  "quote 1.0.7",
@@ -2252,12 +2252,13 @@ checksum = "b18befed8bc2b61abc79a457295e7e838417326da1586050b919414073977f19"
 
 [[package]]
 name = "polling"
-version = "0.1.5"
+version = "0.1.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9e09dffb745feffca5be3dea51c02b7b368c4597ab0219a82acaf9799ab3e0d1"
+checksum = "d10bd4578b2ca39fa2581c058921cb50ad226a8999829ba595e1665bcfdaf4a8"
 dependencies = [
  "cfg-if",
  "libc",
+ "log 0.4.11",
  "wepoll-sys-stjepang",
  "winapi 0.3.9",
 ]
@@ -3479,7 +3480,7 @@ checksum = "f764005d11ee5f36500a149ace24e00e3da98b0158b3e2d53a7495660d3f4d60"
 [[package]]
 name = "telegram-bot"
 version = "0.7.0"
-source = "git+https://github.com/telegram-rs/telegram-bot#517d6509a816632313adf0096f4c2168fe6b594b"
+source = "git+https://github.com/telegram-rs/telegram-bot#ae696eae01d2e213fa5056db8cb9ed754783499a"
 dependencies = [
  "bytes",
  "futures",
@@ -3495,7 +3496,7 @@ dependencies = [
 [[package]]
 name = "telegram-bot-raw"
 version = "0.7.0"
-source = "git+https://github.com/telegram-rs/telegram-bot#517d6509a816632313adf0096f4c2168fe6b594b"
+source = "git+https://github.com/telegram-rs/telegram-bot#ae696eae01d2e213fa5056db8cb9ed754783499a"
 dependencies = [
  "bytes",
  "serde",
