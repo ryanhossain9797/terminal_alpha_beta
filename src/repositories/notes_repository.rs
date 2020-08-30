@@ -15,7 +15,7 @@ pub struct Note {
 
 impl Note {
     fn new(id: impl Into<String>, position: usize, note: impl Into<String>) -> Self {
-        Note {
+        Self {
             id: id.into(),
             position,
             note: note.into(),

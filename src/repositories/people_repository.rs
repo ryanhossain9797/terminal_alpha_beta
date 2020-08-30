@@ -12,7 +12,7 @@ pub struct Person {
 }
 impl Person {
     fn new(name: impl Into<String>, description: impl Into<String>) -> Self {
-        Person {
+        Self {
             name: name.into(),
             description: description.into(),
         }

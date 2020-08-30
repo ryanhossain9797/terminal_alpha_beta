@@ -26,7 +26,7 @@ static CACHE: Lazy<Mutex<Covid>> = Lazy::new(|| Mutex::new(Covid::new()));
 
 impl Covid {
     fn new() -> Self {
-        Covid {
+        Self {
             time: Instant::now() - Duration::from_secs(1200),
             top_new: None,
             top_total: None,
