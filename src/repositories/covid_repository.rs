@@ -36,8 +36,8 @@ impl Covid {
     }
     async fn update_cache(&mut self) {
         let source = "COVID_SERVICE";
-        let error = util::logger::error_logger(source);
-        let info = util::logger::info_logger(source);
+        let error = util::logger::error(source);
+        let info = util::logger::info(source);
 
         let url = "https://api.covid19api.com/summary".to_string();
         match api::get_request_json(&url).await {
@@ -125,7 +125,7 @@ impl Covid {
 
     async fn refresh(&mut self) {
         if self.time.elapsed() > Duration::from_secs(600) {
-            let info = util::logger::info_logger("COVID_CACHE");
+            let info = util::logger::info("COVID_CACHE");
             info("Refreshing cache");
             self.update_cache().await;
         }

@@ -2,8 +2,8 @@ use super::*;
 
 pub async fn start(bot_message: Box<dyn BotMessage>) {
     let source = "START_NOTES";
-    let info = util::logger::info_logger(source);
-    let error = util::logger::error_logger(source);
+    let info = util::logger::info(source);
+    let error = util::logger::error(source);
     info("notes initiated");
     let id = bot_message.get_id();
     // New Arc clone-able version of message
@@ -56,7 +56,7 @@ pub async fn start(bot_message: Box<dyn BotMessage>) {
 pub async fn resume(bot_message: Box<dyn BotMessage>, command: String, note_ids: Vec<String>) {
     let source = "CONTINUE_NOTES";
 
-    let info = util::logger::info_logger(source);
+    let info = util::logger::info(source);
     info(&format!("continuing with notes '{}'", command));
     let id = bot_message.get_id();
 

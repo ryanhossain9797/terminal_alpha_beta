@@ -3,7 +3,7 @@ use super::*;
 //Tests any unknown intent
 pub async fn start(bot_message: Box<dyn BotMessage>) {
     let source = "START_UNKNOWN";
-    let info = util::logger::info_logger(source);
+    let info = util::logger::info(source);
     info("Unknown state initiated");
     let arc_message = Arc::new(bot_message);
 
@@ -14,12 +14,12 @@ pub async fn start(bot_message: Box<dyn BotMessage>) {
         .await;
 }
 
-///Simply uses load_response to load a response for the provided key.  
+///Simply uses `load_response` to load a response for the provided key.  
 ///If unavailable replies with a default message.
 pub async fn custom_response(bot_message: Box<dyn BotMessage>, key: &str) {
     match load(key) {
         Some(msg) => bot_message.send_message(msg.into()).await,
-        _ => {
+        None => {
             bot_message
                 .send_message(load("unknown-question").into())
                 .await

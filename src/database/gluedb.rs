@@ -6,9 +6,9 @@ use std::cell::RefCell;
 
 pub static GLUE: Lazy<Mutex<Option<RefCell<Glue>>>> = Lazy::new(|| Mutex::new(None));
 
-pub async fn initialize_glue() {
+pub async fn initialize() {
     let source = "GLUESQL_INIT";
-    let error = util::logger::error_logger(source);
+    let error = util::logger::error(source);
     match SledStorage::new("data/gluedb") {
         Ok(storage) => {
             let glue = Glue::new(storage);
@@ -21,8 +21,8 @@ pub async fn initialize_glue() {
 #[allow(dead_code)]
 pub async fn log_message(message: &str) -> anyhow::Result<()> {
     let source = "GLUESQL_LOG";
-    let error = util::logger::error_logger(source);
-    let info = util::logger::info_logger(source);
+    let error = util::logger::error(source);
+    let info = util::logger::info(source);
     let sql = &format!(
         "
         CREATE TABLE IF NOT EXISTS unintelligible_log (log TEXT);

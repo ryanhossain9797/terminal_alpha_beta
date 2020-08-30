@@ -1,5 +1,8 @@
 #![feature(async_closure)]
 #![feature(never_type)]
+#![warn(clippy::all)]
+#![warn(clippy::pedantic)]
+#![allow(clippy::wildcard_imports)]
 mod api;
 mod clients;
 mod database;
@@ -15,8 +18,8 @@ use services::*;
 #[async_std::main]
 async fn main() {
     let source = "MAIN";
-    let error = util::logger::error_logger(source);
-    let status = util::logger::status_logger();
+    let error = util::logger::error(source);
+    let status = util::logger::status();
     {
         //---Load up all the ENV variables from .env file
         dotenv().expect("Couldn't load environment variables");

@@ -10,13 +10,13 @@ use std::env;
 use std::time::Duration;
 
 ///Main Starting point for the Discord api.
-pub(crate) async fn discord_main(_sender: Sender<(Arc<Box<dyn handlers::BotMessage>>, String)>) {
+pub(crate) async fn discord_main(sender: Sender<(Arc<Box<dyn handlers::BotMessage>>, String)>) {
     // Configure the client with your Discord bot token in the environment.
     let token = env::var("DISCORD_TOKEN").expect("Expected a token in the environment");
 
     // Create a new instance of the Client, logging in as a bot. This will
     let mut client = Client::new(&token)
-        .event_handler(Handler { sender: _sender })
+        .event_handler(Handler { sender })
         .await
         .expect("Err creating client");
 
@@ -71,7 +71,7 @@ impl EventHandler for Handler {
 /// - replaces redundant spaces with single spaces using regex ("hellow      world" becomes "hellow world").
 async fn filter(message: &DMessage, ctx: &Context) -> Option<(String, bool)> {
     let source = "DISCORD";
-    let error = util::logger::error_logger(source);
+    let error = util::logger::error(source);
     if let Ok(info) = ctx.http.get_current_application_info().await {
         let id: i64 = info.id.into();
         //-----------------------remove self mention from message
@@ -83,7 +83,10 @@ async fn filter(message: &DMessage, ctx: &Context) -> Option<(String, bool)> {
 
         let msg: String = space_trimmer.replace_all(msg, " ").into();
         //-----------------------check if message is from a group chat.......
-        if !message.is_private() {
+        if message.is_private() {
+            //---if not in group chat mentions aren't necessary and any message will be replied by the bot
+            return Some((msg, true));
+        } else {
             //-----------------------......and check if handle is present if message IS from group chat
             if message.content.contains(&handle) {
                 //---true means message is to be processed even if no conversation is in progress
@@ -94,9 +97,6 @@ async fn filter(message: &DMessage, ctx: &Context) -> Option<(String, bool)> {
                 //---required because ongoing conversation will continue regardless of true or false
                 return Some((msg, false));
             }
-        } else {
-            //---if not in group chat mentions aren't necessary and any message will be replied by the bot
-            return Some((msg, true));
         };
     } else {
         error("Problem occurred while fetching self ID");
@@ -131,7 +131,7 @@ impl handlers::BotMessage for DiscordMessage {
     }
     async fn send_message(&self, message: handlers::MsgCount) {
         let source = "DISCORD_SEND";
-        let error = util::logger::error_logger(source);
+        let error = util::logger::error(source);
         match message {
             handlers::MsgCount::SingleMsg(msg) => match msg {
                 handlers::Msg::Text(text) => {

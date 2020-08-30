@@ -11,13 +11,13 @@ static RESPONSES: Lazy<Option<serde_json::Value>> = Lazy::new(|| {
     serde_json::from_str(&(read_to_string("data/responses.json").ok()?)).ok()?
 });
 
-pub async fn initialize_responses() {
+pub async fn initialize() {
     Lazy::force(&RESPONSES);
 }
 
 const NAMES: [&str; 2] = ["Terminal Alpha", "Terminal Beta"];
 
-///Uses load_text() to load a response,  
+///Uses `load_text()` to load a response,  
 ///then prepends  
 ///#### `Terminal Alpha:`  
 ///or

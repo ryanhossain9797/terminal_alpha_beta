@@ -4,30 +4,30 @@ use std::fs::OpenOptions;
 use std::io::prelude::*;
 
 ///Returns a closure that logs the message with blue text
-pub fn info_logger<'a>(source: &'a str) -> impl Fn(&str) + 'a {
+pub fn info<'a>(source: &'a str) -> impl Fn(&str) + 'a {
     move |msg: &str| println!("{}: {}", source.green(), msg.blue())
 }
 ///Returns a closure that logs the message with yellow text
-pub fn warning_logger<'a>(source: &'a str) -> impl Fn(&str) + 'a {
+pub fn warning<'a>(source: &'a str) -> impl Fn(&str) + 'a {
     move |msg: &str| println!("{}: {}", source.green(), msg.yellow())
 }
 ///Returns a closure that logs the message with red text
-pub fn error_logger<'a>(source: &'a str) -> impl Fn(&str) + 'a {
+pub fn error<'a>(source: &'a str) -> impl Fn(&str) + 'a {
     move |msg: &str| println!("{}: {}", source.green(), msg.red())
 }
 ///Returns a closure that logs the message with white on purple text
-pub fn status_logger() -> impl Fn(&str) {
+pub fn status() -> impl Fn(&str) {
     move |msg: &str| show_status(msg)
 }
 ///Logs the message with white on purple text
 pub fn show_status(msg: &str) {
     println!("{}", msg.on_white().black());
 }
-///Logs the provided text to the action_log.txt file.  
+///Logs the provided text to the `action_log.txt` file.  
 ///Used for when a message is unknown.
 pub async fn log_message(processed_text: &str) -> anyhow::Result<()> {
     let source = "LOG_MESSAGE";
-    let error = error_logger(source);
+    let error = error(source);
 
     Ok(OpenOptions::new()
         .read(true)
@@ -51,8 +51,8 @@ pub async fn log_message(processed_text: &str) -> anyhow::Result<()> {
 #[allow(dead_code)]
 pub async fn log_message_db(message: &str) -> anyhow::Result<()> {
     let source = "GLUESQL_LOG";
-    let error = error_logger(source);
-    let info = info_logger(source);
+    let error = error(source);
+    let info = info(source);
     let sql = &format!(
         "
         CREATE TABLE IF NOT EXISTS unintelligible_log (log TEXT);

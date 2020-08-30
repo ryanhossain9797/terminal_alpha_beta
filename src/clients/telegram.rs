@@ -22,9 +22,9 @@ pub static API: Lazy<Api> = Lazy::new(|| {
 });
 
 ///Main Starting point for the telegram api.
-pub(crate) async fn telegram_main(_sender: Sender<(Arc<Box<dyn handlers::BotMessage>>, String)>) {
+pub(crate) async fn telegram_main(sender: Sender<(Arc<Box<dyn handlers::BotMessage>>, String)>) {
     let source = "TELEGRAM_CLIENT";
-    let error = util::logger::error_logger(source);
+    let error = util::logger::error(source);
     let mut stream = API.stream();
     util::logger::show_status("Telegram is connected!\n");
     //Fetch new updates via long poll method
@@ -42,7 +42,7 @@ pub(crate) async fn telegram_main(_sender: Sender<(Arc<Box<dyn handlers::BotMess
                         // Spawn a handler for the message.
 
                         if let Some((msg, start_conversation)) = filter(&message).await {
-                            _sender
+                            sender
                                 .send((
                                     Arc::new(Box::new(TelegramMessage {
                                         message,

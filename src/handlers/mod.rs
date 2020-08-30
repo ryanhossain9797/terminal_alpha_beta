@@ -46,13 +46,13 @@ pub async fn initialize() {
     initialize_state();
     Lazy::force(&NLUENGINE);
     Lazy::force(&CLIENT);
-    initialize_responses().await;
+    responses::initialize().await;
 }
 
 ///ENUM, Represents Message count
-///- SingleMsg - Contains a Msg Enum
-///- MultiMsg - Contains a Vector of Msg Enums
-///- NoMsg - Represnts an empty response
+///- `SingleMsg` - Contains a Msg Enum
+///- `MultiMsg` - Contains a Vector of Msg Enums
+///- `NoMsg` - Represnts an empty response
 pub enum MsgCount {
     SingleMsg(Msg),
     MultiMsg(Vec<Msg>),
@@ -165,7 +165,7 @@ impl BotMessage for Box<dyn BotMessage> {
         (**self).get_id()
     }
     async fn send_message(&self, message: MsgCount) {
-        let _ = (**self).send_message(message).await;
+        (**self).send_message(message).await;
     }
     fn start_conversation(&self) -> bool {
         (**self).start_conversation()
@@ -187,7 +187,7 @@ pub async fn init_sender() -> (
 ///Distributes incoming requests to separate threads
 pub async fn receiver(r: Receiver<(Arc<Box<dyn BotMessage>>, String)>) {
     let source = "DISTRIBUTOR";
-    let info = util::logger::info_logger(source);
+    let info = util::logger::info(source);
     while let Ok((message, text)) = r.recv().await {
         //Spawn a new task to handle the message
         let _ = task::spawn(async move { handler(message.dyn_clone(), text).await });
@@ -198,7 +198,7 @@ pub async fn receiver(r: Receiver<(Arc<Box<dyn BotMessage>>, String)>) {
 ///First place to handle messages after distribution
 async fn handler(bot_message: Box<dyn BotMessage>, processed_text: String) {
     let source = "HANDLER";
-    let info = util::logger::info_logger(source);
+    let info = util::logger::info(source);
     info(&format!("Processed text is {}", processed_text));
 
     //If record from user exists (A Some(record)), some conversation is ongoing
@@ -210,14 +210,14 @@ async fn handler(bot_message: Box<dyn BotMessage>, processed_text: String) {
         if processed_text == "cancel last" {
             purge_state(bot_message).await;
         } else {
-            use UserState::*;
+            use UserState::{Animation, Identify, Notes, Search, Unknown};
             info(&format!("Saved state is {}", record.state));
             match record.state {
                 Search => search::resume(bot_message, processed_text.clone()).await,
                 Identify => identify::resume(bot_message, processed_text.clone()).await,
                 Animation => animation::resume(bot_message, processed_text.clone()).await,
                 Notes(data) => notes::resume(bot_message, processed_text.clone(), data).await,
-                _ => extra::unknown_state_notice(bot_message).await,
+                Unknown => extra::unknown_state_notice(bot_message).await,
             }
         }
     }
@@ -241,9 +241,9 @@ async fn handler(bot_message: Box<dyn BotMessage>, processed_text: String) {
 async fn natural_understanding(bot_message: Box<dyn BotMessage>, processed_text: String) {
     let source = "NATURAL_ACTION_PICKER";
 
-    let info = util::logger::info_logger(source);
-    let warning = util::logger::warning_logger(source);
-    let error = util::logger::error_logger(source);
+    let info = util::logger::info(source);
+    let warning = util::logger::warning(source);
+    let error = util::logger::error(source);
     //---Stuff required to run the NLU engine to get an intent
     if let Some(engine) = &*NLUENGINE {
         let intents_alternatives = 1;
@@ -283,7 +283,7 @@ async fn natural_understanding(bot_message: Box<dyn BotMessage>, processed_text:
                         _ => {
                             //Forward to chat for more intents
                             info("forwarding to chat");
-                            chat::continue_chat(bot_message, processed_text, &intent).await;
+                            chat::resume(bot_message, processed_text, &intent).await;
                         }
                     }
                 }

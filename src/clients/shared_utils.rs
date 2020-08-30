@@ -4,7 +4,7 @@ use async_std::prelude::*;
 
 pub async fn _download_file(url: &str, name: &str) -> Option<String> {
     let source = "DOWNLOAD_FILE";
-    let error = util::logger::error_logger(source);
+    let error = util::logger::error(source);
     if let Ok(response) = reqwest::get(url).await {
         let path: &str = &format!("temp/{}.gif", name);
         match OpenOptions::new().write(true).create(true).open(path).await {

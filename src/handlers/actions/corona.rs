@@ -2,7 +2,7 @@ use super::*;
 
 pub async fn start(bot_message: Box<dyn BotMessage>) {
     let source = "CORONA";
-    let error = util::logger::error_logger(source);
+    let error = util::logger::error(source);
 
     let maybe_top_new = covid_service::get_top_new().await;
     let maybe_top_total = covid_service::get_top_total().await;
@@ -59,15 +59,13 @@ pub async fn start(bot_message: Box<dyn BotMessage>) {
         (Ok(confirmed), Ok(deaths)) => {
             bot_message
                 .send_message(MsgCount::MultiMsg(vec![
-                    (match responses::load("corona-body") {
-                        Some(response) => Some(
+                    responses::load("corona-body")
+                        .map(|response| {
                             response
                                 .replace("{confirmed}", &format!("{}", confirmed))
-                                .replace("{deaths}", &format!("{}", deaths)),
-                        ),
-                        _ => None,
-                    })
-                    .into(),
+                                .replace("{deaths}", &format!("{}", deaths))
+                        })
+                        .into(),
                     responses::load("corona-footer").into(),
                 ]))
                 .await;

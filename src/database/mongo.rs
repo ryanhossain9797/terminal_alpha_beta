@@ -6,9 +6,9 @@ use std::env;
 
 static MONGO: Lazy<Mutex<Option<Database>>> = Lazy::new(|| Mutex::new(None));
 
-pub async fn initialize_mongo() {
+pub async fn initialize() {
     let source = "MONGO_INIT";
-    let error = util::logger::error_logger(source);
+    let error = util::logger::error(source);
 
     // no one else has initialized it yet, so
     if let Ok(token) = env::var("MONGO_AUTH") {
@@ -26,9 +26,9 @@ pub async fn initialize_mongo() {
     }
 }
 
-pub async fn get_mongo() -> Option<Database> {
+pub async fn get() -> Option<Database> {
     let source = "MONGO_GET";
-    let info = util::logger::info_logger(source);
+    let info = util::logger::info(source);
 
     match &*MONGO.lock().await {
         Some(db) => {

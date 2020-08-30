@@ -21,7 +21,7 @@ impl Person {
 
 ///Return's a Some(Person) if name matches, otherwise a None
 pub async fn get(name: String) -> anyhow::Result<Option<Person>> {
-    if let Some(document) = database::mongo::get_mongo()
+    if let Some(document) = database::mongo::get()
         .await
         .ok_or_else(|| anyhow::anyhow!("Couldn't fetch db connection"))?
         .collection("people")
@@ -39,7 +39,7 @@ pub async fn get(name: String) -> anyhow::Result<Option<Person>> {
 
 ///Returns a Some(Vec<Person>) if successful, otherwise a None
 pub async fn get_all() -> anyhow::Result<Vec<Person>> {
-    Ok(database::mongo::get_mongo()
+    Ok(database::mongo::get()
         .await
         .ok_or_else(|| anyhow::anyhow!("Couldn't fetch db connection"))?
         .collection("people")
