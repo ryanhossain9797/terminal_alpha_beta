@@ -15,6 +15,8 @@ panic = 'abort'
 [dependencies]
 futures = "0.3"
 async-std = { version = "1.6", features = ["tokio02", "attributes", "unstable"]}
+# tokio = {git = "https://github.com/tokio-rs/tokio", features = ["full"]}
+# tokio = {version = "0.2", features = ["full"]}
 telegram-bot = {git = "https://github.com/telegram-rs/telegram-bot"}
 serenity = { version = "0.9.0-rc.0", default-features = false, features = ["client", "gateway", "rustls_backend", "model", "utils", "cache"]}
 snips-nlu-lib = { git = "https://github.com/snipsco/snips-nlu-rs", branch = "master" }

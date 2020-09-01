@@ -22,9 +22,16 @@ arm-musl-release:
 ------
 Needed
 > arm-linux-gnueabihf-gcc
+	arm-linux-gnueabihf-binutils
+	arm-linux-gnueabihf-gcc-stage1
+	arm-linux-gnueabihf-linux-api-headers
+	arm-linux-gnueabihf-glibc-headers
+	arm-linux-gnueabihf-gcc-stage2
+	arm-linux-gnueabihf-glibc
+	arm-linux-gnueabihf-gcc
 > clang
 > openssl (? was already installed, shouldn't risk uninstall testing, prolly important to OS itself)
-> crfsuite (unsure - test by removing)
 
 Not Needed (Probably, further testing required)
 > arm-linux-gnueabihf-musl
+> crfsuite (unsure - test by removing)

@@ -10,10 +10,14 @@ mod handlers;
 mod repositories;
 mod services;
 mod util;
-use async_std::task;
+use async_std::{
+    sync::{Receiver, Sender},
+    task,
+};
 use clients::*;
 use dotenv::dotenv;
 use services::*;
+use std::sync::Arc;
 
 #[async_std::main]
 async fn main() {
@@ -31,7 +35,6 @@ async fn main() {
         if let Some(date) = option_env!("COMPILED_AT") {
             status(&format!("Compile date {}\n", date));
         }
-
         status("Initializing everything");
 
         clients::initialize();
@@ -43,16 +46,41 @@ async fn main() {
 
     let (sender, receiver) = handlers::init_sender().await;
 
-    let telegram_sender = sender.clone();
-    let discord_sender = sender;
     //Wait for tasks to finish,
     //Which is hopefully never, because that would mean it crashed.
     let clients_result = futures::future::try_join_all(vec![
         //Spawn task to handle inbound Updates from clients
+        task::spawn(async { services(receiver).await }),
+        //Spawn a task for clients
+        task::spawn(async { clients(sender).await }),
+    ])
+    .await;
+
+    if let Err(err) = clients_result {
+        error(&format!("One or more services have failed {}", err));
+    }
+}
+
+async fn services(
+    receiver: Receiver<(Arc<Box<dyn handlers::BotMessage>>, String)>,
+) -> Result<!, &'static str> {
+    let _ = futures::future::try_join_all(vec![
+        //Spawn a task to receive updates
         task::spawn(async {
             handlers::receiver(receiver).await;
-            Err::<!, &str>("Distributor Failed")
+            Err::<!, &str>("Receiver Failed")
         }),
+    ])
+    .await;
+    Err::<!, &'static str>("Services failed")
+}
+
+async fn clients(
+    sender: Sender<(Arc<Box<dyn handlers::BotMessage>>, String)>,
+) -> Result<!, &'static str> {
+    let telegram_sender = sender.clone();
+    let discord_sender = sender;
+    let _ = futures::future::try_join_all(vec![
         //Spawn a task for telegram
         task::spawn(async {
             run_telegram(telegram_sender).await;
@@ -65,8 +93,5 @@ async fn main() {
         }),
     ])
     .await;
-
-    if let Err(err) = clients_result {
-        error(&format!("One or more clients have failed {}", err));
-    }
+    Err::<!, &'static str>("Clients failed")
 }
