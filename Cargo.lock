@@ -2995,13 +2995,13 @@ dependencies = [
 
 [[package]]
 name = "search_with_google"
-version = "0.4.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ba02d155ac937fcf2e9727f92737bcbee1b1a95c3f7340d3a097ece558a46ba1"
+version = "0.5.0"
+source = "git+https://gitlab.com/zireael9797/search-with-google#163c7adf5ce0542c81712c8e6cb85ec7818c3c2e"
 dependencies = [
  "reqwest",
  "scraper",
  "select",
+ "thiserror",
  "tokio",
 ]
 
