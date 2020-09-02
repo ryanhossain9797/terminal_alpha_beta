@@ -12,7 +12,7 @@ pub async fn start(bot_message: Box<dyn BotMessage>) {
 ///Continues chat.  
 ///Updates userstate record map with Chat intent and New time.  
 ///Fires wipe history command for Chat state.
-pub async fn resume(bot_message: Box<dyn BotMessage>, _processed_text: String, intent: &str) {
+pub async fn resume(bot_message: Box<dyn BotMessage>, intent: &str) {
     use extra::custom_response as response;
     let source = "CONTINUE_CHAT";
     let info = util::logger::info(source);

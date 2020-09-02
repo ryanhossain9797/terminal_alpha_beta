@@ -252,6 +252,7 @@
         "title": "titleVar"
       },
       "notes": {},
+      "reminder": {},
       "search": {
         "searchTerm": "searchWord"
       },

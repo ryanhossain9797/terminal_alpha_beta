@@ -32,6 +32,11 @@ Needed
 > clang
 > openssl (? was already installed, shouldn't risk uninstall testing, prolly important to OS itself)
 
+Needed for training intent
+> Python 3.7+
+> `pip install snips-nlu`
+> `python -m snips_nlu download en` or simply `snips-nlu download en`
+
 Not Needed (Probably, further testing required)
 > arm-linux-gnueabihf-musl
 > crfsuite (unsure - test by removing)

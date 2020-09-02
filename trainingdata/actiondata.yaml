@@ -137,6 +137,18 @@ utterances:
   - update a note
   - delete note
 
+# reminder intent
+---
+type: intent
+name: reminder
+utterances:
+  - remind me to
+  - reminder
+  - set reminder
+  - reminder for
+  - reminder at
+  - after some time remind
+
 # chatWord entity
 ---
 type: entity

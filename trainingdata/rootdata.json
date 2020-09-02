@@ -1266,6 +1266,52 @@
         }
       ]
     },
+    "reminder": {
+      "utterances": [
+        {
+          "data": [
+            {
+              "text": "remind me to"
+            }
+          ]
+        },
+        {
+          "data": [
+            {
+              "text": "reminder"
+            }
+          ]
+        },
+        {
+          "data": [
+            {
+              "text": "set reminder"
+            }
+          ]
+        },
+        {
+          "data": [
+            {
+              "text": "reminder for"
+            }
+          ]
+        },
+        {
+          "data": [
+            {
+              "text": "reminder at"
+            }
+          ]
+        },
+        {
+          "data": [
+            {
+              "text": "after some time remind"
+            }
+          ]
+        }
+      ]
+    },
     "search": {
       "utterances": [
         {

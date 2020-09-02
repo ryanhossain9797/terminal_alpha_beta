@@ -26,10 +26,10 @@ cross-arm-musl:
 arm64:
 	cargo build --target aarch64-unknown-linux-gnu
 train:
-	rm -rf ./data/rootengine
-	rm -f trainingdata/actiondata.json
-	rm -f trainingdata/chatdata.json
+	rm -f trainingdata/rootdata.json
 	snips-nlu generate-dataset en trainingdata/chatdata.yaml trainingdata/actiondata.yaml > trainingdata/rootdata.json
-	snips-nlu train trainingdata/rootdata.json data/rootengine
+	snips-nlu train trainingdata/rootdata.json data/rootenginenew
+	rm -rf ./data/rootengine
+	mv ./data/rootenginenew ./data/rootengine
 go-lib:
 	env GOOS=linux GOARCH=arm CGO_ENABLED=1 CC=arm-linux-gnueabihf-gcc go build -buildmode=c-archive -o libpeople.a main.go

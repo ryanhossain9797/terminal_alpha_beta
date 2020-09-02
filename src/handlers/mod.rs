@@ -261,11 +261,12 @@ async fn natural_understanding(bot_message: Box<dyn BotMessage>, processed_text:
                         "info" => info::start(bot_message, json).await,
                         "notes" => notes::start(bot_message).await,
                         "corona" => corona::start(bot_message).await,
+                        "reminder" => reminder::start(bot_message, json).await,
                         "unknown" => extra::start(bot_message).await,
                         _ => {
                             //Forward to chat for more intents
                             info("forwarding to chat");
-                            chat::resume(bot_message, processed_text, intent.as_str()).await;
+                            chat::resume(bot_message, intent.as_str()).await;
                         }
                     }
                 }

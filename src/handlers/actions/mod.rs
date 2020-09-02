@@ -5,5 +5,6 @@ pub mod extra;
 pub mod identify;
 pub mod info;
 pub mod notes;
+pub mod reminder;
 pub mod search;
 use super::*;
