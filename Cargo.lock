@@ -885,6 +885,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "flume"
+version = "0.8.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "21f39cf120a8b2e25f325d4ca7637f9cae8e3dcc9134b7811a3c35e0353f5518"
+dependencies = [
+ "futures",
+ "rand 0.7.3",
+ "spinning_top",
+]
+
+[[package]]
 name = "fnv"
 version = "1.0.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3360,6 +3371,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6e63cff320ae2c57904679ba7cb63280a3dc4613885beafb148ee7bf9aa9042d"
 
 [[package]]
+name = "spinning_top"
+version = "0.2.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7e529d73e80d64b5f2631f9035113347c578a1c9c7774b83a2b880788459ab36"
+dependencies = [
+ "lock_api 0.4.1",
+]
+
+[[package]]
 name = "sqlparser"
 version = "0.6.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3549,6 +3569,7 @@ dependencies = [
  "closestmatch",
  "colored",
  "dotenv",
+ "flume",
  "futures",
  "futures-intrusive",
  "gluesql",

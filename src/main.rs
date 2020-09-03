@@ -10,12 +10,10 @@ mod handlers;
 mod repositories;
 mod services;
 mod util;
-use async_std::{
-    sync::{Receiver, Sender},
-    task,
-};
+use async_std::task;
 use clients::*;
 use dotenv::dotenv;
+use flume::{Receiver, Sender};
 use services::*;
 use std::sync::Arc;
 

@@ -9,11 +9,9 @@ use state::userstate::*;
 
 use std::{fs::*, sync::Arc, time::Duration};
 
-use async_std::{
-    sync::{channel, Receiver, Sender},
-    task,
-};
+use async_std::task;
 use async_trait::async_trait;
+use flume::{Receiver, Sender};
 use once_cell::sync::Lazy;
 use snips_nlu_lib::SnipsNluEngine;
 
@@ -159,7 +157,7 @@ pub async fn init_sender() -> (
     Sender<(Arc<Box<dyn BotMessage>>, String)>,
     Receiver<(Arc<Box<dyn BotMessage>>, String)>,
 ) {
-    let (sender, receiver) = channel(10);
+    let (sender, receiver) = flume::bounded::<(Arc<Box<dyn BotMessage>>, String)>(10);
     (sender, receiver)
 }
 
@@ -167,7 +165,7 @@ pub async fn init_sender() -> (
 pub async fn receiver(r: Receiver<(Arc<Box<dyn BotMessage>>, String)>) {
     let source = "DISTRIBUTOR";
     let info = util::logger::info(source);
-    while let Ok((message, text)) = r.recv().await {
+    while let Ok((message, text)) = r.recv_async().await {
         //Spawn a new task to handle the message
         let _ = task::spawn(async move { handler(message.dyn_clone(), text).await });
         info("Handler Thread Spawned");

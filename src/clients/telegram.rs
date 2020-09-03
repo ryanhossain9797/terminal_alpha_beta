@@ -1,4 +1,4 @@
-//--------TELGRAM CODE
+//--------TELEGRAM CODE
 use super::*;
 use async_std::task;
 use async_trait::async_trait;
@@ -41,8 +41,8 @@ pub(crate) async fn telegram_main(sender: Sender<(Arc<Box<dyn handlers::BotMessa
                         );
 
                         if let Some((msg, start_conversation)) = filter(&message).await {
-                            sender
-                                .send((
+                            let _ = sender
+                                .send_async((
                                     Arc::new(Box::new(TelegramMessage {
                                         message,
                                         start_conversation,

@@ -42,8 +42,9 @@ impl EventHandler for Handler {
         );
         if !message.author.bot {
             if let Some((msg, start_conversation)) = filter(&message, &ctx).await {
-                self.sender
-                    .send((
+                let _ = self
+                    .sender
+                    .send_async((
                         Arc::new(Box::new(DiscordMessage {
                             message,
                             ctx,
