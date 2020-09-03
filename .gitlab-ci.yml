@@ -17,9 +17,9 @@ before_script:
 - apt-get install -yqq --no-install-recommends build-essential
 - apt-get install -yqq --no-install-recommends clang
 
-# Use cargo to test the project
-test:cargo:
+# Use cargo to build the project
+build:cargo:
   script:
   - rustc --version && cargo --version      # Print version info for debugging
-  - cargo build --release
+  - rustup run nightly cargo build --release
  
