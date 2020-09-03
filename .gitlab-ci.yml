@@ -20,6 +20,8 @@ before_script:
 # Use cargo to build the project
 build:cargo:
   script:
+  - rustup target add nightly-x86_64-unknown-linux-gnu
+  - rustup default nightly
   - rustc --version && cargo --version      # Print version info for debugging
   - rustup run nightly cargo build --release
  
