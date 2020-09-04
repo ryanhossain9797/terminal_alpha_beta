@@ -105,6 +105,25 @@
       "matching_strictness": 1.0,
       "use_synonyms": true
     },
+    "reminderVar": {
+      "automatically_extensible": true,
+      "data": [
+        {
+          "synonyms": [
+            "go to sleep",
+            "eat",
+            "take a bath",
+            "order food",
+            "go shopping",
+            "submit work",
+            "start working"
+          ],
+          "value": "send day end report"
+        }
+      ],
+      "matching_strictness": 1.0,
+      "use_synonyms": true
+    },
     "searchWord": {
       "automatically_extensible": true,
       "data": [
@@ -121,6 +140,7 @@
       "matching_strictness": 1.0,
       "use_synonyms": true
     },
+    "snips/duration": {},
     "titleVar": {
       "automatically_extensible": true,
       "data": [],
@@ -1271,42 +1291,80 @@
         {
           "data": [
             {
-              "text": "remind me to"
+              "text": "remind me to "
+            },
+            {
+              "entity": "reminderVar",
+              "slot_name": "reminder",
+              "text": "send day end report"
+            },
+            {
+              "text": " after "
+            },
+            {
+              "entity": "snips/duration",
+              "slot_name": "duration",
+              "text": "three hours"
             }
           ]
         },
         {
           "data": [
             {
-              "text": "reminder"
+              "text": "reminder "
+            },
+            {
+              "entity": "reminderVar",
+              "slot_name": "reminder",
+              "text": "eat"
+            },
+            {
+              "text": " after "
+            },
+            {
+              "entity": "snips/duration",
+              "slot_name": "duration",
+              "text": "2 hours and 10 minutes"
             }
           ]
         },
         {
           "data": [
             {
-              "text": "set reminder"
+              "text": "set reminder after "
+            },
+            {
+              "entity": "snips/duration",
+              "slot_name": "duration",
+              "text": "five minutes"
+            },
+            {
+              "text": " to "
+            },
+            {
+              "entity": "reminderVar",
+              "slot_name": "reminder",
+              "text": "start working"
             }
           ]
         },
         {
           "data": [
             {
-              "text": "reminder for"
-            }
-          ]
-        },
-        {
-          "data": [
+              "text": "after "
+            },
             {
-              "text": "reminder at"
-            }
-          ]
-        },
-        {
-          "data": [
+              "entity": "snips/duration",
+              "slot_name": "duration",
+              "text": "4 days"
+            },
             {
-              "text": "after some time remind"
+              "text": " remind me to "
+            },
+            {
+              "entity": "reminderVar",
+              "slot_name": "reminder",
+              "text": "go to sleep"
             }
           ]
         }

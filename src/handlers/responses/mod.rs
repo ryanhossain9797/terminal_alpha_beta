@@ -67,6 +67,7 @@ pub fn load_text(key: &str) -> Option<String> {
     "identify-notfound": "We could not find that person, Tagged for future identification",
     "identify-dberror": "We could not access the people database",
     "info-fail": "We couldn't connect to the info database, forgive us",
+    "reminder-fail": "We didn't understand your reminder request, forgive us",
     "animation-start": "Greetings unit\nyou want to find a so called \"GIF\"?\nvery well, name one",
     "animation-fail": "forgive us, we couldn't aquire that animation",
     "search-start": "Greetings unit\nwhat do you want to search for?",

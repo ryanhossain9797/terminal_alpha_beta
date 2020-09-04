@@ -37,4 +37,5 @@ gluesql = { version = "0.1", features = ["sled-storage"] }
 mongodb = {version = "1.1", default-features = false, features = ["async-std-runtime"]}
 serde = "1.0"
 serde_json = "1.0"
+cached = "0.18"
 search_with_google = { git = "https://gitlab.com/zireael9797/search-with-google", version = "0.5" }

@@ -218,6 +218,9 @@
       "personWord": {
         "automatically_extensible": true
       },
+      "reminderVar": {
+        "automatically_extensible": true
+      },
       "searchWord": {
         "automatically_extensible": true
       },
@@ -252,7 +255,10 @@
         "title": "titleVar"
       },
       "notes": {},
-      "reminder": {},
+      "reminder": {
+        "duration": "snips/duration",
+        "reminder": "reminderVar"
+      },
       "search": {
         "searchTerm": "searchWord"
       },

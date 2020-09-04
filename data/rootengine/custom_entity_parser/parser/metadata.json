@@ -29,12 +29,16 @@
       "entity_parser": "parser_7"
     },
     {
-      "entity_identifier": "searchWord",
+      "entity_identifier": "reminderVar",
       "entity_parser": "parser_8"
     },
     {
-      "entity_identifier": "titleVar",
+      "entity_identifier": "searchWord",
       "entity_parser": "parser_9"
+    },
+    {
+      "entity_identifier": "titleVar",
+      "entity_parser": "parser_10"
     }
   ]
 }

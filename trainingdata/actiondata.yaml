@@ -141,13 +141,16 @@ utterances:
 ---
 type: intent
 name: reminder
+slots:
+  - name: reminder
+    entity: reminderVar
+  - name: duration
+    entity: snips/duration
 utterances:
-  - remind me to
-  - reminder
-  - set reminder
-  - reminder for
-  - reminder at
-  - after some time remind
+  - remind me to [reminder](send day end report) after [duration](three hours)
+  - reminder [reminder](eat) after [duration](2 hours and 10 minutes)
+  - set reminder after [duration](five minutes) to [reminder](start working)
+  - after [duration](4 days) remind me to [reminder](go to sleep)
 
 # chatWord entity
 ---
@@ -216,3 +219,11 @@ automatically_extensible: yes
 type: entity
 name: passVar
 automatically_extensible: yes
+
+# reminderVar entity 
+---
+type: entity
+name: reminderVar
+automatically_extensible: yes
+values:
+- [send day end report, go to sleep, eat, take a bath, order food, go shopping, submit work, start working]
