@@ -410,9 +410,9 @@ checksum = "631ae5198c9be5e753e5cc215e1bd73c2b466a3565173db433f52bb9d3e66dba"
 
 [[package]]
 name = "cached"
-version = "0.18.0"
+version = "0.19.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6aaf9983f274431ca66cd5a3b19952c774384f28ff42442afeb034bfc99ac994"
+checksum = "c64ed980e5a154a1a34e4de3d81d20aa985f93b1bb6ab030f7afa0208b74396e"
 dependencies = [
  "async-mutex",
  "cached_proc_macro",
@@ -421,9 +421,9 @@ dependencies = [
 
 [[package]]
 name = "cached_proc_macro"
-version = "0.3.0"
+version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "88cadcb98ede1333dd83303c296498461f3f622fdc2c7c47f2d442884f23dfb5"
+checksum = "d8b23e8d77fb99d0bc30e6602e32a5a8dc2195311813051ea475ae16bd338f06"
 dependencies = [
  "async-mutex",
  "darling",
@@ -3150,6 +3150,27 @@ dependencies = [
 ]
 
 [[package]]
+name = "serde-query"
+version = "0.1.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a4946d9ac85072c554a0ebbc0dd0901d2ced1f3a6eb80cee9b4a7b6aebe66220"
+dependencies = [
+ "serde",
+ "serde-query-derive",
+]
+
+[[package]]
+name = "serde-query-derive"
+version = "0.1.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "190c21b01337cde803dc33757cc60e625f73ce3afa8eb3fafee206c125209508"
+dependencies = [
+ "proc-macro2 1.0.19",
+ "quote 1.0.7",
+ "syn 1.0.39",
+]
+
+[[package]]
 name = "serde-value"
 version = "0.5.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3653,6 +3674,7 @@ dependencies = [
  "reqwest",
  "search_with_google",
  "serde",
+ "serde-query",
  "serde_json",
  "serenity",
  "snips-nlu-lib",
