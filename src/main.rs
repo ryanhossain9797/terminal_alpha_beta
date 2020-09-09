@@ -68,6 +68,11 @@ async fn services(
             handlers::receiver(receiver).await;
             Err::<!, &str>("Receiver Failed")
         }),
+        //Spawn a task to receive updates
+        task::spawn(async {
+            handlers::reminder_service().await;
+            Err::<!, &str>("Reminder Failed")
+        }),
     ])
     .await;
     Err::<!, &'static str>("Services failed")

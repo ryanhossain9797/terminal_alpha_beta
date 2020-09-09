@@ -1,7 +1,14 @@
 use super::*;
 use cached::proc_macro::cached;
+use flume::{Receiver, Sender};
+use once_cell::sync::Lazy;
 use serde_json::Value;
 use serde_query::{DeserializeQuery, Query};
+
+type TimedMessage = (Box<dyn BotMessage>, Duration, String);
+
+static REMINDER: Lazy<(Sender<TimedMessage>, Receiver<TimedMessage>)> =
+    Lazy::new(|| flume::bounded::<TimedMessage>(10));
 
 #[derive(DeserializeQuery, Copy, Clone)]
 struct ReminderDuration {
@@ -33,9 +40,6 @@ pub async fn start(bot_message: Box<dyn BotMessage>, json: String) {
         let confirmation_template = responses::load_text("reminder-confirmation")
             .unwrap_or_else(|| "(fallback) Reminder set: {reminder}".to_string());
 
-        let body_template = responses::load_text("reminder-body")
-            .unwrap_or_else(|| "(fallback) Reminder: {reminder}".to_string());
-
         bot_message
             .send_message(
                 confirmation_template
@@ -44,16 +48,10 @@ pub async fn start(bot_message: Box<dyn BotMessage>, json: String) {
             )
             .await;
 
-        task::spawn(async move {
-            task::sleep(delay).await;
-            bot_message
-                .send_message(
-                    body_template
-                        .replace("{reminder}", reminder.as_str())
-                        .into(),
-                )
-                .await;
-        });
+        let _ = (*REMINDER)
+            .0
+            .send_async((bot_message, delay, reminder))
+            .await;
     } else {
         bot_message
             .send_message(responses::load("reminder-fail").into())
@@ -96,4 +94,19 @@ fn duration_reminder_retriever(json_string: String) -> Option<(String, ReminderD
         }
     }
     None
+}
+
+pub async fn service() -> anyhow::Result<!> {
+    let body_template = responses::load_text("reminder-body")
+        .unwrap_or_else(|| "(fallback) Reminder: {reminder}".to_string());
+    while let Ok((bot_message, delay, reminder)) = (*REMINDER).1.recv_async().await {
+        let template = body_template.clone();
+        task::spawn(async move {
+            task::sleep(delay).await;
+            bot_message
+                .send_message(template.replace("{reminder}", reminder.as_str()).into())
+                .await;
+        });
+    }
+    Err(anyhow::anyhow!("reminder_service_crashed"))
 }

@@ -305,3 +305,7 @@ async fn natural_understanding(bot_message: Box<dyn BotMessage>, processed_text:
         extra::unsupported_notice(bot_message).await
     }
 }
+
+pub async fn reminder_service() {
+    let _ = actions::reminder::service().await;
+}
