@@ -1,18 +1,21 @@
 use super::*;
 use async_std::sync::Mutex;
 use gluesql::*;
-use once_cell::sync::Lazy;
-use std::cell::RefCell;
+use once_cell::sync::OnceCell;
 
-pub static GLUE: Lazy<Mutex<Option<RefCell<Glue>>>> = Lazy::new(|| Mutex::new(None));
+pub static GLUE: OnceCell<Mutex<Glue>> = OnceCell::new();
 
 pub async fn initialize() {
     let source = "GLUESQL_INIT";
     let error = util::logger::error(source);
+
+    if GLUE.get().is_some() {
+        return;
+    }
     match SledStorage::new("data/gluedb") {
         Ok(storage) => {
             let glue = Glue::new(storage);
-            *GLUE.lock().await = Some(RefCell::new(glue));
+            let _ = GLUE.set(Mutex::new(glue));
         }
         Err(err) => error(format!("{}", err).as_str()),
     }
@@ -32,14 +35,13 @@ pub async fn log_message(message: &str) -> anyhow::Result<()> {
     );
 
     let queries = parse(sql)?;
-    let glue_mutex = GLUE.lock().await;
-    let glue = glue_mutex.as_ref().ok_or_else(|| anyhow::anyhow!(""))?;
-
-    if (*glue.borrow_mut())
+    let glue_mutex = GLUE.get();
+    let glue = glue_mutex.ok_or_else(|| anyhow::anyhow!(""))?;
+    if (*glue.lock().await)
         .execute(queries.get(0).expect("there is no first query"))
         .is_ok()
     {
-        if (*glue.borrow_mut())
+        if (*glue.lock().await)
             .execute(queries.get(1).expect("there is no second query"))
             .is_ok()
         {

@@ -1,20 +1,23 @@
 use super::*;
-use async_std::sync::Mutex;
 use mongodb::{options::ClientOptions, Client, Database};
-use once_cell::sync::Lazy;
+use once_cell::sync::OnceCell;
 use std::env;
 
-static MONGO: Lazy<Mutex<Option<Database>>> = Lazy::new(|| Mutex::new(None));
+static MONGO: OnceCell<Database> = OnceCell::new();
 
 pub async fn initialize() {
     let source = "MONGO_INIT";
     let error = util::logger::error(source);
 
+    if MONGO.get().is_some() {
+        return;
+    }
+
     // no one else has initialized it yet, so
     if let Ok(token) = env::var("MONGO_AUTH") {
         if let Ok(client_options) = ClientOptions::parse(token.as_str()).await {
             if let Ok(client) = Client::with_options(client_options) {
-                *MONGO.lock().await = Some(client.database("terminal"));
+                let _ = MONGO.set(client.database("terminal"));
             } else {
                 error("Couldn't initialize client");
             }
@@ -26,15 +29,12 @@ pub async fn initialize() {
     }
 }
 
-pub async fn get() -> Option<Database> {
+pub async fn get() -> Option<&'static Database> {
     let source = "MONGO_GET";
     let info = util::logger::info(source);
 
-    match &*MONGO.lock().await {
-        Some(db) => {
-            info("DB already initialized");
-            Some(db.clone())
-        }
-        _ => None,
-    }
+    MONGO.get().map(|db| {
+        info("DB already initialized");
+        db
+    })
 }

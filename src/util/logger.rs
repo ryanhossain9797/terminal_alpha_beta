@@ -62,14 +62,16 @@ pub async fn log_message_db(message: &str) -> anyhow::Result<()> {
     );
 
     let queries = parse(sql.as_str())?;
-    let glue_mutex = crate::database::gluedb::GLUE.lock().await;
-    let glue = glue_mutex.as_ref().ok_or_else(|| anyhow::anyhow!(""))?;
 
-    if (*glue.borrow_mut())
+    let glue = crate::database::gluedb::GLUE
+        .get()
+        .ok_or_else(|| anyhow::anyhow!(""))?;
+
+    if (*glue.lock().await)
         .execute(queries.get(0).expect("there is no first query"))
         .is_ok()
     {
-        if (*glue.borrow_mut())
+        if (*glue.lock().await)
             .execute(queries.get(1).expect("there is no second query"))
             .is_ok()
         {
