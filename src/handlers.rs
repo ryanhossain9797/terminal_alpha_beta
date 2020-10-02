@@ -215,7 +215,7 @@ async fn natural_understanding(bot_message: Box<dyn BotMessage>, processed_text:
 
     let info = util::logger::info(source);
     //---Stuff required to run the NLU engine to get an intent
-    if let Ok(Some(intent)) = intent::parse(processed_text.as_str()).await {
+    if let Ok(Some(intent)) = intent::detect(processed_text.as_str()).await {
         match intent {
             Intent::Chat => chat::start(bot_message).await,
             Intent::Search => search::start(bot_message).await,
@@ -245,7 +245,7 @@ async fn natural_understanding(bot_message: Box<dyn BotMessage>, processed_text:
 //     let warning = util::logger::warning(source);
 //     let error = util::logger::error(source);
 //     //---Stuff required to run the NLU engine to get an intent
-//     if let Ok(result) = intent::parse_old(processed_text.as_str()).await {
+//     if let Ok(result) = intent::detect(processed_text.as_str()).await {
 //         if let Some(intent) = result.intent.intent_name.clone() {
 //             info(
 //                 format!(

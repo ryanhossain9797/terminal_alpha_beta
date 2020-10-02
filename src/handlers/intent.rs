@@ -31,7 +31,7 @@ pub enum Intent {
     Unknown,
 }
 
-pub async fn parse_old(processed_text: &str) -> anyhow::Result<IntentParserResult> {
+fn parse(processed_text: &str) -> anyhow::Result<IntentParserResult> {
     Ok((&*NLUENGINE)
         .as_ref()
         .ok_or_else(|| anyhow!("NLU engine inactive"))?
@@ -46,7 +46,7 @@ pub async fn parse_old(processed_text: &str) -> anyhow::Result<IntentParserResul
 }
 
 ///Uses natural understanding to determine intent if no state is found
-pub async fn parse(processed_text: &str) -> anyhow::Result<Option<Intent>> {
+pub async fn detect(processed_text: &str) -> anyhow::Result<Option<Intent>> {
     use Intent::{
         About, Animation, Chat, Corona, Creator, Functions, Greet, Identify, Info, Notes, Reminder,
         Search, Technology, Unknown,
@@ -59,18 +59,7 @@ pub async fn parse(processed_text: &str) -> anyhow::Result<Option<Intent>> {
     let error = util::logger::error(source);
 
     //---Stuff required to run the NLU engine to get an intent
-    if let Ok(result) = (&*NLUENGINE)
-        .as_ref()
-        .ok_or_else(|| anyhow!("NLU engine inactive"))?
-        .parse_with_alternatives(
-            processed_text,
-            None,
-            None,
-            INTENTS_ALTERNATIVES,
-            SLOTS_ALTERNATIVES,
-        )
-        .map_err(|err| anyhow!("Couldn't parse text {}", err))
-    {
+    if let Ok(result) = parse(processed_text) {
         if let Some(intent) = (&*NLUENGINE)
             .as_ref()
             .ok_or_else(|| anyhow!("NLU engine inactive"))?
