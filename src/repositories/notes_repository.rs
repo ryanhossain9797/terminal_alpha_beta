@@ -98,7 +98,7 @@ pub async fn delete_note(user_id: &str, note_id: &str) -> anyhow::Result<()> {
 
     match notes
         .delete_one(
-            doc! {"_id": oid::ObjectId::with_string(note_id).map_err(|_| anyhow::anyhow!("Invalid note id"))?, "id":user_id},
+            doc! {"_id": oid::ObjectId::with_string(note_id).map_err(|err| anyhow::anyhow!(format!("Invalid note id {}", err)))?, "id":user_id},
             None,
         )
         .await

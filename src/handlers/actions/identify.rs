@@ -28,7 +28,7 @@ pub async fn resume(bot_message: Box<dyn BotMessage>, name: String) {
         info("Found direct match");
         arc_message.send_message(person.description.into()).await;
     }
-    //---Else, try to get closes match
+    //---Else, try to get closest match
     else {
         info("No direct match, trying closest match");
         arc_message

@@ -1,14 +1,12 @@
 use super::*;
 
-use async_std::sync::Mutex;
 use async_std::task;
+use dashmap::DashMap;
 use once_cell::sync::Lazy;
-use std::collections::HashMap;
 use std::fmt;
 use std::time::Instant;
 
-static RECORDS: Lazy<Mutex<HashMap<String, UserStateRecord>>> =
-    Lazy::new(|| Mutex::new(HashMap::new()));
+static RECORDS: Lazy<DashMap<String, UserStateRecord>> = Lazy::new(DashMap::new);
 
 pub fn initialize_state() {
     Lazy::force(&RECORDS);
@@ -129,8 +127,7 @@ pub async fn retrieve_state(id: &str) -> Option<UserStateRecord> {
 
 ///Sets the Provided user's state to the Provided state
 async fn set_state(id: String, state: UserState) {
-    let mut map = RECORDS.lock().await;
-    map.insert(
+    RECORDS.insert(
         id,
         UserStateRecord {
             last: Instant::now(),
@@ -140,14 +137,12 @@ async fn set_state(id: String, state: UserState) {
 }
 ///Returns the state of the Provided user
 async fn get_state(id: &str) -> Option<UserStateRecord> {
-    let map = RECORDS.lock().await;
-    match map.get(id) {
-        Some(record) => Some(record.clone()),
+    match RECORDS.get(id) {
+        Some(record) => Some(record.value().clone()),
         None => None,
     }
 }
 ///Remove the Provided user's state
 async fn delete_state(id: &str) {
-    let mut map = RECORDS.lock().await;
-    map.remove(id);
+    RECORDS.remove(id);
 }

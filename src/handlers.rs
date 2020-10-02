@@ -1,9 +1,11 @@
 mod actions;
+mod intent;
 mod responses;
 mod state;
 
 use super::*;
 use actions::*;
+use intent::{Intent, NLUENGINE};
 use responses::*;
 use state::userstate::*;
 
@@ -13,7 +15,6 @@ use async_std::task;
 use async_trait::async_trait;
 use flume::{Receiver, Sender};
 use once_cell::sync::Lazy;
-use snips_nlu_lib::SnipsNluEngine;
 
 ///Long wait time, Used in runing system
 const LONGWAIT: u64 = 30;
@@ -23,12 +24,6 @@ const SHORTWAIT: u64 = 10;
 
 ///Currently set waitime
 const WAITTIME: u64 = LONGWAIT;
-
-///NLUENGINE: Snips NLU is used to pick actions when they don't match directly
-static NLUENGINE: Lazy<Option<SnipsNluEngine>> = Lazy::new(|| {
-    util::logger::show_status("\nLoading the nlu engine...");
-    SnipsNluEngine::from_path("data/rootengine/").ok()
-});
 
 ///HTTP client for..... HTTP things
 static CLIENT: Lazy<reqwest::Client> = Lazy::new(|| {
@@ -219,92 +214,108 @@ async fn natural_understanding(bot_message: Box<dyn BotMessage>, processed_text:
     let source = "NATURAL_ACTION_PICKER";
 
     let info = util::logger::info(source);
-    let warning = util::logger::warning(source);
-    let error = util::logger::error(source);
     //---Stuff required to run the NLU engine to get an intent
-    if let Some(engine) = &*NLUENGINE {
-        let intents_alternatives = 1;
-        let slots_alternatives = 1;
-        let result = engine
-            .parse_with_alternatives(
-                processed_text.as_str(),
-                None,
-                None,
-                intents_alternatives,
-                slots_alternatives,
-            )
-            .unwrap();
-
-        if let Some(intent) = result.intent.intent_name.clone() {
-            info(
-                format!(
-                    "{} with confidence {}",
-                    intent, result.intent.confidence_score
-                )
-                .as_str(),
-            );
-            //Tries to match against existing intents like chat, search etc
-            //Only valid if confidence greater than 0.5
-            if result.intent.confidence_score > 0.5 {
-                //---Convert result to json string
-                if let Ok(json) = serde_json::to_string(&result) {
-                    info("ACTION_PICKER: intent json is valid");
-                    let intent_str: &str = intent.as_str();
-                    info(format!("intent is {}", intent_str).as_str());
-                    match intent_str {
-                        "chat" => chat::start(bot_message).await,
-                        "search" => search::start(bot_message).await,
-                        "identify" => identify::start(bot_message).await,
-                        "animation" => animation::start(bot_message).await,
-                        "info" => info::start(bot_message, json).await,
-                        "notes" => notes::start(bot_message).await,
-                        "corona" => corona::start(bot_message).await,
-                        "reminder" => reminder::start(bot_message, json).await,
-                        "unknown" => extra::start(bot_message).await,
-                        _ => {
-                            //Forward to chat for more intents
-                            info("forwarding to chat");
-                            chat::resume(bot_message, intent.as_str()).await;
-                        }
-                    }
-                }
-                //If failed to parse the intent result as json
-                else {
-                    error("couldn't convert intent data to JSON");
-                    let _ = util::logger::log_message(processed_text.as_str())
-                        .await
-                        .map_err(|err| {
-                            error(format!("{}", err).as_str());
-                        });
-                    extra::unsupported_notice(bot_message).await
-                }
-            }
-            //Unsure intent if cannot match to any intent confidently
-            else {
-                warning("couldn't match an intent confidently");
-                let _ = util::logger::log_message(processed_text.as_str())
-                    .await
-                    .map_err(|err| {
-                        error(format!("{}", err).as_str());
-                    });
-                extra::unsupported_notice(bot_message).await
+    if let Ok(Some(intent)) = intent::parse(processed_text.as_str()).await {
+        match intent {
+            Intent::Chat => chat::start(bot_message).await,
+            Intent::Search => search::start(bot_message).await,
+            Intent::Identify => identify::start(bot_message).await,
+            Intent::Animation => animation::start(bot_message).await,
+            Intent::Info { json } => info::start(bot_message, json).await,
+            Intent::Notes => notes::start(bot_message).await,
+            Intent::Corona => corona::start(bot_message).await,
+            Intent::Reminder { json } => reminder::start(bot_message, json).await,
+            Intent::Unknown => extra::start(bot_message).await,
+            _ => {
+                //Forward to chat for more intents
+                info("forwarding to chat");
+                chat::resume(bot_message, intent).await;
             }
         }
-        //Unknown intent if can't match intent at all
-        else {
-            warning("unknown intent");
-            let _ = util::logger::log_message(processed_text.as_str())
-                .await
-                .map_err(|err| {
-                    error(format!("{}", err).as_str());
-                });
-            extra::unsupported_notice(bot_message).await
-        };
     } else {
-        error("NLU engine load failed");
         extra::unsupported_notice(bot_message).await
     }
 }
+
+// ///Uses natural understanding to determine intent if no state is found
+// async fn natural_understanding(bot_message: Box<dyn BotMessage>, processed_text: String) {
+//     let source = "NATURAL_ACTION_PICKER";
+
+//     let info = util::logger::info(source);
+//     let warning = util::logger::warning(source);
+//     let error = util::logger::error(source);
+//     //---Stuff required to run the NLU engine to get an intent
+//     if let Ok(result) = intent::parse_old(processed_text.as_str()).await {
+//         if let Some(intent) = result.intent.intent_name.clone() {
+//             info(
+//                 format!(
+//                     "{} with confidence {}",
+//                     intent, result.intent.confidence_score
+//                 )
+//                 .as_str(),
+//             );
+//             //Tries to match against existing intents like chat, search etc
+//             //Only valid if confidence greater than 0.5
+//             if result.intent.confidence_score > 0.5 {
+//                 //---Convert result to json string
+//                 if let Ok(json) = serde_json::to_string(&result) {
+//                     info("ACTION_PICKER: intent json is valid");
+//                     let intent_str: &str = intent.as_str();
+//                     info(format!("intent is {}", intent_str).as_str());
+//                     match intent_str {
+//                         "chat" => chat::start(bot_message).await,
+//                         "search" => search::start(bot_message).await,
+//                         "identify" => identify::start(bot_message).await,
+//                         "animation" => animation::start(bot_message).await,
+//                         "info" => info::start(bot_message, json).await,
+//                         "notes" => notes::start(bot_message).await,
+//                         "corona" => corona::start(bot_message).await,
+//                         "reminder" => reminder::start(bot_message, json).await,
+//                         "unknown" => extra::start(bot_message).await,
+//                         _ => {
+//                             //Forward to chat for more intents
+//                             info("forwarding to chat");
+//                             chat::resume(bot_message, intent.as_str()).await;
+//                         }
+//                     }
+//                 }
+//                 //If failed to parse the intent result as json
+//                 else {
+//                     error("couldn't convert intent data to JSON");
+//                     let _ = util::logger::log_message(processed_text.as_str())
+//                         .await
+//                         .map_err(|err| {
+//                             error(format!("{}", err).as_str());
+//                         });
+//                     extra::unsupported_notice(bot_message).await
+//                 }
+//             }
+//             //Unsure intent if cannot match to any intent confidently
+//             else {
+//                 warning("couldn't match an intent confidently");
+//                 let _ = util::logger::log_message(processed_text.as_str())
+//                     .await
+//                     .map_err(|err| {
+//                         error(format!("{}", err).as_str());
+//                     });
+//                 extra::unsupported_notice(bot_message).await
+//             }
+//         }
+//         //Unknown intent if can't match intent at all
+//         else {
+//             warning("unknown intent");
+//             let _ = util::logger::log_message(processed_text.as_str())
+//                 .await
+//                 .map_err(|err| {
+//                     error(format!("{}", err).as_str());
+//                 });
+//             extra::unsupported_notice(bot_message).await
+//         };
+//     } else {
+//         error("NLU engine load failed");
+//         extra::unsupported_notice(bot_message).await
+//     }
+// }
 
 pub async fn reminder_service() {
     let _ = actions::reminder::service().await;
