@@ -4,15 +4,15 @@ use std::fs::OpenOptions;
 use std::io::prelude::*;
 
 ///Returns a closure that logs the message with blue text
-pub fn info<'a>(source: &'a str) -> impl Fn(&str) + 'a {
+pub fn info(source: &str) -> impl Fn(&str) + '_ {
     move |msg: &str| println!("{}: {}", source.green(), msg.blue())
 }
 ///Returns a closure that logs the message with yellow text
-pub fn warning<'a>(source: &'a str) -> impl Fn(&str) + 'a {
+pub fn warning(source: &str) -> impl Fn(&str) + '_ {
     move |msg: &str| println!("{}: {}", source.green(), msg.yellow())
 }
 ///Returns a closure that logs the message with red text
-pub fn error<'a>(source: &'a str) -> impl Fn(&str) + 'a {
+pub fn error(source: &str) -> impl Fn(&str) + '_ {
     move |msg: &str| println!("{}: {}", source.green(), msg.red())
 }
 ///Returns a closure that logs the message with white on purple text

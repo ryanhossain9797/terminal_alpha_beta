@@ -14,13 +14,13 @@ pub async fn start(bot_message: Box<dyn BotMessage>) {
 ///Fires wipe history command for Chat state.
 pub async fn resume(bot_message: Box<dyn BotMessage>, intent: Intent) {
     use extra::custom_response as response;
-
+    use Intent::{About, Creator, Functions, Greet, Technology};
     match intent {
-        Intent::Greet => response(bot_message, "chat-greet").await,
-        Intent::About => response(bot_message, "chat-about").await,
-        Intent::Technology => response(bot_message, "chat-technology").await,
-        Intent::Functions => response(bot_message, "chat-functions").await,
-        Intent::Creator => response(bot_message, "chat-creator").await,
+        Greet => response(bot_message, "chat-greet").await,
+        About => response(bot_message, "chat-about").await,
+        Technology => response(bot_message, "chat-technology").await,
+        Functions => response(bot_message, "chat-functions").await,
+        Creator => response(bot_message, "chat-creator").await,
         _ => extra::unsupported_notice(bot_message).await,
     }
 }
