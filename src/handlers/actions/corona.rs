@@ -37,13 +37,17 @@ pub async fn start(bot_message: Box<dyn BotMessage>) {
         });
         bot_message.send_message(new_cases_message.into()).await;
     }
+
     task::sleep(Duration::from_secs(1)).await;
+
     if let Ok(top_total) = maybe_top_total {
         let mut total_cases_message = responses::load("corona-total-header")
             .unwrap_or_else(|| "(Fallback) Top total cases:\n".to_string());
+
         let total_template = responses::load_text("corona-total").unwrap_or_else(|| {
             "(Fallback)\nname: {1}\ntotal confirmed: {2}\ntotal deaths: {3}\n".to_string()
         });
+
         total_cases_message = (top_total)
             .iter()
             .fold(total_cases_message, |message, country| {
@@ -56,7 +60,9 @@ pub async fn start(bot_message: Box<dyn BotMessage>) {
             });
         bot_message.send_message(total_cases_message.into()).await;
     }
+
     task::sleep(Duration::from_secs(1)).await;
+
     match maybe_aggregate {
         (Ok(confirmed), Ok(deaths)) => {
             bot_message

@@ -34,20 +34,14 @@ pub fn load(key: &str) -> Option<String> {
 ///Loads a response from the JSON storage for the provided key.  
 ///Returns the Option<String>, May be None if response is not found.
 pub fn load_text(key: &str) -> Option<String> {
-    if let Some(json) = &*RESPONSES {
-        match &json[key] {
-            Value::String(response) => {
-                return Some(response.to_string());
-            }
-            Value::Array(responses) => {
-                if let Some(Value::String(response)) = responses.choose(&mut rand::thread_rng()) {
-                    return Some(response.to_string());
-                }
-            }
-            _ => {}
-        }
+    match &(*RESPONSES).as_ref()?[key] {
+        Value::String(response) => response.to_string().into(),
+        Value::Array(responses) => match responses.choose(&mut rand::thread_rng())? {
+            Value::String(response) => response.to_string().into(),
+            _ => None,
+        },
+        _ => None,
     }
-    None
 }
 
 /*

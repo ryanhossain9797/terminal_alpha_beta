@@ -1,6 +1,6 @@
 use super::*;
 
-//Tests any unknown intent
+///Tests any unknown intent
 pub async fn start(bot_message: Box<dyn BotMessage>) {
     let source = "START_UNKNOWN";
     let info = util::logger::info(source);
@@ -38,7 +38,7 @@ pub async fn unsupported_notice(bot_message: Box<dyn BotMessage>) {
 }
 
 ///Notice to send when the stored state for a user is not supported.  
-//Usually represents an Error or a WIP state.
+///Usually represents an Error or a WIP state.
 pub async fn unknown_state_notice(bot_message: Box<dyn BotMessage>) {
     bot_message.send_message(load("unknown-state").into()).await;
 }

@@ -138,5 +138,5 @@ pub async fn detect(processed_text: &str) -> anyhow::Result<Option<Intent>> {
                 });
         };
     }
-    return Err(anyhow::anyhow!("Nlu failed"));
+    Err(anyhow::anyhow!("Nlu failed"))
 }
