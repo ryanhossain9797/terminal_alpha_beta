@@ -1,9 +1,10 @@
 use super::*;
+use util::logger;
 
 use anyhow::anyhow;
 
 use once_cell::sync::Lazy;
-use snips_nlu_lib::{ontology::IntentParserResult, SnipsNluEngine};
+use snips_nlu_lib::SnipsNluEngine;
 
 const INTENTS_ALTERNATIVES: usize = 1;
 const SLOTS_ALTERNATIVES: usize = 1;
@@ -31,18 +32,30 @@ pub enum Intent {
     Unknown,
 }
 
-fn parse(processed_text: &str) -> anyhow::Result<IntentParserResult> {
-    Ok((&*NLUENGINE)
-        .as_ref()
-        .ok_or_else(|| anyhow!("NLU engine inactive"))?
-        .parse_with_alternatives(
-            processed_text,
-            None,
-            None,
-            INTENTS_ALTERNATIVES,
-            SLOTS_ALTERNATIVES,
+fn parse(processed_text: &str) -> anyhow::Result<(f32, String, String)> {
+    Ok({
+        let result = (&*NLUENGINE)
+            .as_ref()
+            .ok_or_else(|| anyhow!("NLU engine inactive"))?
+            .parse_with_alternatives(
+                processed_text,
+                None,
+                None,
+                INTENTS_ALTERNATIVES,
+                SLOTS_ALTERNATIVES,
+            )
+            .map_err(|err| anyhow::anyhow!(format!("{}", err)))?;
+        (
+            result.intent.confidence_score,
+            result
+                .intent
+                .intent_name
+                .as_ref()
+                .ok_or_else(|| anyhow::anyhow!("no intent name".to_string()))?
+                .clone(),
+            serde_json::to_string(&result)?,
         )
-        .map_err(|err| anyhow!("Couldn't parse text {}", err))?)
+    })
 }
 
 ///Uses natural understanding to determine intent if no state is found
@@ -54,89 +67,49 @@ pub async fn detect(processed_text: &str) -> anyhow::Result<Option<Intent>> {
 
     let source = "NATURAL_ACTION_PICKER";
 
-    let info = util::logger::info(source);
-    let warning = util::logger::warning(source);
-    let error = util::logger::error(source);
+    let (info, warning, error) = (
+        logger::info(source),
+        logger::warning(source),
+        logger::error(source),
+    );
 
     //---Stuff required to run the NLU engine to get an intent
-    if let Ok(result) = parse(processed_text) {
-        if let Some(intent) = (&*NLUENGINE)
-            .as_ref()
-            .ok_or_else(|| anyhow!("NLU engine inactive"))?
-            .parse_with_alternatives(
-                processed_text,
-                None,
-                None,
-                INTENTS_ALTERNATIVES,
-                SLOTS_ALTERNATIVES,
-            )
-            .map_err(|err| anyhow!("Couldn't parse text {}", err))?
-            .intent
-            .intent_name
-            .clone()
-        {
-            info(
-                format!(
-                    "{} with confidence {}",
-                    intent, result.intent.confidence_score
-                )
-                .as_str(),
-            );
-            //Tries to match against existing intents like chat, search etc
-            //Only valid if confidence greater than 0.5
-            if result.intent.confidence_score > 0.5 {
-                //---Convert result to json string
-                if let Ok(json) = serde_json::to_string(&result) {
-                    info("ACTION_PICKER: intent json is valid");
-                    let intent_str: &str = intent.as_str();
-                    info(format!("intent is {}", intent_str).as_str());
-                    return match intent_str {
-                        "chat" => Ok(Some(Chat)),
-                        "search" => Ok(Some(Search)),
-                        "identify" => Ok(Some(Identify)),
-                        "animation" => Ok(Some(Animation)),
-                        "info" => Ok(Some(Info { json })),
-                        "notes" => Ok(Some(Notes)),
-                        "corona" => Ok(Some(Corona)),
-                        "reminder" => Ok(Some(Reminder { json })),
-                        "unknown" => Ok(Some(Unknown)),
-                        "greet" => Ok(Some(Greet)),
-                        "about" => Ok(Some(About)),
-                        "technology" => Ok(Some(Technology)),
-                        "functions" => Ok(Some(Functions)),
-                        "creator" => Ok(Some(Creator)),
-                        _ => Ok(None),
-                    };
-                }
-                //If failed to parse the intent result as json
-                else {
-                    error("couldn't convert intent data to JSON");
-                    let _ = util::logger::log_message(processed_text)
-                        .await
-                        .map_err(|err| {
-                            error(format!("{}", err).as_str());
-                        });
-                }
-            }
-            //Unsure intent if cannot match to any intent confidently
-            else {
-                warning("couldn't match an intent confidently");
-                let _ = util::logger::log_message(processed_text)
-                    .await
-                    .map_err(|err| {
-                        error(format!("{}", err).as_str());
-                    });
-            }
+    if let Ok((confidence, intent_name, json)) = parse(processed_text) {
+        info(format!("{} with confidence {}", intent_name, confidence).as_str());
+
+        let intent_name = intent_name.as_str();
+        //Tries to match against existing intents like chat, search etc
+        //Only valid if confidence greater than 0.5
+        if confidence > 0.5 {
+            info(format!("intent is {}", intent_name).as_str());
+            return Ok(match intent_name {
+                "chat" => Chat.into(),
+                "search" => Search.into(),
+                "identify" => Identify.into(),
+                "animation" => Animation.into(),
+                "info" => Info { json }.into(),
+                "notes" => Notes.into(),
+                "corona" => Corona.into(),
+                "reminder" => Reminder { json }.into(),
+                "unknown" => Unknown.into(),
+                "greet" => Greet.into(),
+                "about" => About.into(),
+                "technology" => Technology.into(),
+                "functions" => Functions.into(),
+                "creator" => Creator.into(),
+                _ => None,
+            });
         }
-        //Unknown intent if can't match intent at all
+        //Unsure intent if cannot match to any intent confidently
         else {
-            warning("unknown intent");
+            warning("couldn't match an intent confidently");
             let _ = util::logger::log_message(processed_text)
                 .await
                 .map_err(|err| {
                     error(format!("{}", err).as_str());
                 });
-        };
+        }
     }
+
     Err(anyhow::anyhow!("Nlu failed"))
 }
