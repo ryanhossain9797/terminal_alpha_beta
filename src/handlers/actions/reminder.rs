@@ -1,5 +1,4 @@
 use super::*;
-use cached::proc_macro::cached;
 use flume::{Receiver, Sender};
 use once_cell::sync::Lazy;
 use serde_json::Value;
@@ -25,10 +24,10 @@ struct ReminderDuration {
     seconds: u64,
 }
 
-pub async fn start(bot_message: Box<dyn BotMessage>, json: String) {
+pub async fn start(bot_message: Box<dyn BotMessage>, json: serde_json::Value) {
     let source = "START_REMINDER";
     let info = util::logger::info(source);
-    let maybe_title_pass = duration_reminder_retriever(json);
+    let maybe_title_pass = duration_reminder_retriever(&json);
 
     if let Some((reminder, duration)) = maybe_title_pass {
         info(reminder.as_str());
@@ -61,38 +60,33 @@ pub async fn start(bot_message: Box<dyn BotMessage>, json: String) {
 
 ///Retrieves the title and pass for the info intent.  
 ///Parses the intent JSON.
-#[cached]
-fn duration_reminder_retriever(json_string: String) -> Option<(String, ReminderDuration)> {
-    let json_result: Result<Value, _> = serde_json::from_str(json_string.as_str());
-    if let Ok(json) = json_result {
-        let mut maybe_reminder: Option<&str> = None;
-        let mut maybe_duration: Option<ReminderDuration> = None;
-        let val = &json["slots"];
-        if let Value::Array(values) = val {
-            for slot in values {
-                if let Value::String(entity) = &slot["slotName"] {
-                    if let Value::String(value) = &slot["rawValue"] {
-                        //If slotName is title
-                        if entity == &String::from("reminder") {
-                            maybe_reminder = Some(&value);
-                        //If slotName is pass
-                        } else if entity == &String::from("duration") {
-                            if let Ok(duration_string) =
-                                serde_json::from_str::<Query<ReminderDuration>>(
-                                    format!("{}", slot).as_str(),
-                                )
-                            {
-                                maybe_duration = Some(duration_string.into());
-                            }
+fn duration_reminder_retriever(json: &serde_json::Value) -> Option<(String, ReminderDuration)> {
+    let mut maybe_reminder: Option<&str> = None;
+    let mut maybe_duration: Option<ReminderDuration> = None;
+    let val = &json["slots"];
+    if let Value::Array(values) = val {
+        for slot in values {
+            if let Value::String(entity) = &slot["slotName"] {
+                if let Value::String(value) = &slot["rawValue"] {
+                    //If slotName is title
+                    if entity == &String::from("reminder") {
+                        maybe_reminder = Some(&value);
+                    //If slotName is pass
+                    } else if entity == &String::from("duration") {
+                        if let Ok(duration_string) = serde_json::from_str::<Query<ReminderDuration>>(
+                            format!("{}", slot).as_str(),
+                        ) {
+                            maybe_duration = Some(duration_string.into());
                         }
                     }
                 }
             }
         }
-        if let (Some(reminder), Some(duration)) = (maybe_reminder, maybe_duration) {
-            return Some((reminder.to_string(), duration));
-        }
     }
+    if let (Some(reminder), Some(duration)) = (maybe_reminder, maybe_duration) {
+        return Some((reminder.to_string(), duration));
+    }
+
     None
 }
 

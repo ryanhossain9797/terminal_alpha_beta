@@ -8,9 +8,10 @@ pub fn info(source: &str) -> impl Fn(&str) + '_ {
     move |msg: &str| println!("{}: {}", source.green(), msg.blue())
 }
 ///Returns a closure that logs the message with yellow text
-pub fn warning(source: &str) -> impl Fn(&str) + '_ {
-    move |msg: &str| println!("{}: {}", source.green(), msg.yellow())
-}
+// pub fn warning(source: &str) -> impl Fn(&str) + '_ {
+//     move |msg: &str| println!("{}: {}", source.green(), msg.yellow())
+// }
+
 ///Returns a closure that logs the message with red text
 pub fn error(source: &str) -> impl Fn(&str) + '_ {
     move |msg: &str| println!("{}: {}", source.green(), msg.red())

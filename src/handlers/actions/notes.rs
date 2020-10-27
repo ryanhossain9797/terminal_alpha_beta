@@ -54,7 +54,7 @@ pub async fn start(bot_message: Box<dyn BotMessage>) {
 ///Performs some action on notes.  
 ///Continues Notes state.  
 ///Updates timeout.
-pub async fn resume(bot_message: Box<dyn BotMessage>, command: String, note_ids: Vec<String>) {
+pub async fn resume(bot_message: Box<dyn BotMessage>, command: String, note_ids: &[String]) {
     let source = "CONTINUE_NOTES";
 
     let info = util::logger::info(source);
@@ -77,7 +77,7 @@ pub async fn resume(bot_message: Box<dyn BotMessage>, command: String, note_ids:
     // If for some reason the user gives an invalid command
     // The previous IDs will be used again
     // If user modifies the notes, this note_ids will be replaced by the updated note ids
-    let mut new_note_ids = note_ids.clone();
+    let mut new_note_ids = note_ids.to_vec();
 
     // Load the dynamic template for notes
     let note_template =

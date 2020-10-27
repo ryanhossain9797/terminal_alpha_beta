@@ -1,11 +1,10 @@
 use super::*;
-use cached::proc_macro::cached;
 use serde_json::Value;
 
-pub async fn start(bot_message: Box<dyn BotMessage>, json: String) {
+pub async fn start(bot_message: Box<dyn BotMessage>, json: serde_json::Value) {
     let source = "START_INFO";
     let info = util::logger::info(source);
-    match title_pass_retriever(json) {
+    match title_pass_retriever(&json) {
         Some((title, pass)) => {
             info(format!("Info title pass is {}, {}", title, pass).as_str());
             match info_service::get_info(title, pass).await {
@@ -28,31 +27,27 @@ pub async fn start(bot_message: Box<dyn BotMessage>, json: String) {
 
 ///Retrieves the title and pass for the info intent.  
 ///Parses the intent JSON.
-#[cached]
-fn title_pass_retriever(json_string: String) -> Option<(String, String)> {
-    let json_result: Result<Value, _> = serde_json::from_str(json_string.as_str());
-    if let Ok(json) = json_result {
-        let mut title: Option<&str> = None;
-        let mut pass: Option<&str> = None;
-        let val = &json["slots"];
-        if let Value::Array(list) = val {
-            for slot in list {
-                if let Value::String(entity) = &slot["slotName"] {
-                    if let Value::String(value) = &slot["rawValue"] {
-                        //If slotName is title
-                        if entity == &String::from("title") {
-                            title = Some(&value);
-                        //If slotName is pass
-                        } else if entity == &String::from("pass") {
-                            pass = Some(&value);
-                        }
+fn title_pass_retriever(json: &serde_json::Value) -> Option<(String, String)> {
+    let mut title: Option<&str> = None;
+    let mut pass: Option<&str> = None;
+    let val = &json["slots"];
+    if let Value::Array(list) = val {
+        for slot in list {
+            if let Value::String(entity) = &slot["slotName"] {
+                if let Value::String(value) = &slot["rawValue"] {
+                    //If slotName is title
+                    if entity == &String::from("title") {
+                        title = Some(&value);
+                    //If slotName is pass
+                    } else if entity == &String::from("pass") {
+                        pass = Some(&value);
                     }
                 }
             }
         }
-        if let (Some(title), Some(pass)) = (title, pass) {
-            return Some((title.to_string(), pass.to_string()));
-        }
+    }
+    if let (Some(title), Some(pass)) = (title, pass) {
+        return Some((title.to_string(), pass.to_string()));
     }
     None
 }

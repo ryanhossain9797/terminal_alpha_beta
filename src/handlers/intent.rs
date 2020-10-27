@@ -20,10 +20,10 @@ pub enum Intent {
     Search,
     Identify,
     Animation,
-    Info { json: String },
+    Info { json: serde_json::Value },
     Notes,
     Corona,
-    Reminder { json: String },
+    Reminder { json: serde_json::Value },
     Greet,
     About,
     Technology,
@@ -32,7 +32,7 @@ pub enum Intent {
     Unknown,
 }
 
-fn parse(processed_text: &str) -> anyhow::Result<(f32, String, String)> {
+fn parse(processed_text: &str) -> anyhow::Result<(f32, String, serde_json::Value)> {
     Ok({
         let result = (&*NLUENGINE)
             .as_ref()
@@ -53,36 +53,28 @@ fn parse(processed_text: &str) -> anyhow::Result<(f32, String, String)> {
                 .as_ref()
                 .ok_or_else(|| anyhow::anyhow!("no intent name".to_string()))?
                 .clone(),
-            serde_json::to_string(&result)?,
+            serde_json::to_value(&result)?,
         )
     })
 }
 
 ///Uses natural understanding to determine intent if no state is found
 pub async fn detect(processed_text: &str) -> anyhow::Result<Option<Intent>> {
-    use Intent::{
-        About, Animation, Chat, Corona, Creator, Functions, Greet, Identify, Info, Notes, Reminder,
-        Search, Technology, Unknown,
-    };
-
     let source = "NATURAL_ACTION_PICKER";
-
-    let (info, warning, error) = (
-        logger::info(source),
-        logger::warning(source),
-        logger::error(source),
-    );
+    let info = logger::info(source);
 
     //---Stuff required to run the NLU engine to get an intent
     if let Ok((confidence, intent_name, json)) = parse(processed_text) {
-        info(format!("{} with confidence {}", intent_name, confidence).as_str());
-
-        let intent_name = intent_name.as_str();
-        //Tries to match against existing intents like chat, search etc
         //Only valid if confidence greater than 0.5
         if confidence > 0.5 {
+            use Intent::{
+                About, Animation, Chat, Corona, Creator, Functions, Greet, Identify, Info, Notes,
+                Reminder, Search, Technology, Unknown,
+            };
+
             info(format!("intent is {}", intent_name).as_str());
-            return Ok(match intent_name {
+
+            Ok(match intent_name.as_str() {
                 "chat" => Chat.into(),
                 "search" => Search.into(),
                 "identify" => Identify.into(),
@@ -98,18 +90,13 @@ pub async fn detect(processed_text: &str) -> anyhow::Result<Option<Intent>> {
                 "functions" => Functions.into(),
                 "creator" => Creator.into(),
                 _ => None,
-            });
+            })
+        } else {
+            logger::log_message(processed_text).await?;
+            Err(anyhow::anyhow!("No intent with sufficient confidence"))
         }
-        //Unsure intent if cannot match to any intent confidently
-        else {
-            warning("couldn't match an intent confidently");
-            let _ = util::logger::log_message(processed_text)
-                .await
-                .map_err(|err| {
-                    error(format!("{}", err).as_str());
-                });
-        }
+    } else {
+        logger::log_message(processed_text).await?;
+        Err(anyhow::anyhow!("Intent matching failed"))
     }
-
-    Err(anyhow::anyhow!("Nlu failed"))
 }
