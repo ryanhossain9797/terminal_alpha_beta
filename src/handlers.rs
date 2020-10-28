@@ -175,32 +175,32 @@ async fn handler(bot_message: Box<dyn BotMessage>, processed_text: String) {
 
     //If record from user exists (A Some(record)), some conversation is ongoing
     //So will be replied regardless of groups or mentions and stuff ('will_respond' is ignored)
-    if let Some(record) = retrieve_state(&bot_message.get_id()).await.as_ref() {
-        //"cancel last" will shut off the conversation
-        if let "cancel last" = processed_text.as_str() {
-            purge_state(bot_message).await;
-        } else {
-            use UserState::{Animation, Identify, Notes, Search, Unknown};
-            info(format!("Saved state is {}", (*record).state).as_str());
-            match &(record.to_owned().state) {
-                Search => search::resume(bot_message, processed_text.clone()).await,
-                Identify => identify::resume(bot_message, processed_text.clone()).await,
-                Animation => animation::resume(bot_message, processed_text.clone()).await,
-                Notes(data) => notes::resume(bot_message, processed_text.clone(), data).await,
-                Unknown => extra::unknown_state_notice(bot_message).await,
+    let record = retrieve_state(&bot_message.get_id()).await;
+
+    //"cancel last" will shut off the conversation
+    if "cancel last" == processed_text.as_str() && record.state != UserState::Initial {
+        purge_state(bot_message).await;
+    } else {
+        use UserState::{Animation, Identify, Initial, Notes, Search, Unknown};
+        info(format!("Saved state is {}", record.state).as_str());
+        match record.state {
+            Initial => {
+                if bot_message.start_conversation() {
+                    match processed_text.as_str() {
+                        "cancel last" => {
+                            bot_message
+                                .send_message(responses::load("cancel-nothing").into())
+                                .await //---cancel last does nothing as there's nothing to cancel
+                        }
+                        _ => natural_understanding(bot_message, processed_text).await, //---hand over to the natural understanding system for advanced matching
+                    }
+                }
             }
-        }
-    }
-    //---if record from user doesn't exist, but is either IN A PRIVATE CHAT or MENTIONED IN A GROUP CHAT
-    //---will start processing new info
-    else if bot_message.start_conversation() {
-        match processed_text.as_str() {
-            "cancel last" => {
-                bot_message
-                    .send_message(responses::load("cancel-nothing").into())
-                    .await //---cancel last does nothing as there's nothing to cancel
-            }
-            _ => natural_understanding(bot_message, processed_text).await, //---hand over to the natural understanding system for advanced matching
+            Search => search::resume(bot_message, processed_text.clone()).await,
+            Identify => identify::resume(bot_message, processed_text.clone()).await,
+            Animation => animation::resume(bot_message, processed_text.clone()).await,
+            Notes(data) => notes::resume(bot_message, processed_text.clone(), &data).await,
+            Unknown => extra::unknown_state_notice(bot_message).await,
         }
     }
 }

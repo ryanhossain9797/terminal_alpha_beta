@@ -23,6 +23,7 @@ pub struct UserStateRecord {
 #[derive(PartialEq, Eq, Clone)]
 pub enum UserState {
     // Chat,
+    Initial,
     Search,
     Identify,
     Animation,
@@ -33,6 +34,7 @@ pub enum UserState {
 impl fmt::Display for UserState {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
+            UserState::Initial => write!(f, "Initial"),
             UserState::Search => write!(f, "Search"),
             UserState::Identify => write!(f, "Identify"),
             UserState::Animation => write!(f, "Animation"),
@@ -60,47 +62,40 @@ pub async fn set_timed_state(bot_message: Arc<Box<dyn BotMessage>>, state: UserS
     let source = "SET_TIMED_STATE";
     let info = util::logger::info(source);
 
+    if state == UserState::Initial {
+        return;
+    }
+
     //---Insert the intent
     set_state(bot_message.get_id(), state.clone()).await;
 
     let _ = task::spawn(async move {
         //Wait a specified amount of time before deleting user state
         task::sleep(Duration::from_secs(WAITTIME)).await;
-        if let Some(record) = get_state(bot_message.get_id().as_str()).await {
-            //If the current state matches pending deletion state
-            if format!("{}", record.state) == format!("{}", state) {
-                //If the current state is older than threshold wait time
-                if record.last.elapsed() > Duration::from_secs(WAITTIME) {
-                    delete_state(bot_message.get_id().as_str()).await;
-                    info(format!("deleted state record '{}'", state).as_str());
-                    bot_message
-                        .send_message(responses::load("delay-notice").into())
-                        .await;
+        let record = get_state(bot_message.get_id().as_str()).await;
+        //If the current state matches pending deletion state
+        if format!("{}", record.state) == format!("{}", state) {
+            //If the current state is older than threshold wait time
+            if record.last.elapsed() > Duration::from_secs(WAITTIME) {
+                delete_state(bot_message.get_id().as_str()).await;
+                info(format!("deleted state record '{}'", state).as_str());
+                bot_message
+                    .send_message(responses::load("delay-notice").into())
+                    .await;
 
-                //If the current state is not older than threshold wait time
-                } else {
-                    info("aborted record delete due to recency");
-                }
-            //If the current state doesn't match pending deletion state
+            //If the current state is not older than threshold wait time
             } else {
-                info(
-                    format!(
-                        "aborted record delete for '{}' because current state is '{}'",
-                        state, record.state
-                    )
-                    .as_str(),
-                );
+                info("aborted record delete due to recency");
             }
-        //If user has no pending state
+        //If the current state doesn't match pending deletion state
         } else {
             info(
                 format!(
-                    "aborted record delete for '{}', there is no recorded state for '{}'",
-                    state,
-                    bot_message.get_id()
+                    "aborted record delete for '{}' because current state is '{}'",
+                    state, record.state
                 )
                 .as_str(),
-            )
+            );
         }
     });
 }
@@ -112,21 +107,23 @@ pub async fn cancel_matching_state(bot_message: Arc<Box<dyn BotMessage>>, state:
     let source = "PURGE_HISTORY";
     let info = util::logger::info(source);
 
-    if let Some(r) = get_state(bot_message.get_id().as_str()).await {
-        if r.state == state {
-            delete_state(bot_message.get_id().as_str()).await;
-            info(format!("deleted state record for {}", state).as_str());
-        }
+    if state == get_state(bot_message.get_id().as_str()).await.state {
+        delete_state(bot_message.get_id().as_str()).await;
+        info(format!("deleted state record for {}", state).as_str());
     }
 }
 
 ///Public API of fetching user's state
-pub async fn retrieve_state(id: &str) -> Option<UserStateRecord> {
+pub async fn retrieve_state(id: &str) -> UserStateRecord {
     get_state(id).await
 }
 
 ///Sets the Provided user's state to the Provided state
 async fn set_state(id: String, state: UserState) {
+    if state == UserState::Initial {
+        return;
+    }
+
     RECORDS.insert(
         id,
         UserStateRecord {
@@ -136,10 +133,13 @@ async fn set_state(id: String, state: UserState) {
     );
 }
 ///Returns the state of the Provided user
-async fn get_state(id: &str) -> Option<UserStateRecord> {
+async fn get_state(id: &str) -> UserStateRecord {
     match RECORDS.get(id) {
-        Some(record) => Some(record.value().clone()),
-        None => None,
+        Some(record) => record.value().clone(),
+        None => UserStateRecord {
+            state: UserState::Initial,
+            last: Instant::now(),
+        },
     }
 }
 ///Remove the Provided user's state
