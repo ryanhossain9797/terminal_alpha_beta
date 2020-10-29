@@ -1,10 +1,10 @@
 use super::*;
-
 use async_std::task;
 use dashmap::DashMap;
 use once_cell::sync::Lazy;
 use std::fmt;
 use std::time::Instant;
+pub use user_state_model::{UserState, UserStateRecord};
 
 static RECORDS: Lazy<DashMap<String, UserStateRecord>> = Lazy::new(DashMap::new);
 
@@ -12,34 +12,51 @@ pub fn initialize_state() {
     Lazy::force(&RECORDS);
 }
 
-///A user state record holds an individual user's state.  
-///Last holds when it was last updated.
-#[derive(Clone)]
-pub struct UserStateRecord {
-    pub state: UserState,
-    pub last: Instant,
-}
+mod user_state_model {
+    use super::*;
+    ///A user state record holds an individual user's state.  
+    ///Last holds when it was last updated.
+    #[derive(Clone)]
+    pub struct UserStateRecord {
+        state: UserState,
+        last: Instant,
+    }
 
-#[derive(PartialEq, Eq, Clone)]
-pub enum UserState {
-    // Chat,
-    Initial,
-    Search,
-    Identify,
-    Animation,
-    Notes(Vec<String>),
-    Unknown,
-}
+    impl UserStateRecord {
+        pub fn new(state: UserState, last: Instant) -> Self {
+            Self { state, last }
+        }
 
-impl fmt::Display for UserState {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match *self {
-            UserState::Initial => write!(f, "Initial"),
-            UserState::Search => write!(f, "Search"),
-            UserState::Identify => write!(f, "Identify"),
-            UserState::Animation => write!(f, "Animation"),
-            UserState::Notes(_) => write!(f, "Notes"),
-            UserState::Unknown => write!(f, "Unknown"),
+        pub fn state(&self) -> &UserState {
+            &self.state
+        }
+
+        pub fn last(&self) -> &Instant {
+            &self.last
+        }
+    }
+
+    #[derive(PartialEq, Eq, Clone)]
+    pub enum UserState {
+        // Chat,
+        Initial,
+        Search,
+        Identify,
+        Animation,
+        Notes(Vec<String>),
+        Unknown,
+    }
+
+    impl fmt::Display for UserState {
+        fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+            match *self {
+                UserState::Initial => write!(f, "Initial"),
+                UserState::Search => write!(f, "Search"),
+                UserState::Identify => write!(f, "Identify"),
+                UserState::Animation => write!(f, "Animation"),
+                UserState::Notes(_) => write!(f, "Notes"),
+                UserState::Unknown => write!(f, "Unknown"),
+            }
         }
     }
 }
@@ -74,9 +91,9 @@ pub async fn set_timed_state(bot_message: Arc<Box<dyn BotMessage>>, state: UserS
         task::sleep(Duration::from_secs(WAITTIME)).await;
         let record = get_state(bot_message.get_id().as_str()).await;
         //If the current state matches pending deletion state
-        if format!("{}", record.state) == format!("{}", state) {
+        if format!("{}", record.state()) == format!("{}", state) {
             //If the current state is older than threshold wait time
-            if record.last.elapsed() > Duration::from_secs(WAITTIME) {
+            if record.last().elapsed() > Duration::from_secs(WAITTIME) {
                 delete_state(bot_message.get_id().as_str()).await;
                 info(format!("deleted state record '{}'", state).as_str());
                 bot_message
@@ -92,7 +109,8 @@ pub async fn set_timed_state(bot_message: Arc<Box<dyn BotMessage>>, state: UserS
             info(
                 format!(
                     "aborted record delete for '{}' because current state is '{}'",
-                    state, record.state
+                    state,
+                    record.state()
                 )
                 .as_str(),
             );
@@ -107,7 +125,7 @@ pub async fn cancel_matching_state(bot_message: Arc<Box<dyn BotMessage>>, state:
     let source = "PURGE_HISTORY";
     let info = util::logger::info(source);
 
-    if state == get_state(bot_message.get_id().as_str()).await.state {
+    if state == *get_state(bot_message.get_id().as_str()).await.state() {
         delete_state(bot_message.get_id().as_str()).await;
         info(format!("deleted state record for {}", state).as_str());
     }
@@ -124,22 +142,13 @@ async fn set_state(id: String, state: UserState) {
         return;
     }
 
-    RECORDS.insert(
-        id,
-        UserStateRecord {
-            last: Instant::now(),
-            state,
-        },
-    );
+    RECORDS.insert(id, UserStateRecord::new(state, Instant::now()));
 }
 ///Returns the state of the Provided user
 async fn get_state(id: &str) -> UserStateRecord {
     match RECORDS.get(id) {
         Some(record) => record.value().clone(),
-        None => UserStateRecord {
-            state: UserState::Initial,
-            last: Instant::now(),
-        },
+        None => UserStateRecord::new(UserState::Initial, Instant::now()),
     }
 }
 ///Remove the Provided user's state

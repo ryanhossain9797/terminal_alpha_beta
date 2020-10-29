@@ -31,6 +31,10 @@ static CLIENT: Lazy<reqwest::Client> = Lazy::new(|| {
     reqwest::Client::new()
 });
 
+pub async fn reminder_service() -> anyhow::Result<!> {
+    actions::reminder::service().await
+}
+
 ///Initializes a variety of things
 ///- State management system
 ///- NLU engine
@@ -157,7 +161,7 @@ pub async fn init_sender() -> (
 }
 
 ///Distributes incoming requests to separate threads
-pub async fn receiver(r: Receiver<(Arc<Box<dyn BotMessage>>, String)>) {
+pub async fn receiver(r: Receiver<(Arc<Box<dyn BotMessage>>, String)>) -> anyhow::Result<!> {
     let source = "DISTRIBUTOR";
     let info = util::logger::info(source);
     while let Ok((message, text)) = r.recv_async().await {
@@ -165,6 +169,7 @@ pub async fn receiver(r: Receiver<(Arc<Box<dyn BotMessage>>, String)>) {
         let _ = task::spawn(async move { handler(message.dyn_clone(), text).await });
         info("Handler Thread Spawned");
     }
+    Err(anyhow::anyhow!("Message receiver failed"))
 }
 
 ///First place to handle messages after distribution
@@ -178,62 +183,18 @@ async fn handler(bot_message: Box<dyn BotMessage>, processed_text: String) {
     let record = retrieve_state(&bot_message.get_id()).await;
 
     //"cancel last" will shut off the conversation
-    if "cancel last" == processed_text.as_str() && record.state != UserState::Initial {
+    if "cancel last" == processed_text.as_str() && *record.state() != UserState::Initial {
         purge_state(bot_message).await;
     } else {
         use UserState::{Animation, Identify, Initial, Notes, Search, Unknown};
-        info(format!("Saved state is {}", record.state).as_str());
-        match record.state {
-            Initial => {
-                if bot_message.start_conversation() {
-                    match processed_text.as_str() {
-                        "cancel last" => {
-                            bot_message
-                                .send_message(responses::load("cancel-nothing").into())
-                                .await //---cancel last does nothing as there's nothing to cancel
-                        }
-                        _ => natural_understanding(bot_message, processed_text).await, //---hand over to the natural understanding system for advanced matching
-                    }
-                }
-            }
-            Search => search::resume(bot_message, processed_text.clone()).await,
-            Identify => identify::resume(bot_message, processed_text.clone()).await,
-            Animation => animation::resume(bot_message, processed_text.clone()).await,
-            Notes(data) => notes::resume(bot_message, processed_text.clone(), &data).await,
+        info(format!("Saved state is {}", record.state()).as_str());
+        match record.state() {
+            Initial => initiate::start_interaction(bot_message, processed_text).await,
+            Search => search::resume(bot_message, processed_text).await,
+            Identify => identify::resume(bot_message, processed_text).await,
+            Animation => animation::resume(bot_message, processed_text).await,
+            Notes(data) => notes::resume(bot_message, processed_text, &data).await,
             Unknown => extra::unknown_state_notice(bot_message).await,
         }
     }
-}
-
-///Uses natural understanding to determine intent if no state is found
-async fn natural_understanding(bot_message: Box<dyn BotMessage>, processed_text: String) {
-    let source = "NATURAL_ACTION_PICKER";
-
-    let info = util::logger::info(source);
-    //---Stuff required to run the NLU engine to get an intent
-    if let Ok(Some(intent)) = intent::detect(processed_text.as_str()).await {
-        use Intent::{Animation, Chat, Corona, Identify, Info, Notes, Reminder, Search, Unknown};
-        match intent {
-            Chat => chat::start(bot_message).await,
-            Search => search::start(bot_message).await,
-            Identify => identify::start(bot_message).await,
-            Animation => animation::start(bot_message).await,
-            Info { json } => info::start(bot_message, json).await,
-            Notes => notes::start(bot_message).await,
-            Corona => corona::start(bot_message).await,
-            Reminder { json } => reminder::start(bot_message, json).await,
-            Unknown => extra::start(bot_message).await,
-            _ => {
-                //Forward to chat for more intents
-                info("forwarding to chat");
-                chat::resume(bot_message, intent).await;
-            }
-        }
-    } else {
-        extra::unsupported_notice(bot_message).await
-    }
-}
-
-pub async fn reminder_service() {
-    let _ = actions::reminder::service().await;
 }

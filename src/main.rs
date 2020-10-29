@@ -55,40 +55,29 @@ async fn main() {
 
 async fn services(
     receiver: Receiver<(Arc<Box<dyn handlers::BotMessage>>, String)>,
-) -> Result<!, &'static str> {
-    let _ = futures::future::try_join_all(vec![
+) -> anyhow::Result<!> {
+    futures::future::try_join_all(vec![
         //Spawn a task to receive updates
-        task::spawn(async {
-            handlers::receiver(receiver).await;
-            Err::<!, &str>("Receiver Failed")
-        }),
-        //Spawn a task to receive updates
-        task::spawn(async {
-            handlers::reminder_service().await;
-            Err::<!, &str>("Reminder Failed")
-        }),
+        task::spawn(async { handlers::receiver(receiver).await }),
+        //Spawn a task to spawn reminder notifications
+        task::spawn(async { handlers::reminder_service().await }),
     ])
-    .await;
-    Err::<!, &'static str>("Services failed")
+    .await?;
+
+    Err(anyhow::anyhow!("Services failed"))
 }
 
 async fn clients(
     sender: Sender<(Arc<Box<dyn handlers::BotMessage>>, String)>,
-) -> Result<!, &'static str> {
+) -> anyhow::Result<!> {
     let telegram_sender = sender.clone();
     let discord_sender = sender;
-    let _ = futures::future::try_join_all(vec![
-        //Spawn a task for telegram
-        task::spawn(async {
-            run_telegram(telegram_sender).await;
-            Err::<!, &str>("Telegram failed")
-        }),
-        //Spawn a task for discord
-        task::spawn(async {
-            run_discord(discord_sender).await;
-            Err::<!, &str>("Discord failed")
-        }),
+
+    futures::future::try_join_all(vec![
+        task::spawn(async { run_telegram(telegram_sender).await }),
+        task::spawn(async { run_discord(discord_sender).await }),
     ])
-    .await;
-    Err::<!, &'static str>("Clients failed")
+    .await?;
+
+    Err(anyhow::anyhow!("Clients failed"))
 }

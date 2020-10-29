@@ -102,5 +102,5 @@ pub async fn service() -> anyhow::Result<!> {
                 .await;
         });
     }
-    Err(anyhow::anyhow!("reminder_service_crashed"))
+    Err(anyhow::anyhow!("Reminder service crashed"))
 }

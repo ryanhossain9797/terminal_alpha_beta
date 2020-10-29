@@ -22,7 +22,9 @@ pub static API: Lazy<Api> = Lazy::new(|| {
 });
 
 ///Main Starting point for the telegram api.
-pub(crate) async fn telegram_main(sender: Sender<(Arc<Box<dyn handlers::BotMessage>>, String)>) {
+pub(crate) async fn telegram_main(
+    sender: Sender<(Arc<Box<dyn handlers::BotMessage>>, String)>,
+) -> anyhow::Result<!> {
     let source = "TELEGRAM_CLIENT";
     let error = util::logger::error(source);
     let mut stream = API.stream();
@@ -67,6 +69,7 @@ pub(crate) async fn telegram_main(sender: Sender<(Arc<Box<dyn handlers::BotMessa
             }
         }
     }
+    Err(anyhow::anyhow!("Telegram failed"))
 }
 
 ///Filter basically does some spring cleaning.

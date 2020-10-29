@@ -10,7 +10,9 @@ use std::env;
 use std::time::Duration;
 
 ///Main Starting point for the Discord api.
-pub(crate) async fn discord_main(sender: Sender<(Arc<Box<dyn handlers::BotMessage>>, String)>) {
+pub(crate) async fn discord_main(
+    sender: Sender<(Arc<Box<dyn handlers::BotMessage>>, String)>,
+) -> anyhow::Result<!> {
     // Configure the client with your Discord bot token in the environment.
     let token = env::var("DISCORD_TOKEN").expect("Expected a token in the environment");
 
@@ -26,6 +28,7 @@ pub(crate) async fn discord_main(sender: Sender<(Arc<Box<dyn handlers::BotMessag
     if let Err(why) = client.start().await {
         util::logger::show_status(format!("Client error: {:?}", why).as_str());
     }
+    Err(anyhow::anyhow!("Discord failed"))
 }
 
 struct Handler {
