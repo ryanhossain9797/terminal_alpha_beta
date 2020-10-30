@@ -8,13 +8,19 @@ pub async fn start_interaction(bot_message: Box<dyn BotMessage>, processed_text:
                     .send_message(responses::load("cancel-nothing").into())
                     .await //---cancel last does nothing as there's nothing to cancel
             }
-            _ => natural_understanding(bot_message, processed_text).await, //---hand over to the natural understanding system for advanced matching
+            _ => {
+                //---hand over to the natural understanding system for advanced matching
+                let _ = natural_understanding(bot_message, processed_text).await;
+            }
         }
     }
 }
 
 ///Uses natural understanding to determine intent if no state is found
-async fn natural_understanding(bot_message: Box<dyn BotMessage>, processed_text: String) {
+async fn natural_understanding(
+    bot_message: Box<dyn BotMessage>,
+    processed_text: String,
+) -> anyhow::Result<()> {
     let source = "NATURAL_ACTION_PICKER";
 
     let info = util::logger::info(source);
@@ -38,6 +44,8 @@ async fn natural_understanding(bot_message: Box<dyn BotMessage>, processed_text:
             }
         }
     } else {
-        extra::unsupported_notice(bot_message).await
+        util::logger::log_message(processed_text.as_str()).await?;
+        extra::unsupported_notice(bot_message).await;
     }
+    Ok(())
 }

@@ -7,7 +7,7 @@ use super::*;
 use actions::*;
 use intent::{Intent, NLUENGINE};
 use responses::*;
-use state::userstate::*;
+use state::*;
 
 use std::{fs::*, sync::Arc, time::Duration};
 
