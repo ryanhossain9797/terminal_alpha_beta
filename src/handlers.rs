@@ -14,16 +14,17 @@ use std::{fs::*, sync::Arc, time::Duration};
 use async_std::task;
 use async_trait::async_trait;
 use flume::{Receiver, Sender};
+use futures::stream::FuturesUnordered;
 use once_cell::sync::Lazy;
 
 ///Long wait time, Used in runing system
-const LONGWAIT: u64 = 30;
+const LONG_WAIT: u64 = 30;
 #[allow(dead_code)]
 ///Short wait time, Used usually for testing
-const SHORTWAIT: u64 = 10;
+const SHORT_WAIT: u64 = 10;
 
 ///Currently set waitime
-const WAITTIME: u64 = LONGWAIT;
+const WAIT_TIME: u64 = LONG_WAIT;
 
 ///HTTP client for..... HTTP things
 static CLIENT: Lazy<reqwest::Client> = Lazy::new(|| {

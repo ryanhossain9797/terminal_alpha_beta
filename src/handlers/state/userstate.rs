@@ -1,6 +1,7 @@
 use super::*;
 use async_std::task;
 use dashmap::DashMap;
+use futures::stream::FuturesUnordered;
 use once_cell::sync::Lazy;
 use std::fmt;
 use std::time::Instant;
@@ -88,12 +89,12 @@ pub async fn set_timed_state(bot_message: Arc<Box<dyn BotMessage>>, state: UserS
 
     let _ = task::spawn(async move {
         //Wait a specified amount of time before deleting user state
-        task::sleep(Duration::from_secs(WAITTIME)).await;
+        task::sleep(Duration::from_secs(WAIT_TIME)).await;
         let record = get_state(bot_message.get_id().as_str()).await;
         //If the current state matches pending deletion state
         if format!("{}", record.state()) == format!("{}", state) {
             //If the current state is older than threshold wait time
-            if record.last().elapsed() > Duration::from_secs(WAITTIME) {
+            if record.last().elapsed() > Duration::from_secs(WAIT_TIME) {
                 delete_state(bot_message.get_id().as_str()).await;
                 info(format!("deleted state record '{}'", state).as_str());
                 bot_message
