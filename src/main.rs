@@ -61,6 +61,8 @@ async fn services(
         task::spawn(async { handlers::receiver(receiver).await }),
         //Spawn a task to spawn reminder notifications
         task::spawn(async { handlers::reminder_service().await }),
+        //Spawn a task to clean up expired states
+        task::spawn(async { handlers::state_expiry_service().await }),
     ])
     .await?;
 

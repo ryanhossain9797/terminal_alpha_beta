@@ -16,6 +16,7 @@ pub async fn run_telegram(
 ) -> anyhow::Result<!> {
     telegram_main(sender).await
 }
+
 ///Just an entry point to start the discord api.
 pub async fn run_discord(
     sender: Sender<(Arc<Box<dyn handlers::BotMessage>>, String)>,

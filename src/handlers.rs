@@ -35,6 +35,10 @@ pub async fn reminder_service() -> anyhow::Result<!> {
     actions::reminder::service().await
 }
 
+pub async fn state_expiry_service() -> anyhow::Result<!> {
+    state::expiry::service().await
+}
+
 ///Initializes a variety of things
 ///- State management system
 ///- NLU engine
