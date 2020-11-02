@@ -27,12 +27,16 @@ async fn main() {
         dotenv().expect("Couldn't load environment variables");
         status("Starting up Terminal Alpha Beta\n");
         status("-----Starting TELEGRAM and DISCORD-----\n"); //---Prints the Date of compilation, added at compile time
+
         if let Some(date) = option_env!("COMPILED_AT") {
             status(&format!("Compile date {}\n", date));
         }
+
         status("Initializing everything");
+
         handlers::initialize().await;
         let _ = database::initialize().await;
+
         status("\nInitialized Everything\n");
     }
     let (sender, receiver) = handlers::init_sender().await;
