@@ -10,7 +10,7 @@ use std::env;
 use std::time::Duration;
 
 ///Main Starting point for the Discord api.
-pub(crate) async fn discord_main(
+pub async fn main(
     sender: Sender<(Arc<Box<dyn handlers::BotMessage>>, String)>,
 ) -> anyhow::Result<!> {
     // Configure the client with your Discord bot token in the environment.

@@ -31,7 +31,6 @@ async fn main() {
             status(&format!("Compile date {}\n", date));
         }
         status("Initializing everything");
-        clients::initialize();
         handlers::initialize().await;
         let _ = database::initialize().await;
         status("\nInitialized Everything\n");
