@@ -5,20 +5,18 @@ use once_cell::sync::OnceCell;
 
 pub static GLUE: OnceCell<Mutex<Glue>> = OnceCell::new();
 
-pub async fn initialize() {
-    let source = "GLUESQL_INIT";
-    let error = util::logger::error(source);
+pub async fn initialize() -> anyhow::Result<()> {
+    // let source = "GLUESQL_INIT";
 
     if GLUE.get().is_some() {
-        return;
+        return Ok(());
     }
-    match SledStorage::new("data/gluedb") {
-        Ok(storage) => {
-            let glue = Glue::new(storage);
-            let _ = GLUE.set(Mutex::new(glue));
-        }
-        Err(err) => error(format!("{}", err).as_str()),
-    }
+
+    GLUE.set(Mutex::new(Glue::new(
+        SledStorage::new("data/gluedb")
+            .map_err(|_| anyhow::anyhow!("sled storage initilization failed"))?,
+    )))
+    .map_err(|_| anyhow::anyhow!("already initialized"))
 }
 
 #[allow(dead_code)]

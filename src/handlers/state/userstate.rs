@@ -1,7 +1,6 @@
 use super::*;
 use async_std::task;
 use dashmap::DashMap;
-use futures::stream::FuturesUnordered;
 use once_cell::sync::Lazy;
 use std::fmt;
 use std::time::Instant;
@@ -117,9 +116,16 @@ pub async fn set_timed_state(bot_message: Arc<Box<dyn BotMessage>>, state: UserS
             );
         }
     });
+
+    //cancer zone
+    // expiry::CLEAN_QUEUE.write().await.push(Box::pin(async move {
+    //     async_std::task::sleep(Duration::from_secs(10)).await;
+    //     println!("yo");
+    // }));
+    // println!("timed state set");
 }
 
-///Immediately cancel's the state IF provided state matches current state.  
+///Immediately cancel's the state IF provided state matches current state.
 ///Used to remove state after state action is completed.  
 ///No notice provided.
 pub async fn cancel_matching_state(bot_message: Arc<Box<dyn BotMessage>>, state: UserState) {

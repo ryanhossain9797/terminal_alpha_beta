@@ -33,7 +33,7 @@ async fn main() {
         status("Initializing everything");
         clients::initialize();
         handlers::initialize().await;
-        database::initialize().await;
+        let _ = database::initialize().await;
         status("\nInitialized Everything\n");
     }
     let (sender, receiver) = handlers::init_sender().await;
@@ -62,7 +62,7 @@ async fn services(
         //Spawn a task to spawn reminder notifications
         task::spawn(async { handlers::reminder_service().await }),
         //Spawn a task to clean up expired states
-        task::spawn(async { handlers::state_expiry_service().await }),
+        // task::spawn(async { handlers::state_expiry_service().await }),
     ])
     .await?;
 

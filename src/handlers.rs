@@ -14,7 +14,6 @@ use std::{fs::*, sync::Arc, time::Duration};
 use async_std::task;
 use async_trait::async_trait;
 use flume::{Receiver, Sender};
-use futures::stream::FuturesUnordered;
 use once_cell::sync::Lazy;
 
 ///Long wait time, Used in runing system
@@ -36,9 +35,9 @@ pub async fn reminder_service() -> anyhow::Result<!> {
     actions::reminder::service().await
 }
 
-pub async fn state_expiry_service() -> anyhow::Result<!> {
-    state::expiry::service().await
-}
+// pub async fn state_expiry_service() -> anyhow::Result<!> {
+//     state::expiry::service().await
+// }
 
 ///Initializes a variety of things
 ///- State management system
