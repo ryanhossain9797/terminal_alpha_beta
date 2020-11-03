@@ -7,7 +7,11 @@ pub async fn start(bot_message: Box<dyn BotMessage>) {
     info("Unknown state initiated");
     let arc_message = Arc::new(bot_message);
 
-    set_timed_state(Arc::clone(&arc_message), UserState::Unknown).await;
+    let _ = handle_event(UserEventData::new(
+        UserEvent::Unknown,
+        Arc::clone(&arc_message),
+    ))
+    .await;
 
     arc_message
         .send_message(responses::load("intentional-unknownstate").into())

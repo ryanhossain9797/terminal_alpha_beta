@@ -32,7 +32,12 @@ pub async fn start(bot_message: Box<dyn BotMessage>) {
             });
             // Only update state on successful notes retrieval
             // And of course the history cleaner
-            set_timed_state(Arc::clone(&arc_message), UserState::Notes(note_ids)).await;
+            let _ = handle_event(UserEventData::new(
+                UserEvent::Notes(note_ids),
+                Arc::clone(&arc_message),
+            ))
+            .await;
+
             info(format!("record added for id {}", id).as_str());
             arc_message
                 .send_message(MsgCount::MultiMsg(vec![
@@ -164,5 +169,9 @@ pub async fn resume(bot_message: Box<dyn BotMessage>, command: String, note_ids:
     }
 
     // And of course clear history
-    set_timed_state(Arc::clone(&arc_message), UserState::Notes(new_note_ids)).await;
+    let _ = handle_event(UserEventData::new(
+        UserEvent::Notes(new_note_ids),
+        Arc::clone(&arc_message),
+    ))
+    .await;
 }

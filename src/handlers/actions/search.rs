@@ -10,8 +10,12 @@ pub async fn start(bot_message: Box<dyn BotMessage>) {
 
     //---Make a cloneable ARC version of the Message
     let arc_message = Arc::new(bot_message);
-    //---Fire off wipe
-    set_timed_state(Arc::clone(&arc_message), UserState::Search).await;
+    //---Fire off event
+    let _ = handle_event(UserEventData::new(
+        UserEvent::Search,
+        Arc::clone(&arc_message),
+    ))
+    .await;
 
     arc_message
         .send_message(responses::load("search-start").into())
@@ -24,8 +28,13 @@ pub async fn resume(bot_message: Box<dyn BotMessage>, processed_text: String) {
     let source = "CONTINUE_SEARCH";
     let info = util::logger::info(source);
     let arc_message = Arc::new(bot_message);
+
     //---Delete the UserState Record
-    cancel_matching_state(Arc::clone(&arc_message), UserState::Search).await;
+    let _ = handle_event(UserEventData::new(
+        UserEvent::Undo(UserState::Search),
+        Arc::clone(&arc_message),
+    ))
+    .await;
 
     let search_result =
         services::search_service::get_search_results_by_query(processed_text.as_str()).await;

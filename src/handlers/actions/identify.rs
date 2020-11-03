@@ -8,7 +8,13 @@ pub async fn start(bot_message: Box<dyn BotMessage>) {
     let info = util::logger::info(source);
     info("identify initiated");
     let arc_message = Arc::new(bot_message);
-    set_timed_state(Arc::clone(&arc_message), UserState::Identify).await;
+
+    let _ = handle_event(UserEventData::new(
+        UserEvent::Identify,
+        Arc::clone(&arc_message),
+    ))
+    .await;
+
     arc_message
         .send_message(responses::load("identify-start").into())
         .await;
@@ -20,7 +26,13 @@ pub async fn resume(bot_message: Box<dyn BotMessage>, name: String) {
     let source = "CONTINUE_IDENTIFY";
     let info = util::logger::info(source);
     let arc_message = Arc::new(bot_message);
-    cancel_matching_state(Arc::clone(&arc_message), UserState::Identify).await;
+
+    let _ = handle_event(UserEventData::new(
+        UserEvent::Undo(UserState::Identify),
+        Arc::clone(&arc_message),
+    ))
+    .await;
+
     info("beginning identification");
 
     //---If exact match on name

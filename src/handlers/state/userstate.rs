@@ -64,11 +64,24 @@ mod user_state_model {
 ///Removes current state with a cancellation message.  
 ///Doesn't care about state.  
 ///Used with the cancel last command.
-pub async fn purge_state(bot_message: Box<dyn BotMessage>) {
+pub async fn purge_state(bot_message: Arc<Box<dyn BotMessage>>) {
     delete_state(bot_message.get_id().as_str()).await;
     bot_message
         .send_message(responses::load("cancel-state").into())
         .await;
+}
+
+///Immediately cancel's the state IF provided state matches current state.
+///Used to remove state after state action is completed.  
+///No notice provided.
+pub async fn cancel_matching_state(bot_message: Arc<Box<dyn BotMessage>>, state: UserState) {
+    let source = "PURGE_HISTORY";
+    let info = util::logger::info(source);
+
+    if state == *get_state(bot_message.get_id().as_str()).await.state() {
+        delete_state(bot_message.get_id().as_str()).await;
+        info(format!("deleted state record for {}", state).as_str());
+    }
 }
 
 ///Sets the user's state to the provided state
@@ -123,19 +136,6 @@ pub async fn set_timed_state(bot_message: Arc<Box<dyn BotMessage>>, state: UserS
     //     println!("yo");
     // }));
     // println!("timed state set");
-}
-
-///Immediately cancel's the state IF provided state matches current state.
-///Used to remove state after state action is completed.  
-///No notice provided.
-pub async fn cancel_matching_state(bot_message: Arc<Box<dyn BotMessage>>, state: UserState) {
-    let source = "PURGE_HISTORY";
-    let info = util::logger::info(source);
-
-    if state == *get_state(bot_message.get_id().as_str()).await.state() {
-        delete_state(bot_message.get_id().as_str()).await;
-        info(format!("deleted state record for {}", state).as_str());
-    }
 }
 
 ///Public API of fetching user's state

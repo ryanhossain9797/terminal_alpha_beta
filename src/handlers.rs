@@ -8,6 +8,7 @@ use actions::*;
 use intent::{Intent, NLUENGINE};
 use responses::*;
 use state::*;
+use state::{handle_event, UserEvent, UserEventData};
 
 use std::{fs::*, sync::Arc, time::Duration};
 
@@ -188,7 +189,7 @@ async fn handler(bot_message: Box<dyn BotMessage>, processed_text: String) {
 
     //"cancel last" will shut off the conversation
     if "cancel last" == processed_text.as_str() && *record.state() != UserState::Initial {
-        purge_state(bot_message).await;
+        let _ = handle_event(UserEventData::new(UserEvent::Reset, Arc::new(bot_message))).await;
     } else {
         use UserState::{Animation, Identify, Initial, Notes, Search, Unknown};
         info(format!("Saved state is {}", record.state()).as_str());
