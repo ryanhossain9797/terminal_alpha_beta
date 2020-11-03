@@ -14,13 +14,12 @@ pub async fn main(
     sender: Sender<(Arc<Box<dyn handlers::BotMessage>>, String)>,
 ) -> anyhow::Result<!> {
     // Configure the client with your Discord bot token in the environment.
-    let token = env::var("DISCORD_TOKEN").expect("Expected a token in the environment");
+    let token = env::var("DISCORD_TOKEN")?;
 
     // Create a new instance of the Client, logging in as a bot. This will
     let mut client = Client::builder(token)
         .event_handler(Handler { sender })
-        .await
-        .expect("Err creating client");
+        .await?;
 
     // Finally, start a single shard, and start listening to events
     // Shards will automatically attempt to reconnect, and will perform
