@@ -17,7 +17,7 @@ pub async fn main(
     let token = env::var("DISCORD_TOKEN").expect("Expected a token in the environment");
 
     // Create a new instance of the Client, logging in as a bot. This will
-    let mut client = Client::new(token.as_str())
+    let mut client = Client::builder(token)
         .event_handler(Handler { sender })
         .await
         .expect("Err creating client");
@@ -25,9 +25,7 @@ pub async fn main(
     // Finally, start a single shard, and start listening to events
     // Shards will automatically attempt to reconnect, and will perform
     // exponential backoff until it reconnects.
-    if let Err(why) = client.start().await {
-        util::logger::show_status(format!("Client error: {:?}", why).as_str());
-    }
+    client.start().await?;
     Err(anyhow::anyhow!("Discord failed"))
 }
 
