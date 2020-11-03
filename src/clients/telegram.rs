@@ -3,7 +3,7 @@ use super::*;
 use async_std::task;
 use async_trait::async_trait;
 use futures::StreamExt;
-use once_cell::sync::Lazy;
+use once_cell::sync::OnceCell;
 use regex::Regex;
 use std::env;
 use std::sync::Arc;
@@ -16,10 +16,7 @@ use telegram_bot::{
 //--- Waiting time for failed connections
 const WAITTIME: u64 = 10;
 
-pub static API: Lazy<Api> = Lazy::new(|| {
-    let token = env::var("TELEGRAM_TOKEN").expect("TELEGRAM_TOKEN not set");
-    Api::new(token)
-});
+pub static API: OnceCell<Api> = OnceCell::new();
 
 ///Main Starting point for the telegram api.
 pub async fn main(
@@ -27,46 +24,55 @@ pub async fn main(
 ) -> anyhow::Result<!> {
     let source = "TELEGRAM_CLIENT";
     let error = util::logger::error(source);
-    Lazy::force(&API);
-    let mut stream = API.stream();
-    util::logger::show_status("Telegram is connected!\n");
-    //Fetch new updates via long poll method
-    while let Some(update_result) = stream.next().await {
-        match update_result {
-            //If the received update contains a new message...
-            Ok(update) => {
-                if let UpdateKind::Message(message) = update.kind {
-                    if let MessageKind::Text { ref data, .. } = message.kind {
-                        // Print received text message to stdout.
-                        util::logger::show_status(
-                            format!("TELEGRAM: <{}>: {}", message.from.first_name.as_str(), data)
-                                .as_str(),
-                        );
+    let token = env::var("TELEGRAM_TOKEN")?;
+    API.set(Api::new(token))
+        .map_err(|_| anyhow::anyhow!("Telegram API already initialized"))?;
 
-                        if let Some((msg, start_conversation)) = filter(&message).await {
-                            let _ = sender
-                                .send_async((
-                                    Arc::new(Box::new(TelegramMessage {
-                                        message,
-                                        start_conversation,
-                                    })),
-                                    msg,
-                                ))
-                                .await;
+    if let Some(api) = API.get() {
+        let mut stream = api.stream();
+        util::logger::show_status("Telegram is connected!\n");
+        //Fetch new updates via long poll method
+        while let Some(update_result) = stream.next().await {
+            match update_result {
+                //If the received update contains a new message...
+                Ok(update) => {
+                    if let UpdateKind::Message(message) = update.kind {
+                        if let MessageKind::Text { ref data, .. } = message.kind {
+                            // Print received text message to stdout.
+                            util::logger::show_status(
+                                format!(
+                                    "TELEGRAM: <{}>: {}",
+                                    message.from.first_name.as_str(),
+                                    data
+                                )
+                                .as_str(),
+                            );
+
+                            if let Some((msg, start_conversation)) = filter(&message).await {
+                                let _ = sender
+                                    .send_async((
+                                        Arc::new(Box::new(TelegramMessage {
+                                            message,
+                                            start_conversation,
+                                        })),
+                                        msg,
+                                    ))
+                                    .await;
+                            }
                         }
                     }
                 }
-            }
-            Err(err) => {
-                error(
-                    format!(
-                        "Hit problems fetching updates, stopping for {} seconds. error is {}",
-                        WAITTIME, err
-                    )
-                    .as_str(),
-                );
-                task::sleep(Duration::from_secs(WAITTIME)).await;
-                error("Resuming");
+                Err(err) => {
+                    error(
+                        format!(
+                            "Hit problems fetching updates, stopping for {} seconds. error is {}",
+                            WAITTIME, err
+                        )
+                        .as_str(),
+                    );
+                    task::sleep(Duration::from_secs(WAITTIME)).await;
+                    error("Resuming");
+                }
             }
         }
     }
@@ -81,7 +87,7 @@ pub async fn main(
 /// - replaces redundant spaces with single spaces using regex ("hellow      world" becomes "hellow world").
 async fn filter(message: &TMessage) -> Option<(String, bool)> {
     if let MessageKind::Text { ref data, .. } = message.kind {
-        let myname_result = API.send(GetMe).await;
+        let myname_result = API.get()?.send(GetMe).await;
         if let Ok(myname) = myname_result {
             if let Some(name) = myname.username {
                 //-----------------------remove self mention from message
@@ -136,35 +142,39 @@ impl handlers::BotMessage for TelegramMessage {
         Box::new(self.clone())
     }
     async fn send_message(&self, message: handlers::MsgCount) {
-        match message {
-            handlers::MsgCount::SingleMsg(msg) => match msg {
-                handlers::Msg::Text(text) => {
-                    let _ = API.send(self.message.chat.text(text)).await;
-                }
-                handlers::Msg::File(url) => {
-                    if API
-                        .send(self.message.chat.document(InputFileRef::new(url.clone())))
-                        .await
-                        .is_err()
-                    {
-                        let _ = API.send(self.message.chat.text(url)).await;
+        if let Some(api) = API.get() {
+            match message {
+                handlers::MsgCount::SingleMsg(msg) => match msg {
+                    handlers::Msg::Text(text) => {
+                        let _ = api.send(self.message.chat.text(text)).await;
                     }
-                }
-            },
-            handlers::MsgCount::MultiMsg(msg_list) => {
-                for msg in msg_list {
-                    //---Need send here because spawn would send messages out of order
-                    match msg {
-                        handlers::Msg::Text(text) => {
-                            let _ = API.send(self.message.chat.text(text)).await;
+                    handlers::Msg::File(url) => {
+                        if api
+                            .send(self.message.chat.document(InputFileRef::new(url.clone())))
+                            .await
+                            .is_err()
+                        {
+                            let _ = api.send(self.message.chat.text(url)).await;
                         }
-                        handlers::Msg::File(url) => {
-                            if API
-                                .send(self.message.chat.document(InputFileRef::new(url.clone())))
-                                .await
-                                .is_err()
-                            {
-                                let _ = API.send(self.message.chat.text(url)).await;
+                    }
+                },
+                handlers::MsgCount::MultiMsg(msg_list) => {
+                    for msg in msg_list {
+                        //---Need send here because spawn would send messages out of order
+                        match msg {
+                            handlers::Msg::Text(text) => {
+                                let _ = api.send(self.message.chat.text(text)).await;
+                            }
+                            handlers::Msg::File(url) => {
+                                if api
+                                    .send(
+                                        self.message.chat.document(InputFileRef::new(url.clone())),
+                                    )
+                                    .await
+                                    .is_err()
+                                {
+                                    let _ = api.send(self.message.chat.text(url)).await;
+                                }
                             }
                         }
                     }
