@@ -12,7 +12,9 @@ pub async fn initialize() -> anyhow::Result<()> {
         return Ok(());
     }
 
+    #[allow(clippy::map_err_ignore)]
     GLUE.set(Mutex::new(Glue::new(
+        #[allow(clippy::map_err_ignore)]
         SledStorage::new("data/gluedb")
             .map_err(|_| anyhow::anyhow!("sled storage initilization failed"))?,
     )))

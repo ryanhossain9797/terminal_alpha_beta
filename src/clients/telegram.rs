@@ -25,6 +25,8 @@ pub async fn main(
     let source = "TELEGRAM_CLIENT";
     let error = util::logger::error(source);
     let token = env::var("TELEGRAM_TOKEN")?;
+
+    #[allow(clippy::map_err_ignore)]
     API.set(Api::new(token))
         .map_err(|_| anyhow::anyhow!("Telegram API already initialized"))?;
 
