@@ -26,7 +26,11 @@ pub enum UserEvent {
     Animation,
     Notes(Vec<String>),
     Unknown,
-    Undo(UserState),
+    SearchCompleted,
+    IdentifyCompleted,
+    AnimationCompleted,
+    // NotesCompleted,
+    // UnknownCompleted,
     Reset,
 }
 
@@ -38,7 +42,11 @@ impl fmt::Display for UserEvent {
             UserEvent::Animation => write!(f, "Animation"),
             UserEvent::Notes(_) => write!(f, "Notes"),
             UserEvent::Unknown => write!(f, "Unknown"),
-            UserEvent::Undo(_) => write!(f, "Undo"),
+            UserEvent::SearchCompleted => write!(f, "SearchCompleted"),
+            UserEvent::IdentifyCompleted => write!(f, "IdentifyCompleted"),
+            UserEvent::AnimationCompleted => write!(f, "AnimationCompleted"),
+            // UserEvent::NotesCompleted => write!(f, "NotesCompleted"),
+            // UserEvent::UnknownCompleted => write!(f, "UnknownCompleted"),
             UserEvent::Reset => write!(f, "Reset"),
         }
     }
@@ -68,11 +76,21 @@ pub async fn handle_event(event_data: UserEventData) -> anyhow::Result<()> {
         (UserState::Initial, UserEvent::Unknown) => {
             userstate::set_timed_state(message, UserState::Unknown).await
         }
-        (current_state, UserEvent::Undo(undo_state)) => {
-            if current_state.to_string() == undo_state.to_string() {
-                userstate::cancel_matching_state(message, undo_state).await
-            }
+        (UserState::Search, UserEvent::SearchCompleted) => {
+            userstate::delete_state(message).await;
         }
+        (UserState::Identify, UserEvent::IdentifyCompleted) => {
+            userstate::delete_state(message).await;
+        }
+        (UserState::Animation, UserEvent::AnimationCompleted) => {
+            userstate::delete_state(message).await;
+        }
+        // (UserState::Notes(_), UserEvent::NotesCompleted) => {
+        //     userstate::delete_state(message).await;
+        // }
+        // (UserState::Unknown, UserEvent::UnknownCompleted) => {
+        //     userstate::delete_state(message).await;
+        // }
         (_, UserEvent::Reset) => userstate::purge_state(message).await,
         _ => return Err(anyhow::anyhow!("Event not valid for this state")),
     }

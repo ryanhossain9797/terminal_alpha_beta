@@ -65,23 +65,10 @@ mod user_state_model {
 ///Doesn't care about state.  
 ///Used with the cancel last command.
 pub async fn purge_state(bot_message: Arc<Box<dyn BotMessage>>) {
-    delete_state(bot_message.get_id().as_str()).await;
     bot_message
         .send_message(responses::load("cancel-state").into())
         .await;
-}
-
-///Immediately cancel's the state IF provided state matches current state.
-///Used to remove state after state action is completed.  
-///No notice provided.
-pub async fn cancel_matching_state(bot_message: Arc<Box<dyn BotMessage>>, state: UserState) {
-    let source = "PURGE_HISTORY";
-    let info = util::logger::info(source);
-
-    if state == *get_state(bot_message.get_id().as_str()).await.state() {
-        delete_state(bot_message.get_id().as_str()).await;
-        info(format!("deleted state record for {}", state).as_str());
-    }
+    delete_state(bot_message).await;
 }
 
 ///Sets the user's state to the provided state
@@ -107,12 +94,11 @@ pub async fn set_timed_state(bot_message: Arc<Box<dyn BotMessage>>, state: UserS
         if format!("{}", record.state()) == format!("{}", state) {
             //If the current state is older than threshold wait time
             if record.last().elapsed() > Duration::from_secs(WAIT_TIME) {
-                delete_state(bot_message.get_id().as_str()).await;
                 info(format!("deleted state record '{}'", state).as_str());
                 bot_message
                     .send_message(responses::load("delay-notice").into())
                     .await;
-
+                delete_state(bot_message).await;
             //If the current state is not older than threshold wait time
             } else {
                 info("aborted record delete due to recency");
@@ -159,6 +145,11 @@ async fn get_state(id: &str) -> UserStateRecord {
     }
 }
 ///Remove the Provided user's state
-async fn delete_state(id: &str) {
-    RECORDS.remove(id);
+// async fn delete_state(id: &str) {
+//     RECORDS.remove(id);
+// }
+
+///Remove the Provided user's state
+pub async fn delete_state(message: Arc<Box<dyn BotMessage>>) {
+    RECORDS.remove(message.get_id().as_str());
 }

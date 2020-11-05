@@ -32,7 +32,7 @@ pub async fn resume(bot_message: Box<dyn BotMessage>, processed_text: String) {
     let arc_message = Arc::new(bot_message);
     // Purge state history
     let _ = handle_event(UserEventData::new(
-        UserEvent::Undo(UserState::Animation),
+        UserEvent::AnimationCompleted,
         Arc::clone(&arc_message),
     ))
     .await;

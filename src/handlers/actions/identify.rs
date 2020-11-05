@@ -28,7 +28,7 @@ pub async fn resume(bot_message: Box<dyn BotMessage>, name: String) {
     let arc_message = Arc::new(bot_message);
 
     let _ = handle_event(UserEventData::new(
-        UserEvent::Undo(UserState::Identify),
+        UserEvent::IdentifyCompleted,
         Arc::clone(&arc_message),
     ))
     .await;

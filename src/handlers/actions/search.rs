@@ -31,7 +31,7 @@ pub async fn resume(bot_message: Box<dyn BotMessage>, processed_text: String) {
 
     //---Delete the UserState Record
     let _ = handle_event(UserEventData::new(
-        UserEvent::Undo(UserState::Search),
+        UserEvent::SearchCompleted,
         Arc::clone(&arc_message),
     ))
     .await;
