@@ -15,7 +15,7 @@ panic = 'abort'
 [dependencies]
 futures = "0.3"
 
-async-std = { version = "1.6", features = ["tokio02", "attributes", "unstable"]}
+async-std = { version = "1.7", features = ["tokio02", "tokio03", "attributes", "unstable"]}
 telegram-bot = {git = "https://github.com/telegram-rs/telegram-bot"}
 serenity = { version = "0.9", default-features = false, features = ["client", "gateway", "rustls_backend", "model", "utils", "cache"]}
 snips-nlu-lib = { git = "https://github.com/snipsco/snips-nlu-rs", branch = "master" }
@@ -38,4 +38,3 @@ search_with_google = "0.5"
 serde-query = "0.1"
 gluesql = "0.2"
 # openssl-probe = "0.1"
-# futures-intrusive = "0.3"
