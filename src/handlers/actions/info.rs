@@ -1,28 +1,35 @@
 use super::*;
 use serde_json::Value;
 
-pub async fn start(bot_message: Box<dyn BotMessage>, json: serde_json::Value) {
+pub async fn start(
+    bot_message: Box<dyn BotMessage>,
+    json: serde_json::Value,
+) -> anyhow::Result<()> {
     let source = "START_INFO";
     let info = util::logger::info(source);
-    match title_pass_retriever(&json) {
-        Some((title, pass)) => {
+
+    match title_pass_retriever(&json).ok_or_else(|| anyhow::anyhow!("title and pass not found")) {
+        Ok((title, pass)) => {
             info(format!("Info title pass is {}, {}", title, pass).as_str());
             match info_service::get_info(title, pass).await {
                 Ok(Some(info)) => bot_message.send_message(info.into()).await,
                 Ok(None) => extra::unsupported_notice(bot_message).await,
-                _ => {
+                Err(err) => {
                     bot_message
                         .send_message(responses::load("info-fail").into())
-                        .await
+                        .await;
+                    return Err(err);
                 }
             }
         }
-        None => {
+        Err(err) => {
             bot_message
                 .send_message(responses::load("info-fail").into())
-                .await
+                .await;
+            return Err(err);
         }
     }
+    Ok(())
 }
 
 ///Retrieves the title and pass for the info intent.  

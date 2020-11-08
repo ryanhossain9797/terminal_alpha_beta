@@ -33,14 +33,14 @@ async fn natural_understanding(
         match intent {
             Acknowledgement => {}
             Chat => chat::start(bot_message).await,
-            Search => search::start(bot_message).await,
-            Identify => identify::start(bot_message).await,
-            Animation => animation::start(bot_message).await,
-            Info { json } => info::start(bot_message, json).await,
-            Notes => notes::start(bot_message).await,
+            Search => search::start(bot_message).await?,
+            Identify => identify::start(bot_message).await?,
+            Animation => animation::start(bot_message).await?,
+            Info { json } => info::start(bot_message, json).await?,
+            Notes => notes::start(bot_message).await?,
             Corona => corona::start(bot_message).await,
             Reminder { json } => reminder::start(bot_message, json).await,
-            Unknown => extra::start(bot_message).await,
+            Unknown => extra::start(bot_message).await?,
             _ => {
                 //Forward to chat for more intents
                 info("forwarding to chat");

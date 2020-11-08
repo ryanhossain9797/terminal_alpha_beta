@@ -1,6 +1,6 @@
 use super::*;
 
-pub async fn start(bot_message: Box<dyn BotMessage>) {
+pub async fn start(bot_message: Box<dyn BotMessage>) -> anyhow::Result<()> {
     let source = "START_NOTES";
     let info = util::logger::info(source);
     let error = util::logger::error(source);
@@ -52,8 +52,10 @@ pub async fn start(bot_message: Box<dyn BotMessage>) {
             arc_message
                 .send_message(responses::load("notes-fail").into())
                 .await;
+            return Err(err);
         }
     }
+    Ok(())
 }
 
 ///Performs some action on notes.  

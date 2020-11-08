@@ -3,21 +3,17 @@ use closestmatch::*;
 
 ///Adds a userstate record with identify state to userstate records map.  
 ///Fires wipe history command for identify state.
-pub async fn start(bot_message: Box<dyn BotMessage>) {
+pub async fn start(bot_message: Box<dyn BotMessage>) -> anyhow::Result<()> {
     let source = "START_IDENTIFY";
     let info = util::logger::info(source);
     info("identify initiated");
     let arc_message = Arc::new(bot_message);
 
-    let _ = handle_event(UserEventData::new(
-        UserEvent::Identify,
-        Arc::clone(&arc_message),
-    ))
-    .await;
-
     arc_message
         .send_message(responses::load("identify-start").into())
         .await;
+
+    handle_event(UserEventData::new(UserEvent::Identify, arc_message)).await
 }
 
 ///Finishes identify.  

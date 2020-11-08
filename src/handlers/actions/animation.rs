@@ -2,24 +2,20 @@ use super::*;
 
 ///Adds a userstate record with animation state to userstate records map.  
 ///Fires wipe history command for animation state.
-pub async fn start(bot_message: Box<dyn BotMessage>) {
+pub async fn start(bot_message: Box<dyn BotMessage>) -> anyhow::Result<()> {
     let source = "START_ANIMATION";
     let info = util::logger::info(source);
 
     info("animation initiated");
-    info(format!("record added for id {}", bot_message.get_id()).as_str());
     // Arc cloneable message
     let arc_message = Arc::new(bot_message);
-    // And fire off wipe history
-    let _ = handle_event(UserEventData::new(
-        UserEvent::Animation,
-        Arc::clone(&arc_message),
-    ))
-    .await;
 
     arc_message
         .send_message(responses::load("animation-start").into())
         .await;
+
+    // And fire off wipe history
+    handle_event(UserEventData::new(UserEvent::Animation, arc_message)).await
 }
 
 ///Finishes animation fetching.  

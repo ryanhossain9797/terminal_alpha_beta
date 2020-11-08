@@ -2,7 +2,7 @@ use super::*;
 
 ///Adds a userstate record with search state to userstate records map.  
 ///Fires wipe history command for search state.
-pub async fn start(bot_message: Box<dyn BotMessage>) {
+pub async fn start(bot_message: Box<dyn BotMessage>) -> anyhow::Result<()> {
     let source = "START_SEARCH";
 
     let info = util::logger::info(source);
@@ -10,16 +10,11 @@ pub async fn start(bot_message: Box<dyn BotMessage>) {
 
     //---Make a cloneable ARC version of the Message
     let arc_message = Arc::new(bot_message);
-    //---Fire off event
-    let _ = handle_event(UserEventData::new(
-        UserEvent::Search,
-        Arc::clone(&arc_message),
-    ))
-    .await;
-
     arc_message
         .send_message(responses::load("search-start").into())
         .await;
+    //---Fire off event
+    handle_event(UserEventData::new(UserEvent::Search, arc_message)).await
 }
 
 ///Finishes search

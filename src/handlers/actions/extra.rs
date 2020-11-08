@@ -1,34 +1,24 @@
 use super::*;
 
 ///Tests any unknown intent
-pub async fn start(bot_message: Box<dyn BotMessage>) {
+pub async fn start(bot_message: Box<dyn BotMessage>) -> anyhow::Result<()> {
     let source = "START_UNKNOWN";
     let info = util::logger::info(source);
     info("Unknown state initiated");
     let arc_message = Arc::new(bot_message);
 
-    let _ = handle_event(UserEventData::new(
-        UserEvent::Unknown,
-        Arc::clone(&arc_message),
-    ))
-    .await;
-
     arc_message
         .send_message(responses::load("intentional-unknownstate").into())
         .await;
+    handle_event(UserEventData::new(UserEvent::Unknown, arc_message)).await
 }
 
 ///Simply uses `load_response` to load a response for the provided key.  
 ///If unavailable replies with a default message.
 pub async fn custom_response(bot_message: Box<dyn BotMessage>, key: &str) {
-    match load(key) {
-        Some(msg) => bot_message.send_message(msg.into()).await,
-        None => {
-            bot_message
-                .send_message(load("unknown-question").into())
-                .await
-        }
-    }
+    bot_message
+        .send_message(load(key).map_or_else(|| load("unknown-question").into(), |msg| msg.into()))
+        .await;
 }
 
 ///Message to send when the user's message can't be handled at all.
