@@ -16,6 +16,7 @@ pub static NLUENGINE: Lazy<Option<SnipsNluEngine>> = Lazy::new(|| {
 });
 
 pub enum Intent {
+    Acknowledgement,
     Chat,
     Search,
     Identify,
@@ -67,13 +68,14 @@ pub async fn detect(processed_text: &str) -> anyhow::Result<Option<Intent>> {
         maybe_intent_data.and_then(|(confidence, intent_name, json)| {
             if confidence > 0.5 {
                 use Intent::{
-                    About, Animation, Chat, Corona, Creator, Functions, Greet, Identify, Info,
-                    Notes, Reminder, Search, Technology, Unknown,
+                    About, Acknowledgement, Animation, Chat, Corona, Creator, Functions, Greet,
+                    Identify, Info, Notes, Reminder, Search, Technology, Unknown,
                 };
 
                 info(format!("intent is {}", intent_name).as_str());
 
                 match intent_name.as_str() {
+                    "acknowledgement" => Acknowledgement.into(),
                     "chat" => Chat.into(),
                     "search" => Search.into(),
                     "identify" => Identify.into(),

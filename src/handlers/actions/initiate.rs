@@ -26,8 +26,12 @@ async fn natural_understanding(
     let info = util::logger::info(source);
     //---Stuff required to run the NLU engine to get an intent
     if let Ok(Some(intent)) = intent::detect(processed_text.as_str()).await {
-        use Intent::{Animation, Chat, Corona, Identify, Info, Notes, Reminder, Search, Unknown};
+        use Intent::{
+            Acknowledgement, Animation, Chat, Corona, Identify, Info, Notes, Reminder, Search,
+            Unknown,
+        };
         match intent {
+            Acknowledgement => {}
             Chat => chat::start(bot_message).await,
             Search => search::start(bot_message).await,
             Identify => identify::start(bot_message).await,

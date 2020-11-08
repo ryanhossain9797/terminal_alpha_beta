@@ -216,6 +216,59 @@
         }
       ]
     },
+    "acknowledgement": {
+      "utterances": [
+        {
+          "data": [
+            {
+              "text": "alright"
+            }
+          ]
+        },
+        {
+          "data": [
+            {
+              "text": "ok"
+            }
+          ]
+        },
+        {
+          "data": [
+            {
+              "text": "got it"
+            }
+          ]
+        },
+        {
+          "data": [
+            {
+              "text": "thanks"
+            }
+          ]
+        },
+        {
+          "data": [
+            {
+              "text": "sure thing"
+            }
+          ]
+        },
+        {
+          "data": [
+            {
+              "text": "gotcha"
+            }
+          ]
+        },
+        {
+          "data": [
+            {
+              "text": "ok thanks"
+            }
+          ]
+        }
+      ]
+    },
     "animation": {
       "utterances": [
         {
@@ -1372,6 +1425,15 @@
     },
     "search": {
       "utterances": [
+        {
+          "data": [
+            {
+              "entity": "searchWord",
+              "slot_name": "searchTerm",
+              "text": "search"
+            }
+          ]
+        },
         {
           "data": [
             {

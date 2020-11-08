@@ -231,6 +231,7 @@
     "language_code": "en",
     "slot_name_mappings": {
       "about": {},
+      "acknowledgement": {},
       "animation": {
         "animationTerm": "animationWord"
       },

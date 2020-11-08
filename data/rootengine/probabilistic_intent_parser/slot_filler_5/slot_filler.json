@@ -153,7 +153,7 @@
     "unit_name": "crf_slot_filler"
   },
   "crf_model_file": null,
-  "intent": "functions",
+  "intent": "creator",
   "language_code": "en",
   "slot_name_mapping": {}
 }

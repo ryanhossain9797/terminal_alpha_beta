@@ -1,3 +1,17 @@
+# acknowledgement intent
+---
+type: intent
+name: acknowledgement
+utterances:
+  - alright
+  - ok
+  - got it
+  - thanks
+  - sure thing
+  - gotcha
+  - ok thanks
+
+
 # chat intent
 ---
 type: intent
@@ -22,6 +36,7 @@ slots:
   - name: searchTerm
     entity: searchWord
 utterances:
+  - "[searchTerm](search)"
   - help me [searchTerm](search)
   - help me [searchTerm](search) for something
   - "[searchTerm](search) something"
