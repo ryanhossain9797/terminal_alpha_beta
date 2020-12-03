@@ -119,8 +119,8 @@
           "entities": [
             "infoWord",
             "passVar",
-            "passWord",
-            "titleVar"
+            "titleVar",
+            "passWord"
           ],
           "entity_filter": {
             "automatically_extensible": true

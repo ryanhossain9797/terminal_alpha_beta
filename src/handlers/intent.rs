@@ -66,7 +66,8 @@ pub async fn detect(processed_text: &str) -> anyhow::Result<Option<Intent>> {
 
     parse(processed_text).map(|maybe_intent_data| {
         maybe_intent_data.and_then(|(confidence, intent_name, json)| {
-            if confidence > 0.5 {
+            info(format!("{} with confidence {}", intent_name, confidence).as_str());
+            if confidence > 0.35 {
                 use Intent::{
                     About, Acknowledgement, Animation, Chat, Corona, Creator, Functions, Greet,
                     Identify, Info, Notes, Reminder, Search, Technology, Unknown,

@@ -86,7 +86,7 @@ pub async fn set_timed_state(bot_message: Arc<Box<dyn BotMessage>>, state: UserS
     //---Insert the intent
     set_state(bot_message.get_id(), state.clone()).await;
 
-    let _ = task::spawn(async move {
+    drop(task::spawn(async move {
         //Wait a specified amount of time before deleting user state
         task::sleep(Duration::from_secs(WAIT_TIME)).await;
         let record = get_state(bot_message.get_id().as_str()).await;
@@ -114,14 +114,7 @@ pub async fn set_timed_state(bot_message: Arc<Box<dyn BotMessage>>, state: UserS
                 .as_str(),
             );
         }
-    });
-
-    //cancer zone
-    // expiry::CLEAN_QUEUE.write().await.push(Box::pin(async move {
-    //     async_std::task::sleep(Duration::from_secs(10)).await;
-    //     println!("yo");
-    // }));
-    // println!("timed state set");
+    }));
 }
 
 ///Public API of fetching user's state

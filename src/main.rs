@@ -35,7 +35,7 @@ async fn main() {
         status("Initializing everything");
 
         handlers::initialize().await;
-        let _ = database::initialize().await;
+        drop(database::initialize().await);
 
         status("\nInitialized Everything\n");
     }

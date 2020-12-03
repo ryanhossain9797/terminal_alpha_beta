@@ -49,6 +49,7 @@ async fn natural_understanding(
         }
     } else {
         util::logger::log_message(processed_text.as_str()).await?;
+        util::logger::log_message_db(processed_text.as_str()).await?;
         extra::unsupported_notice(bot_message).await;
     }
     Ok(())

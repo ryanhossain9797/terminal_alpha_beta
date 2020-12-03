@@ -1,3 +1,4 @@
+use super::database::gluedb::*;
 use colored::*;
 use gluesql::*;
 use std::fs::OpenOptions;
@@ -64,16 +65,24 @@ pub async fn log_message_db(message: &str) -> anyhow::Result<()> {
 
     let queries = parse(sql.as_str())?;
 
-    let glue = crate::database::gluedb::GLUE
+    let glue = GLUE
         .get()
-        .ok_or_else(|| anyhow::anyhow!(""))?;
+        .ok_or_else(|| anyhow::anyhow!("gluedb not initialized"))?;
 
     if (*glue.lock().await)
-        .execute(queries.get(0).expect("there is no first query"))
+        .execute(
+            queries
+                .get(0)
+                .ok_or_else(|| anyhow::anyhow!("no second query"))?,
+        )
         .is_ok()
     {
         if (*glue.lock().await)
-            .execute(queries.get(1).expect("there is no second query"))
+            .execute(
+                queries
+                    .get(1)
+                    .ok_or_else(|| anyhow::anyhow!("no second query"))?,
+            )
             .is_ok()
         {
         } else {

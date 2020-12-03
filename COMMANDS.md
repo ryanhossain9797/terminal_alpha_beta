@@ -10,16 +10,19 @@ linker = "arm-linux-gnueabihf-gcc"
 snips-nlu train path/to/data.json path/to/output_folder
 ```
 ```
-scp -P 5914 target/armv7-unknown-linux-gnueabihf/release/terminal_alpha_beta alarm@192.168.0.104:terminal
+scp -P 5914 target/armv7-unknown-linux-gnueabihf/release/terminal_alpha_beta alarm@192.168.0.235:terminal
 ```
 ```
-scp -P 5914 target/armv7-unknown-linux-musleabihf/release/terminal_alpha_beta alarm@192.168.0.104:terminal
+scp -P 5914 target/armv7-unknown-linux-musleabihf/release/terminal_alpha_beta alarm@192.168.88.235:terminal
 ```
 ```
-scp -P 5914 data/responses.json  alarm@192.168.0.104:responses.json
+scp -P 5914 data/responses.json  alarm@192.168.88.235:responses.json
 ```
 ```
-scp -P 5914 -r data/rootengine  alarm@192.168.0.104:rootengine
+scp -P 5914 -r data/rootengine  alarm@192.168.88.235:rootengine
+```
+```
+scp -P 5914 .env  alarm@192.168.88.235:.env
 ```
 
 ```
