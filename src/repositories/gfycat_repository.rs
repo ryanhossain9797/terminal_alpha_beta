@@ -20,9 +20,8 @@ pub async fn get_gfycat_by_keyword(keyword: &str) -> anyhow::Result<String> {
                 .ok_or_else(|| anyhow::anyhow!("Can't find value for key 'max2mbGif'"))?
             {
                 return Ok(url.to_string());
-            } else {
-                return Err(anyhow::anyhow!("'max2mbGif' isn't a url"));
             }
+            return Err(anyhow::anyhow!("'max2mbGif' isn't a url"));
         }
     } else {
         return Err(anyhow::anyhow!("{}", "'gfycats' isn't a valid json"));
