@@ -8,10 +8,11 @@ use regex::Regex;
 use std::env;
 use std::sync::Arc;
 use std::time::Duration;
-use telegram_bot::Message as TMessage;
-use telegram_bot::{
-    Api, CanSendDocument, CanSendMessage, GetMe, InputFileRef, MessageChat, MessageKind, UpdateKind,
-};
+// use telegram_bot::Message as TMessage;
+// use telegram_bot::{
+//     Api, CanSendDocument, CanSendMessage, GetMe, InputFileRef, MessageChat, MessageKind, UpdateKind,
+// };
+use teloxide::prelude::*;
 
 //--- Waiting time for failed connections
 const WAITTIME: u64 = 10;
@@ -26,6 +27,26 @@ pub async fn main(
     let error = util::logger::error(source);
     let token = env::var("TELEGRAM_TOKEN")?;
 
+    let bot = Bot::builder().token(token.as_str()).build();
+
+    teloxide::repl(bot, |message| async move {
+        if let Some(text) = message.update.text() {
+            if let Some((msg, start_conversation)) = filter(&message).await {
+                let _ = sender
+                    .send_async((
+                        Arc::new(Box::new(TelegramMessage {
+                            message,
+                            start_conversation,
+                        })),
+                        msg,
+                    ))
+                    .await;
+            }
+        }
+        ResponseResult::<()>::Ok(())
+    })
+    .await;
+    /*
     #[allow(clippy::map_err_ignore)]
     API.set(Api::new(token))
         .map_err(|_| anyhow::anyhow!("Telegram API already initialized"))?;
@@ -77,7 +98,7 @@ pub async fn main(
                 }
             }
         }
-    }
+    }*/
     Err(anyhow::anyhow!("Telegram failed"))
 }
 
@@ -87,9 +108,9 @@ pub async fn main(
 /// - removes / from start if it's there ("/hellow    @machinelifeformbot   world" becomes "hellow    @machinelifeformbot   world").
 /// - removes mentions of the bot from the message ("hellow    @machinelifeformbot   world" becomes "hellow      world").
 /// - replaces redundant spaces with single spaces using regex ("hellow      world" becomes "hellow world").
-async fn filter(message: &TMessage) -> Option<(String, bool)> {
-    if let MessageKind::Text { ref data, .. } = message.kind {
-        let myname_result = API.get()?.send(GetMe).await;
+async fn filter(message: &UpdateWithCx<Message>) -> Option<(String, bool)> {
+    if let Some(data) = message.update.text() {
+        let myname_result = message.update.chat();
         if let Ok(myname) = myname_result {
             if let Some(name) = myname.username {
                 //-----------------------remove self mention from message

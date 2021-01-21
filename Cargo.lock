@@ -1799,6 +1799,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "lockfree"
+version = "0.5.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "74ee94b5ad113c7cb98c5a040f783d0952ee4fe100993881d1673c2cb002dd23"
+dependencies = [
+ "owned-alloc",
+]
+
+[[package]]
 name = "log"
 version = "0.3.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2305,6 +2314,12 @@ dependencies = [
  "log 0.4.13",
  "winapi 0.3.9",
 ]
+
+[[package]]
+name = "owned-alloc"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "30fceb411f9a12ff9222c5f824026be368ff15dc2f13468d850c7d3f502205d6"
 
 [[package]]
 name = "parking"
@@ -2962,6 +2977,7 @@ dependencies = [
  "percent-encoding",
  "pin-project-lite 0.2.4",
  "serde",
+ "serde_json",
  "serde_urlencoded",
  "tokio 0.2.24",
  "tokio-tls",
@@ -3907,6 +3923,41 @@ dependencies = [
 ]
 
 [[package]]
+name = "teloxide"
+version = "0.3.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a265c0b217a2adfeb630562b5ec058dbd32f277d032e8d630caee2c7575cea76"
+dependencies = [
+ "async-trait",
+ "bytes 0.5.6",
+ "derive_more",
+ "futures",
+ "lockfree",
+ "log 0.4.13",
+ "mime 0.3.16",
+ "pin-project 0.4.27",
+ "reqwest 0.10.10",
+ "serde",
+ "serde_json",
+ "serde_with_macros",
+ "teloxide-macros",
+ "thiserror",
+ "tokio 0.2.24",
+ "tokio-util 0.3.1",
+]
+
+[[package]]
+name = "teloxide-macros"
+version = "0.3.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "13d8854ad575520d8b37f4a7fdfcd381f48849557f0907b1a7d8163dbd8e952f"
+dependencies = [
+ "proc-macro2 1.0.24",
+ "quote 1.0.8",
+ "syn 1.0.58",
+]
+
+[[package]]
 name = "tempfile"
 version = "3.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3967,6 +4018,7 @@ dependencies = [
  "serenity",
  "snips-nlu-lib",
  "telegram-bot",
+ "teloxide",
 ]
 
 [[package]]
