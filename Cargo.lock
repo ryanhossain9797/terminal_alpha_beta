@@ -95,6 +95,8 @@ dependencies = [
  "num_cpus",
  "once_cell",
  "tokio 0.2.22",
+ "tokio 0.3.6",
+ "tokio 1.1.0",
 ]
 
 [[package]]
@@ -4123,6 +4125,18 @@ dependencies = [
 
 [[package]]
 name = "tokio"
+version = "0.3.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "720ba21c25078711bf456d607987d95bce90f7c3bea5abe1db587862e7a1e87c"
+dependencies = [
+ "autocfg 1.0.1",
+ "num_cpus",
+ "pin-project-lite 0.2.4",
+ "slab",
+]
+
+[[package]]
+name = "tokio"
 version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8efab2086f17abcddb8f756117665c958feee6b2e39974c2f1600592ab3a4195"
@@ -4132,6 +4146,7 @@ dependencies = [
  "libc",
  "memchr",
  "mio 0.7.7",
+ "num_cpus",
  "pin-project-lite 0.2.4",
 ]
 
