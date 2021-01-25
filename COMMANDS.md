@@ -40,7 +40,7 @@ Needed
 >		arm-linux-gnueabihf-glibc
 >		arm-linux-gnueabihf-gcc
 > clang
-> openssl (? was already installed, shouldn't risk uninstall testing, prolly important to OS itself)
+> openssl (? was already installed, shouldn't risk uninstall testing, probably important to OS itself)
 ```
 ```
 Needed for training intent
